@@ -3,7 +3,9 @@ package app.fonte;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.ViewGroup;
@@ -133,6 +135,8 @@ public class MainActivity extends Activity {
         return "application/octet-stream";
     }
 
+    private static final String[] ICONS = {"orange", "blue", "green", "violet", "red"};
+
     /** Appelé par la page (local-backend.js) pour enregistrer une sauvegarde : le système demande où la ranger. */
     private class Bridge {
         @JavascriptInterface
@@ -153,6 +157,33 @@ public class MainActivity extends Activity {
                     }
                 }
             });
+        }
+
+        /** Change l'icône de l'écran d'accueil : active l'entrée de lanceur de la couleur choisie, désactive les autres. */
+        @JavascriptInterface
+        public void setIcon(final String key) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    boolean known = false;
+                    for (String k : ICONS) if (k.equals(key)) known = true;
+                    if (!known) return;
+                    PackageManager pm = getPackageManager();
+                    try {
+                        // la nouvelle d'abord, pour qu'il y ait toujours une icône dans le lanceur
+                        pm.setComponentEnabledSetting(alias(key), PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+                        for (String k : ICONS) {
+                            if (!k.equals(key)) pm.setComponentEnabledSetting(alias(k), PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+                        }
+                    } catch (RuntimeException ignored) {
+                        // lanceur ou système qui refuse : l'icône reste celle d'avant
+                    }
+                }
+            });
+        }
+
+        private ComponentName alias(String key) {
+            return new ComponentName(MainActivity.this.getPackageName(), "app.fonte.Icon" + Character.toUpperCase(key.charAt(0)) + key.substring(1));
         }
     }
 

@@ -22,12 +22,13 @@ function applyAccent() {
   q('link[rel="icon"]').href = icoUrl(192);
   q('link[rel="apple-touch-icon"]').href = icoUrl(180);
 }
-function setAccent(k) { ACCENT = k; try { localStorage.setItem('muscu-accent', JSON.stringify(k)); } catch (e) {} applyAccent(); accentPick(); }
+function hasAppIcon() { try { return !!(window.FonteApp && typeof window.FonteApp.setIcon === 'function'); } catch (e) { return false; } }
+function setAccent(k) { ACCENT = k; try { localStorage.setItem('muscu-accent', JSON.stringify(k)); } catch (e) {} if (hasAppIcon()) { try { window.FonteApp.setIcon(k); } catch (e) {} } applyAccent(); accentPick(); }
 function accentPick() {
   var el = document.getElementById('daccent'), lg = document.getElementById('lg');
   if (lg) lg.src = icoUrl(192);
   if (!el) return;
-  el.innerHTML = '<p class="m">Couleur de l’appli</p><div class="sws">' + ACC.map(function (x) { return '<button class="sw' + (ACCENT === x[0] ? ' on' : '') + '" style="background:' + x[2] + '" onclick="setAccent(\'' + x[0] + '\')" aria-label="' + x[1] + '" aria-pressed="' + (ACCENT === x[0]) + '"></button>'; }).join('') + '</div>' + (window.FONTE_LOCAL ? '<p class="m">La couleur change l’interface de l’appli. L’icône sur l’écran d’accueil du téléphone reste orange.</p>' : '<p class="m">Sur l’écran d’accueil du téléphone, le logo d’une appli déjà installée ne change qu’en la réinstallant.</p>');
+  el.innerHTML = '<p class="m">Couleur de l’appli</p><div class="sws">' + ACC.map(function (x) { return '<button class="sw' + (ACCENT === x[0] ? ' on' : '') + '" style="background:' + x[2] + '" onclick="setAccent(\'' + x[0] + '\')" aria-label="' + x[1] + '" aria-pressed="' + (ACCENT === x[0]) + '"></button>'; }).join('') + '</div>' + (hasAppIcon() ? '<p class="m">La couleur change l’interface et l’icône de l’écran d’accueil. Selon ton lanceur, l’icône peut mettre quelques secondes à changer.</p>' : window.FONTE_LOCAL ? '<p class="m">La couleur change l’interface de l’appli. L’icône sur l’écran d’accueil du téléphone reste orange.</p>' : '<p class="m">Sur l’écran d’accueil du téléphone, le logo d’une appli déjà installée ne change qu’en la réinstallant.</p>');
 }
 applyAccent();
 </script>

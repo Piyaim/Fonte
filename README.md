@@ -18,7 +18,7 @@ Il y a deux façons de l'utiliser, avec la même interface :
 - Une jauge de difficulté ressentie (1 à 5) qui influence le conseil de charge de la séance suivante.
 - Un minuteur de repos dont l'affichage reste juste quand l'écran se verrouille.
 - Records (1RM estimé), courbes de progression, poids de corps, photos de progression, import et export.
-- Cinq couleurs au choix. L'interface est **en français uniquement** pour l'instant.
+- Cinq couleurs au choix, qui changent aussi l'icône de l'écran d'accueil dans l'appli Android (selon ton lanceur, ça peut prendre quelques secondes). L'interface est **en français uniquement** pour l'instant.
 
 ## ⚠️ À lire avant d'utiliser
 
@@ -76,6 +76,7 @@ playwright install chromium
 python3 tests/differentiel.py       # même scénario sur Flask et sur le serveur local : les réponses doivent être identiques
 python3 tests/ui_local.py           # parcours dans l'interface en mode local (photo, export, import)
 python3 tests/simulation_android.py # imite la coque : page servie sous l'adresse interne de la WebView
+python3 tests/icone_app.py          # le choix d'une couleur appelle bien le changement d'icône de la coque
 ```
 
 Lancer le serveur sans Docker :
