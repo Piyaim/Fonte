@@ -43,4 +43,11 @@ android {
     lint {
         abortOnError = false
     }
+
+    // L'appli web (dossier server/static) est embarquée telle quelle dans l'APK : une seule source pour les deux versions.
+    sourceSets {
+        getByName("main") {
+            assets.srcDir("../../server/static")
+        }
+    }
 }

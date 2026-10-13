@@ -1,7 +1,7 @@
-Fonte is a self-hosted weight-training log. This Android app is a thin shell that opens your own Fonte server, so you need a Fonte server (Docker) reachable from your phone. The interface is in French.
+Fonte is a weight-training log that runs entirely on your phone: no server, no account, nothing sent anywhere.
 
 Features: editable catalogue of 50 exercises, programs and sessions, sessions by muscle group, perceived-effort gauge with load advice, a rest timer whose display stays accurate when the screen locks, personal records, progress charts, body weight, progress photos, import and export.
 
-Privacy: no third-party libraries, no trackers, a single permission (network). Your data stays on your server.
+Your data stays in the app: export it regularly, it is erased if you uninstall the app. The interface is in French.
 
 Fonte is not a coach and gives no medical advice.

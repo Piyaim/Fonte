@@ -7,12 +7,13 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" href="/static/icons/icon-192.png">
 <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+<script src="/static/local-backend.js"></script>
 <script>
 var ACC = [['orange','Orange','#ff7a1a'],['blue','Bleu','#4dabf7'],['green','Vert','#51cf66'],['violet','Violet','#9775fa'],['red','Rouge','#ff6b6b']];
 var ACC_TC = {orange:'#e8590c', blue:'#1971c2', green:'#2b8a3e', violet:'#7048e8', red:'#e03131'};
 var ACCENT = 'orange';
 try { var _a = JSON.parse(localStorage.getItem('muscu-accent') || 'null'); if (ACC_TC[_a]) ACCENT = _a; } catch (e) {}
-function icoUrl(n) { return ACCENT === 'orange' ? '/static/icons/icon-192.png' : '/icon/' + n + '.png?c=' + ACCENT; }
+function icoUrl(n) { if (window.FONTE_LOCAL) return window.FONTE_ICON(ACCENT, n); return ACCENT === 'orange' ? '/static/icons/icon-192.png' : '/icon/' + n + '.png?c=' + ACCENT; }
 function applyAccent() {
   var d = document.documentElement, q = function (s) { return document.querySelector(s); };
   d.dataset.accent = ACCENT;
@@ -26,7 +27,7 @@ function accentPick() {
   var el = document.getElementById('daccent'), lg = document.getElementById('lg');
   if (lg) lg.src = icoUrl(192);
   if (!el) return;
-  el.innerHTML = '<p class="m">Couleur de l’appli</p><div class="sws">' + ACC.map(function (x) { return '<button class="sw' + (ACCENT === x[0] ? ' on' : '') + '" style="background:' + x[2] + '" onclick="setAccent(\'' + x[0] + '\')" aria-label="' + x[1] + '" aria-pressed="' + (ACCENT === x[0]) + '"></button>'; }).join('') + '</div>' + (window.FonteApp ? '<button class="sopt" onclick="FonteApp.changeServer()"><b>Changer le serveur</b><span>Modifier l’adresse du serveur Fonte</span></button>' : '<p class="m">Sur l’écran d’accueil du téléphone, le logo d’une appli déjà installée ne change qu’en la réinstallant.</p>');
+  el.innerHTML = '<p class="m">Couleur de l’appli</p><div class="sws">' + ACC.map(function (x) { return '<button class="sw' + (ACCENT === x[0] ? ' on' : '') + '" style="background:' + x[2] + '" onclick="setAccent(\'' + x[0] + '\')" aria-label="' + x[1] + '" aria-pressed="' + (ACCENT === x[0]) + '"></button>'; }).join('') + '</div>' + (window.FONTE_LOCAL ? '<p class="m">La couleur change l’interface de l’appli. L’icône sur l’écran d’accueil du téléphone reste orange.</p>' : '<p class="m">Sur l’écran d’accueil du téléphone, le logo d’une appli déjà installée ne change qu’en la réinstallant.</p>');
 }
 applyAccent();
 </script>
@@ -1373,10 +1374,10 @@ function vData() {
     ${spark(BW.slice(-12).map(a => a.kg), 'Poids, ' + Math.min(BW.length, 12) + ' pesées')}`;
   if (BW.length) h += '<table>' + BW.slice(-6).reverse().map(b => `<tr><td>${frDate(b.day)}</td><td>${fmt(b.kg)} kg</td><td style="text-align:right"><button class="sm danger" onclick="delBW(${b.id})" aria-label="Supprimer">✕</button></td></tr>`).join('') + '</table>';
   h += `</div><div class="card"><h2>Sauvegarde</h2>
-    <p class="m">La base est sur le Pi et part dans la sauvegarde quotidienne. L'export sert de copie manuelle.</p>
-    <a class="sm" style="display:inline-block;text-decoration:none;margin-top:6px" href="/api/export">Télécharger l'export (JSON)</a>
+    <p class="m">${window.FONTE_LOCAL ? 'Tes données sont stockées sur ce téléphone, dans l’appli : si tu la désinstalles ou effaces ses données, elles disparaissent. Exporte-les régulièrement ; séances et photos sont dans deux fichiers séparés.' : 'La base est sur le serveur. L’export sert de copie manuelle.'}</p>
+    <a class="sm" style="display:inline-block;text-decoration:none;margin-top:6px" href="/api/export" onclick="return exportClick('data')">Télécharger l'export (JSON)</a>${window.FONTE_LOCAL ? ' <a class="sm" style="display:inline-block;text-decoration:none;margin-top:6px" href="#" onclick="return exportClick(\'photos\')">Télécharger les photos (JSON)</a>' : ''}
     <h3>Importer</h3>
-    <p class="m">• Export de l'ancienne appli (bouton « Exporter » puis copier) : les séances sont <b>ajoutées</b>, les doublons ignorés.<br>• Export de ce service : <b>remplace toute la base</b>.</p>
+    <p class="m">• Export de l'ancienne appli (bouton « Exporter » puis copier) : les séances sont <b>ajoutées</b>, les doublons ignorés.<br>• Export de ce service : <b>remplace toute la base</b>.${window.FONTE_LOCAL ? '<br>• Export des photos : les photos sont <b>ajoutées</b>.' : ''}</p>
     <textarea id="bk" placeholder="Colle le JSON ici"></textarea>
     <p class="m">ou</p><input type="file" id="bkf" accept="application/json,.json" onchange="readFile(this)">
     <button class="go" onclick="doImport()">Importer</button></div>`;
@@ -1421,7 +1422,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) tkNo
 })();
 
 
-/* ------------------------------------------------------------------ photos de progression (stockées sur le Pi uniquement) */
+/* ------------------------------------------------------------------ photos de progression (stockées localement uniquement) */
 let PH = null;
 async function loadPhotos() {
   try { const r = await fetch('/api/photos'); if (r.ok) { PH = await r.json(); if (view === 'progres' && !$('phov')) R(); } } catch (e) {}
@@ -1450,7 +1451,7 @@ function showPhoto(i) {
   if (!PH || !PH[i]) { if (o) o.remove(); return; }
   if (!o) { o = document.createElement('div'); o.id = 'phov'; o.className = 'pr-overlay'; o.onclick = ev => { if (ev.target === o) o.remove(); }; document.body.appendChild(o); }
   const p = PH[i];
-  o.innerHTML = `<div class="phv"><img src="/photos/${p.id}/full" alt="Photo du ${frDate(p.day)}"><p><b>${frDate(p.day)}</b>${p.note ? ' · ' + esc(p.note) : ''}</p><div class="acts"><button class="sm" onclick="showPhoto(${i - 1})" ${i <= 0 ? 'disabled' : ''}>‹</button><button class="sm" onclick="showPhoto(${i + 1})" ${i >= PH.length - 1 ? 'disabled' : ''}>›</button><button class="sm danger" onclick="delPhoto(${p.id})">Supprimer</button><button class="sm" onclick="$('phov').remove()">Fermer</button></div></div>`;
+  o.innerHTML = `<div class="phv"><img src="${photoUrl(p.id, 'full')}" alt="Photo du ${frDate(p.day)}"><p><b>${frDate(p.day)}</b>${p.note ? ' · ' + esc(p.note) : ''}</p><div class="acts"><button class="sm" onclick="showPhoto(${i - 1})" ${i <= 0 ? 'disabled' : ''}>‹</button><button class="sm" onclick="showPhoto(${i + 1})" ${i >= PH.length - 1 ? 'disabled' : ''}>›</button><button class="sm danger" onclick="delPhoto(${p.id})">Supprimer</button><button class="sm" onclick="$('phov').remove()">Fermer</button></div></div>`;
 }
 async function delPhoto(id) {
   if (!confirm('Supprimer définitivement cette photo ?')) return;
@@ -1459,23 +1460,23 @@ async function delPhoto(id) {
 }
 function vPhotos() {
   if (PH === null) { PH = []; loadPhotos(); }
-  let h = `<div class="card"><h2>Photos de progression</h2><p class="m">Stockées uniquement sur ton Pi, envoyées nulle part ailleurs. Pour bien comparer : même lumière, même pose, même distance.</p>`;
+  let h = `<div class="card"><h2>Photos de progression</h2><p class="m">${window.FONTE_LOCAL ? 'Stockées uniquement sur ce téléphone, envoyées nulle part.' : 'Stockées uniquement sur ton serveur, envoyées nulle part ailleurs.'} Pour bien comparer : même lumière, même pose, même distance.</p>`;
   if (PH.length >= 2) {
     const a = PH[0], b = PH[PH.length - 1];
-    h += `<div class="phcmp"><figure><img src="/photos/${a.id}/full" alt="Première photo"><figcaption>Départ · ${frDate(a.day)}</figcaption></figure><figure><img src="/photos/${b.id}/full" alt="Dernière photo"><figcaption>Dernière · ${frDate(b.day)}</figcaption></figure></div>`;
+    h += `<div class="phcmp"><figure><img src="${photoUrl(a.id, 'full')}" alt="Première photo"><figcaption>Départ · ${frDate(a.day)}</figcaption></figure><figure><img src="${photoUrl(b.id, 'full')}" alt="Dernière photo"><figcaption>Dernière · ${frDate(b.day)}</figcaption></figure></div>`;
   }
-  if (PH.length) h += '<div class="phgrid">' + PH.map((p, i) => `<button onclick="showPhoto(${i})" aria-label="Photo du ${frDate(p.day)}"><img src="/photos/${p.id}/thumb" loading="lazy" alt=""><span>${frDate(p.day).slice(0, 5)}</span></button>`).join('') + '</div>';
+  if (PH.length) h += '<div class="phgrid">' + PH.map((p, i) => `<button onclick="showPhoto(${i})" aria-label="Photo du ${frDate(p.day)}"><img src="${photoUrl(p.id, 'thumb')}" loading="lazy" alt=""><span>${frDate(p.day).slice(0, 5)}</span></button>`).join('') + '</div>';
   else h += '<p class="m">Aucune photo pour l\'instant.</p>';
   h += `<div class="row" style="grid-template-columns:1fr auto"><input id="ph-note" maxlength="200" placeholder="Note (facultatif)"><button class="sm" onclick="$('ph-in').click()">Ajouter une photo</button></div><input id="ph-in" type="file" accept="image/*" hidden onchange="addPhoto(this)"></div>`;
   return h;
 }
 
 /* ------------------------------------------------------------------ démarrage */
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+if (!window.FONTE_LOCAL && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 (async () => {
   /* l'appli s'ouvre sur l'accueil */
   try { await load(); R(); }
-  catch (e) { $('app').innerHTML = `<p class="empty">Impossible de joindre le serveur : ${esc(e.message)}</p>`; }
+  catch (e) { $('app').innerHTML = `<p class="empty">${window.FONTE_LOCAL ? 'Impossible de lire les données de l’appli' : 'Impossible de joindre le serveur'} : ${esc(e.message)}</p>`; }
 })();
 </script>
 </body>
