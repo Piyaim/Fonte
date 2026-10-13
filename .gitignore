@@ -8,3 +8,14 @@ local.properties
 *.apk
 *.db
 .idea/
+
+# Travail Blender (fichiers lourds, hors dépôt)
+*.blend
+*.blend1
+*.blend2
+rendus-bruts/
+
+# Secrets et environnement local
+*.jks
+*.keystore
+.venv/
