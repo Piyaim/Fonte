@@ -214,6 +214,10 @@
     g.nd = nd; g.head = add(g.NB, mul(nd, (B.neck + 4.5) * sc * B.head));
     g.fv = [-nd[1] * f, nd[0] * f];
     g.H = H; g.f = f; g.sc = sc;
+    if (p.bar && !Array.isArray(p.bar) && p.bar.rel === 'spine') {   // barre posée sur le corps (nuque, hanches) : suit le tronc
+      var bs = p.bar.s, bt = g.tang(Math.max(0, bs)), bn = frontNormal(mul(bt, -1), f); p = Object.assign({}, p, { bar: add(spinePos(bs), mul(bn, (p.bar.off || 0) * sc)) });
+    }
+    g.bar = p.bar;
     // membres : near / far
     function limb(spec, root, l1, l2, kind) {
       var o = {}, lim1 = l1 * sc, lim2 = l2 * sc, th1, th2, e, w, tgt;
@@ -391,17 +395,35 @@
     return '';
   }
   function handPt(g, near) { var a = near === false ? g.armF : g.armN, d = unit(sub(a.end, a.mid)); return add(a.end, mul(d, 2.6)); }
+  /* point d'ancrage : [x, y] absolu, ['spine', s, décalage], ou ['thigh'|'shank'|'upper'|'fore', t, décalage] (décalage > 0 = côté avant) */
+  function anchor(at, g, f, B) {
+    if (!Array.isArray(at) || typeof at[0] === 'number') return at;
+    var k = at[0], seg, A, Bp, d, nn, t;
+    if (k === 'spine') { t = g.tang(Math.max(0, at[1])); nn = frontNormal(mul(t, -1), f); return add(g.spinePos(at[1]), mul(nn, (at[2] || 0) * B.sc)); }
+    seg = { thigh: [g.legN.root, g.legN.mid], shank: [g.legN.mid, g.legN.end], upper: [g.armN.root, g.armN.mid], fore: [g.armN.mid, g.armN.end], thigh2: [g.legF.root, g.legF.mid], shank2: [g.legF.mid, g.legF.end] }[k];
+    A = seg[0]; Bp = seg[1]; d = unit(sub(Bp, A)); nn = frontNormal(d, f);
+    return add(lerp2(A, Bp, at[1]), mul(nn, (at[2] || 0) * B.sc));
+  }
   function propEl(pr, p, g, f, B) {
     var t = pr.t, at;
     if (t === 'plate' || t === 'db') {
-      var r = pr.r || (t === 'db' ? 4.2 : 8), pts = pr.at === 'bar' ? [p.bar] : Array.isArray(pr.at) ? [pr.at] : pr.hand === 'both' ? [handPt(g, false), handPt(g)] : [handPt(g)];
+      var r = pr.r || (t === 'db' ? 4.2 : 8), pts = pr.at === 'bar' ? [g.bar || p.bar] : Array.isArray(pr.at) ? [anchor(pr.at, g, f, B)] : pr.hand === 'both' ? [handPt(g, false), handPt(g)] : [handPt(g)];
       return pts.map(function (a) { return '<g class="fpl"><circle cx="' + n1(a[0]) + '" cy="' + n1(a[1]) + '" r="' + r + '"/><circle class="fhub" cx="' + n1(a[0]) + '" cy="' + n1(a[1]) + '" r="' + n1(Math.max(1.1, r * 0.2)) + '"/></g>'; }).join('');
+    }
+    if (t === 'pad') {   // coussin / plateau : rectangle arrondi orienté, ancré sur la semelle, la main, un point ou la colonne
+      var c, ang = pr.a || 0, L = pr.l || 20, th = pr.h || 3.2;
+      if (pr.at === 'sole' || pr.at === 'sole2') { var fo = pr.at === 'sole' ? g.footN : g.footF; c = add(fo.A, add(mul(fo.fd, 3 * B.sc), mul(fo.dn, (4.0 + th / 2) * B.sc))); ang = pr.fix ? ang : Math.atan2(fo.dn[1], fo.dn[0]) / RAD + 90 + (pr.da || 0); if (pr.fix) c = [c[0], fo.A[1] + (4.0 + th / 2) * B.sc]; }
+      else if (pr.at === 'hand') c = handPt(g);
+      else c = anchor(pr.at, g, f, B);
+      if (pr.dx || pr.dy) c = add(c, [pr.dx || 0, pr.dy || 0]);
+      return '<rect class="' + (pr.c || 'fpr') + '" x="' + n1(c[0] - L / 2) + '" y="' + n1(c[1] - th / 2) + '" width="' + L + '" height="' + th + '" rx="' + n1(th / 2) + '" transform="rotate(' + n1(ang) + ' ' + n1(c[0]) + ' ' + n1(c[1]) + ')"/>';
     }
     if (t === 'cable') {
       at = pr.to === 'hands' || !pr.to ? handPt(g) : pr.to;
       return '<path class="fcab" d="M' + P(pr.from) + 'L' + P(at) + '"/>';
     }
-    if (t === 'line') { var a = pr.a === 'hands' ? handPt(g) : pr.a, b = pr.b === 'hands' ? handPt(g) : pr.b; return '<path class="fcab" d="M' + P(a) + 'L' + P(b) + '"/>'; }
+    function refP(q) { return q === 'hands' ? handPt(g) : q === 'foot' ? g.footN.A : q === 'foot2' ? g.footF.A : q; }
+    if (t === 'line') { var a = refP(pr.a), b = refP(pr.b); return '<path class="fcab" d="M' + P(a) + 'L' + P(b) + '"/>'; }
     if (t === 'handle') { var h = handPt(g); return '<circle class="fhub" cx="' + n1(h[0]) + '" cy="' + n1(h[1]) + '" r="1.8"/>'; }
     return '';
   }
@@ -630,16 +652,16 @@
     spec._k = pk; spec._f = fk; spec._T = spec.keys[spec.keys.length - 1].t; return spec;
   }
   function ease(k) { return 0.5 - 0.5 * cos(PI * Math.max(0, Math.min(1, k))); }
-  function track(ks, t, get) {
+  function track(ks, t, lin) {
     var i; for (i = 1; i < ks.length; i++) if (t <= ks[i].t) break;
     if (i >= ks.length) i = ks.length - 1;
     var a = ks[i - 1], b = ks[i], k = b.t === a.t ? 1 : (t - a.t) / (b.t - a.t);
-    return [a, b, ease(k)];
+    return [a, b, lin ? Math.max(0, Math.min(1, k)) : ease(k)];
   }
   function poseAt(spec, time) {
     prepare(spec);
-    var T = spec._T, t = ((time % T) + T) % T, r = track(spec._k, t), p = blend(r[0].p, r[1].p, r[2]);
-    if (spec._f.length) { var q = track(spec._f, t); p.fx = lerp(q[0].v, q[1].v, q[2]); }
+    var T = spec._T, t = ((time % T) + T) % T, r = track(spec._k, t, spec.lin), p = blend(r[0].p, r[1].p, r[2]);
+    if (spec._f.length) { var q = track(spec._f, t, spec.lin); p.fx = lerp(q[0].v, q[1].v, q[2]); }
     return p;
   }
 

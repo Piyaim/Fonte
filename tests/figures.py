@@ -16,7 +16,7 @@ JS = """() => {
         if (/NaN|Infinity|undefined/.test(svg)) res.bad.push(slug + ' ' + g + ' t=' + t.toFixed(2));
         if (spec.view !== 'front' && spec.view !== 'back') {
           const p = FIG.poseAt(spec, t), geo = FIG.solveSide(p, FIG.BODY[g], spec.f || 1);
-          if (p.arm && p.arm.ik === 'bar') { const d = norm(geo.armN.end, p.bar); if (d > 1.5) res.reach.push(slug + ' ' + g + ' t=' + t.toFixed(2) + ' écart ' + d.toFixed(1)); }
+          if (p.arm && p.arm.ik === "bar") { const d = norm(geo.armN.end, geo.bar); if (d > 1.5) res.reach.push(slug + ' ' + g + ' t=' + t.toFixed(2) + ' écart ' + d.toFixed(1)); }
           if (p.leg && p.leg.ik && p.leg.ik[1] >= 86) { const d = norm(geo.legN.end, p.leg.ik); if (d > 1.0) res.floor.push(slug + ' ' + g + ' t=' + t.toFixed(2) + ' écart ' + d.toFixed(1)); }
         }
       }

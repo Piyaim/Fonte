@@ -18,7 +18,7 @@ Il y a deux façons de l'utiliser, avec la même interface :
 - Une jauge de difficulté ressentie (1 à 5) qui influence le conseil de charge de la séance suivante.
 - Un minuteur de repos dont l'affichage reste juste quand l'écran se verrouille.
 - Records (1RM estimé), courbes de progression, poids de corps, photos de progression, import et export.
-- Des animations de personnage (homme ou femme, au choix dans le menu ☰) montrent chaque mouvement, avec les muscles travaillés qui s'allument. Elles sont en cours de réalisation : une partie du catalogue en a déjà, le reste suit.
+- Des animations de personnage (homme ou femme, au choix dans le menu ☰) montrent chaque mouvement, avec les muscles travaillés qui s'allument. Les 50 exercices du catalogue de départ ont leur animation (musculation, gainage, cardio).
 - Cinq couleurs au choix, qui changent aussi l'icône de l'écran d'accueil dans l'appli Android (selon ton lanceur, ça peut prendre quelques secondes). L'interface est **en français uniquement** pour l'instant.
 
 ## ⚠️ À lire avant d'utiliser
