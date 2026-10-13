@@ -1,0 +1,6 @@
+var P=function(o){return Object.assign({skin:[24,50,66],cl:[210,60,48],sh2:[222,26,28],ac:[24,95,56],sn:[222,15,24],hairCol:[24,40,22],eyeCol:[22,50,30],muscle:.55},o)};
+function box(t,svgs,hs){return '<div style="background:#17222b;border-radius:18px;padding:14px;width:520px;color:#e8eef2;font:700 22px Trebuchet MS,sans-serif"><div style="margin-bottom:8px">'+t+'</div><div style="display:flex;align-items:flex-end;justify-content:center;gap:8px;height:430px;background:radial-gradient(ellipse at 50% 60%,#2a3a46,#17222b 70%);border-radius:12px">'+svgs.map(function(s){return '<div style="width:'+hs+'px">'+s+'</div>'}).join('')+'</div></div>';}
+var A1=AVA.render(P({sex:'m',hair:'quiff',uid:'am',pose:'hips',wrist:true})),A2=AVA.render(P({sex:'f',hair:'long',uid:'af',pose:'hips',wrist:true,skin:[22,45,72],cl:[330,62,54],hairCol:[18,55,20],muscle:.45}));
+var B1=AVB.render(P({sex:'m',hair:'spiky',uid:'bm',pose:'flex',band:true})),B2=AVB.render(P({sex:'f',hair:'twin',uid:'bf',pose:'flex',skin:[22,45,72],cl:[330,62,56],ac:[170,70,50],hairCol:[18,55,20],muscle:.45}));
+var C1=AVCs.render(P({sex:'m',hair:'flat',uid:'cm',band:true,muscle:.6})),C2=AVCs.render(P({sex:'f',hair:'ponytail',uid:'cf',skin:[22,45,72],cl:[330,70,58],ac:[170,80,48],hairCol:[18,60,22],muscle:.4}));
+return box('A · Héros',[A1,A2],234)+box('B · Mascotte',[B1,B2],250)+box('C · Sticker',[C1,C2],250);
