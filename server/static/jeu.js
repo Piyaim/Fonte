@@ -237,7 +237,7 @@
     + '.j-team{display:flex;gap:8px}.j-team .j-card{flex:1}'
     + '.j-q{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid var(--l);font-size:14px}.j-q:first-of-type{border-top:0}.j-q.ok{color:var(--a);font-weight:700}'
     + '.j-bar{height:6px;border-radius:3px;background:var(--l);overflow:hidden;margin:3px 0}.j-bar i{display:block;height:100%;background:var(--a)}'
-    + '.j-ov{position:fixed;inset:0;z-index:30;background:rgba(8,12,18,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;color:#fff;text-align:center}'
+    + '.j-ov{position:fixed;inset:0;z-index:30;background:rgba(8,12,18,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;color:#fff;text-align:center}'
     + '.j-ov .j-big{width:min(78vw,300px)}.j-ov h2{font-size:26px;margin:6px 0}.j-ov p{margin:4px 0;color:#ccd6df}.j-ov .go{max-width:320px}.j-ov .sm{background:transparent;color:#fff;border-color:#ffffff55;max-width:320px;width:100%;margin-top:8px}'
     + '.j-egg{width:120px;animation:j-shake .5s infinite}@keyframes j-shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-9deg)}40%{transform:rotate(8deg)}60%{transform:rotate(-6deg)}80%{transform:rotate(5deg)}}'
     + '.j-flash{position:fixed;inset:0;z-index:31;pointer-events:none;animation:j-fl .7s ease-out forwards}@keyframes j-fl{0%{opacity:.95}100%{opacity:0}}'
@@ -316,7 +316,7 @@
     IT.forEach(function (i) { if (!s.items[i[0]]) rows.push(['item', i[0], i[1], i[2], 'Garde-robe']); });
     if (!rows.length) return h + '<p class="empty">Tu as tout. Bravo !</p>';
     rows.sort(function (a, b) { return PRICE[a[3]] - PRICE[b[3]]; });
-    return h + '<div class="card">' + rows.map(function (r) { var p = PRICE[r[3]], can = s.shards >= p; return '<div class="j-q"><span>' + E(r[2]) + ' ' + tag(r[3]) + '<br><small class="m">' + r[4] + '</small></span><button class="sm" ' + (can ? '' : 'disabled style="opacity:.5"') + ' onclick="JEU.buy(\'' + r[0] + '\',\'' + r[1] + '\')">' + p + ' éclats</button></div>'; }).join('') + '</div>';
+    return h + '<div class="card">' + rows.map(function (r) { var p = PRICE[r[3]], can = s.shards >= p; return '<div class="j-q" style="cursor:pointer;align-items:center" onclick="JEU.preview(\'' + r[0] + '\',\'' + r[1] + '\')"><span>' + E(r[2]) + ' ' + tag(r[3]) + '<br><small class="m">' + r[4] + ' · toucher pour voir</small></span><button class="sm" ' + (can ? '' : 'disabled style="opacity:.5"') + ' onclick="event.stopPropagation();JEU.buy(\'' + r[0] + '\',\'' + r[1] + '\')">' + p + ' éclats</button></div>'; }).join('') + '</div>';
   }
   function vRegles() {
     var s = st(), pct = function (k) { return Math.round(RATES[k] * 100) + ' %'; };
@@ -384,6 +384,25 @@
     var tt = document.getElementById('j-tt'); if (tt) tt.onclick = function () { o.remove(); var r = pull(1); if (r) playPull(r); };
     document.getElementById('j-la').onclick = function () { closeOv(o); };
   }
+  function preview(kind, id) {
+    var s = st(), o = kind === 'crea' ? CRE[id] : ITM[id]; if (!o) return;
+    var owned = kind === 'crea' ? !!s.owned[id] : !!s.items[id], can = s.shards >= PRICE[o.rar], body;
+    if (kind === 'crea') {
+      body = '<div style="display:flex;gap:6px;width:100%;max-width:420px">' + [1, 2, 3].map(function (n) { return '<div style="flex:1;text-align:center;font-size:12px;color:#ccd6df">' + art(id, n) + 'Stade ' + n + '</div>'; }).join('') + '</div>'
+        + '<p>Zone : <b>' + ZN[o.zone] + '</b></p><p class="m" style="color:#aab">Il évolue avec tes séries sur cette zone : stade 2 au niveau 6, stade 3 au niveau 14.</p>';
+    } else {
+      var vars = o.slot === 'tenue' ? '--f3:' + o.v[0] + ';--f4:' + o.v[1] : o.slot === 'cheveux' ? '--f5:' + o.v[0] : '--fxc:' + o.v[0];
+      var fd = window.FIGDATA || {}, ex = Object.values(exs()), e = ex.find(function (x) { return x.slug === 'curl-halteres' && fd[x.slug]; }) || ex.find(function (x) { return x.slug && fd[x.slug]; }), fig = '';
+      if (e) { try { fig = g('figSvg')(e, fd[e.slug], true); } catch (er) {} }
+      body = '<div style="width:100%;max-width:340px;background:var(--bg);border-radius:12px;padding:8px;' + vars + '">' + fig + '</div><p style="margin-top:8px">' + o.v.map(function (col) { return '<span class="j-sw" style="width:30px;height:30px;background:' + col + '"></span>'; }).join('')
+        + '</p><p class="m" style="color:#aab">Aperçu sur le personnage, avec ta tenue actuelle pour le reste.</p>';
+    }
+    var ov2 = ov('<h2>' + E(o.name) + '</h2><p>' + tag(o.rar) + '</p>' + body
+      + (owned ? '<p><b style="color:#ffd45e">Déjà débloqué</b></p>' : '<button class="go" id="j-by" ' + (can ? '' : 'disabled style="opacity:.5"') + '>Débloquer pour ' + PRICE[o.rar] + ' éclats' + (can ? '' : ' (tu en as ' + s.shards + ')') + '</button>')
+      + '<button class="sm" id="j-pc">Fermer</button>');
+    document.getElementById('j-pc').onclick = function () { closeOv(ov2); };
+    var by = document.getElementById('j-by'); if (by && can) by.onclick = function () { buy(kind, id); toast2('Débloqué'); closeOv(ov2); };
+  }
   function showCrea(cid) {
     var s = st(), c = CRE[cid], lv = levelOf(cid), stg = stageOf(lv), zs = zoneSetsAll(), sets = Math.round(zs[c.zone] || 0);
     var next = stg === 1 ? 6 : stg === 2 ? 14 : null, need = next ? Math.pow(next - 1, 2) : null, prev = stg === 1 ? 0 : Math.pow((stg === 2 ? 6 : 14) - 1, 2);
@@ -405,7 +424,7 @@
     pull: function (n) { var r = pull(n); if (!r) return toast2('Pas assez de jetons'); playPull(r); },
     buy: function (kind, id) { if (buy(kind, id)) { toast2('Débloqué'); rer(); } },
     equip: function (sl, id) { equip(sl, id); rer(); },
-    show: showCrea,
+    show: showCrea, preview: preview,
     opt: function (k) { var s = st(); s.opts[k] = !s.opts[k]; save(); if (k === 'hide' && s.opts.hide) { try { g('go')('accueil'); } catch (e) {} } else rer(); try { g('nav')(); } catch (e) {} },
     exportState: function () { var s = st(); return s.init ? JSON.parse(JSON.stringify(s)) : null; },
     importState: function (o) { if (o && o.v === 1) { S = Object.assign(blank(), o); save(); applyWardrobe(); } },

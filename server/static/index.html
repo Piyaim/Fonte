@@ -61,6 +61,7 @@ nav button.on{background:var(--a);border-color:var(--a);color:var(--on)}
 .top{display:flex;gap:12px;align-items:flex-start}
 .top svg{width:120px;flex:none;background:var(--bg);border-radius:8px}
 .top b{color:var(--a)}
+.topf{flex-direction:column;gap:6px}.topf>div{width:100%}
 .row{display:grid;grid-template-columns:28px 1fr 1fr;gap:8px;align-items:center;margin-top:6px}
 .row span{color:var(--m);font-size:13px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
@@ -263,6 +264,7 @@ body:not([data-view="seance"]) .bar{display:none}
 .fsh0{fill:none;stroke:var(--l);stroke-width:1}.fsd{fill:var(--f7);opacity:.09}
 .fln{fill:none;stroke:var(--f2);stroke-width:.5;opacity:.7;stroke-linecap:round}.flh{fill:var(--f2)}
 svg.fig{width:100%;display:block}
+.top:not(.topf) svg.fig{width:120px}
 
 /* ---- couleur de l'appli (patch F) ---- */
 :root{--g1:#ff8f2e;--g2:#ea5a0c;--g3:#b63a08;--gs:232,89,12}
@@ -1024,7 +1026,7 @@ function statsHeader() {
 function exCard(e) {
   const rows = rowsFor(e); F.vals[e.id] = rows;
   const [l1, l2] = inputLabels(e);
-  let h = `<div class="card"><div class="top">${diagram(e, true)}<div style="flex:1;min-width:0"><h2>${esc(e.name)}${e.green ? ' 🟢' : ''}</h2><b>${esc(target(e))}</b>`;
+  let h = `<div class="card"><div class="top${window.FIGDATA && e.slug && window.FIGDATA[e.slug] ? ' topf' : ''}">${diagram(e, true)}<div style="flex:1;min-width:0"><h2>${esc(e.name)}</h2><b>${esc(target(e))}</b>`;
   if (e.rest) h += `<p class="m">Repos entre séries : ${e.rest} s</p>`;
   if (e.tip) h += `<p class="m">${esc(e.tip)}</p>`;
   h += `</div></div>${advice(e, F.sid)}`;
@@ -1044,7 +1046,7 @@ function exCard(e) {
 function exOptions(exclude = []) {
   return groups().map(g => {
     const list = Object.values(EX).filter(e => e.grp === g && !e.archived && !exclude.includes(e.id)).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
-    return list.length ? `<optgroup label="${esc(g)}">${list.map(e => `<option value="${e.id}">${esc(e.name)}${e.green ? ' 🟢' : ''}</option>`).join('')}</optgroup>` : '';
+    return list.length ? `<optgroup label="${esc(g)}">${list.map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join('')}</optgroup>` : '';
   }).join('');
 }
 
@@ -1290,7 +1292,6 @@ function exForm() {
     <label style="margin-top:8px">Consigne technique<textarea id="e-tip" maxlength="1000">${esc(d.tip)}</textarea></label>
     <label class="ck"><input id="e-side" type="checkbox" ${d.per_side ? 'checked' : ''}>Par côté (unilatéral)</label>
     <label class="ck" id="e-assl"><input id="e-ass" type="checkbox" ${d.assisted ? 'checked' : ''}>Machine à assistance (progresser = baisser la charge)</label>
-    <label class="ck"><input id="e-green" type="checkbox" ${d.green ? 'checked' : ''}>Repère 🟢</label>
     <button class="go" onclick="saveEx()">${isNew ? 'Créer l\'exercice' : 'Enregistrer'}</button>
     <button class="sm w" onclick="editEx=null;R()">Retour au catalogue</button>`;
   if (!isNew) {
@@ -1311,7 +1312,7 @@ function kindHint() {
 function saveEx() {
   const d = {name: $('e-name').value, grp: $('e-grp').value, kind: $('e-kind').value, sets: $('e-sets').value,
     target_min: $('e-min').value, target_max: $('e-max').value, rest: $('e-rest').value, focus: $('e-focus').value,
-    tip: $('e-tip').value, per_side: $('e-side').checked, assisted: $('e-ass').checked, green: $('e-green').checked};
+    tip: $('e-tip').value, per_side: $('e-side').checked, assisted: $('e-ass').checked, green: !!(editEx && editEx.green)};
   const id = editEx.id;
   act(async () => { await (id ? api('PUT', `/api/exercises/${id}`, d) : api('POST', '/api/exercises', d)); editEx = null; }, id ? 'Exercice modifié' : 'Exercice créé');
 }
