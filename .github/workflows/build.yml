@@ -1,9 +1,10 @@
-# Construit l'APK Android. Se lance quand tu pousses un tag de version (ex. v0.1.0) ou à la main (onglet Actions).
+# Construit l'APK Android quand une version est publiée (Releases > Draft a new release), ou à la main (onglet Actions).
+# Il ajoute l'APK à la version et y met le titre et la description du fichier notes-de-version/<tag>.md.
 name: Build APK
 
 on:
-  push:
-    tags: ['v*']
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -60,15 +61,16 @@ jobs:
           name: fonte-apk
           path: fonte-*.apk
 
-      - name: Publier la version
+      - name: Ajouter l'APK et la description à la version
         if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
         working-directory: .
         run: |
+          gh release upload "$GITHUB_REF_NAME" "fonte-${VERSION}.apk" --clobber
           NOTES="notes-de-version/${GITHUB_REF_NAME}.md"
           if [ -f "$NOTES" ]; then
-            gh release create "$GITHUB_REF_NAME" "fonte-${VERSION}.apk" --title "Fonte ${VERSION}" --notes-file "$NOTES"
+            gh release edit "$GITHUB_REF_NAME" --title "Fonte ${VERSION}" --notes-file "$NOTES"
           else
-            gh release create "$GITHUB_REF_NAME" "fonte-${VERSION}.apk" --title "Fonte ${VERSION}" --generate-notes
+            echo "::warning::Pas de fichier $NOTES : la description de la version reste celle saisie à la main."
           fi
