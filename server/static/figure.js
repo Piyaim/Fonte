@@ -78,6 +78,7 @@
       neckR: 2.3, hair: 'pony', head: 0.96
     }
   };
+  var HAND_P = [[0, 1.8, 1.7], [0.45, 2.3, 2.0], [0.85, 1.9, 1.7], [1, 1.2, 1.2]];
   var FOOT = [[-2.9, -1.6], [-3.7, 1.4], [-3.3, 4.0], [7.2, 4.0], [9.4, 3.2], [8.8, 1.8], [5, 0.7], [2.4, -1.0], [0.4, -1.8]];
   var HEAD = [[-5.0, 1.3], [-4.6, 4.6], [-1.6, 6.5], [2.4, 5.7], [4.2, 3.7], [4.7, 2.2], [5.8, 0.4], [4.9, -0.7], [5.0, -1.9], [4.1, -4.3], [1.6, -5.3], [-2.6, -4.8], [-4.5, -2.0]];
   var HAIR_M = [[-5.4, 0.6], [-5.1, 4.8], [-1.8, 7.0], [2.8, 6.2], [4.6, 4.0], [3.2, 3.6], [0.4, 3.9], [-2.2, 2.6], [-3.1, -0.4]];
@@ -118,6 +119,67 @@
     var d = unit(sub(P1, P0)), n = frontNormal(d, f), L = len(sub(P1, P0)), N = 8, fr = [], bk = [], i, t, c, pr;
     for (i = 0; i <= N; i++) { t = i / N; c = add(P0, mul(d, L * t)); pr = prof(sub2, t); fr.push(add(c, mul(n, pr[0] + (infl || 0)))); bk.push(sub(c, mul(n, pr[1] + (infl || 0)))); }
     return smoothCut(fr, bk);
+  }
+  /* courbe B-spline quadratique : lisse, sans dépassement, les coins s'arrondissent */
+  function smoothQ(pts, closed) {
+    var n = pts.length, d, i, a, b, m;
+    function mid(u, v) { return [(u[0] + v[0]) / 2, (u[1] + v[1]) / 2]; }
+    if (closed) {
+      d = 'M' + P(mid(pts[n - 1], pts[0]));
+      for (i = 0; i < n; i++) { a = pts[i]; b = pts[(i + 1) % n]; m = mid(a, b); d += 'Q' + P(a) + ' ' + P(m); }
+      return d + 'Z';
+    }
+    d = 'M' + P(pts[0]);
+    for (i = 1; i < n - 1; i++) { a = pts[i]; m = mid(a, pts[i + 1]); d += 'Q' + P(a) + ' ' + P(i === n - 2 ? pts[n - 1] : m); }
+    return d;
+  }
+  /* membre d'un seul tenant : l'axe passe par les articulations avec des coins arrondis, le profil varie en continu
+   * -> plus de jonctions ni de ronds aux coudes et aux genoux. pts = [racine, milieu, bout(, pointe)], profs = un profil par segment */
+  function limbTube(pts, profs, f, o) {
+    o = o || {};
+    var C = [], S = [0], i, k, seg = [], rd = o.round == null ? 0.42 : o.round;
+    for (i = 0; i < pts.length - 1; i++) seg.push(len(sub(pts[i + 1], pts[i])));
+    var cuts = [];
+    for (i = 1; i < pts.length - 1; i++) cuts.push(Math.min(seg[i - 1], seg[i]) * rd);
+    function pushC(q) { C.push(q); }
+    var cur = pts[0], bnd = [];
+    for (i = 1; i < pts.length - 1; i++) {
+      var u1 = unit(sub(pts[i], pts[i - 1])), u2 = unit(sub(pts[i + 1], pts[i])), a = sub(pts[i], mul(u1, cuts[i - 1])), b = add(pts[i], mul(u2, cuts[i - 1]));
+      for (k = 0; k < 5; k++) pushC(lerp2(cur, a, k / 5));
+      var nq = 9, j, t, q;
+      for (j = 0; j <= nq; j++) { t = j / nq; q = [(1 - t) * (1 - t) * a[0] + 2 * t * (1 - t) * pts[i][0] + t * t * b[0], (1 - t) * (1 - t) * a[1] + 2 * t * (1 - t) * pts[i][1] + t * t * b[1]]; if (j === 4) bnd.push(C.length); pushC(q); }
+      cur = b;
+    }
+    for (k = 0; k <= 6; k++) pushC(lerp2(cur, pts[pts.length - 1], k / 6));
+    for (i = 1; i < C.length; i++) S.push(S[i - 1] + len(sub(C[i], C[i - 1])));
+    var tot = S[S.length - 1], Lsum = seg.reduce(function (x, y) { return x + y; }, 0), bs = [0], acc = 0;
+    // frontières de segment (en abscisse curviligne) : au sommet de chaque coin
+    var bi = 0; bs = [0]; bnd.forEach(function (ix) { bs.push(S[Math.min(ix, S.length - 1)]); }); bs.push(tot);
+    var fr = [], bk = [], rf = [], rb = [], si = 0, s0, s1, pr, t2;
+    for (i = 0; i < C.length; i++) {
+      while (si < profs.length - 1 && S[i] > bs[si + 1]) si++;
+      s0 = bs[si]; s1 = bs[si + 1]; t2 = s1 > s0 ? Math.max(0, Math.min(1, (S[i] - s0) / (s1 - s0))) : 0;
+      pr = prof(profs[si], t2); rf.push(pr[0]); rb.push(pr[1]);
+    }
+    for (k = 0; k < 3; k++) [rf, rb].forEach(function (r) { var c = r.slice(); for (i = 1; i < r.length - 1; i++) r[i] = (c[i - 1] + 2 * c[i] + c[i + 1]) / 4; });
+    var nrm = [], tg = [];
+    for (i = 0; i < C.length; i++) { var a2 = C[Math.max(0, i - 1)], b2 = C[Math.min(C.length - 1, i + 1)], d = unit(sub(b2, a2)); tg.push(d); nrm.push(frontNormal(d, f)); }
+    var step = Math.max(1, Math.round(C.length / 22)), idx = [];
+    for (i = 0; i < C.length; i += step) idx.push(i); if (idx[idx.length - 1] !== C.length - 1) idx.push(C.length - 1);
+    idx.forEach(function (ii) { fr.push(add(C[ii], mul(nrm[ii], rf[ii]))); bk.push(sub(C[ii], mul(nrm[ii], rb[ii]))); });
+    var last = C.length - 1, ra = (rf[last] + rb[last]) / 2, out = fr.slice();
+    var ce = o.capE === false ? null : o.cap || 0.95;
+    if (ce) {
+      out.push(add(add(C[last], mul(nrm[last], rf[last] * 0.78)), mul(tg[last], ra * ce * 0.66)));
+      out.push(add(C[last], mul(tg[last], ra * ce)));
+      out.push(add(sub(C[last], mul(nrm[last], rb[last] * 0.78)), mul(tg[last], ra * ce * 0.66)));
+    }
+    out = out.concat(bk.reverse());
+    if (o.capS) {
+      var r0 = (rf[0] + rb[0]) / 2;
+      out.push(sub(C[0], mul(tg[0], r0 * 0.9)));
+    }
+    return smoothQ(out, true);
   }
   function circle(c, r) { return 'M' + n1(c[0] - r) + ',' + n1(c[1]) + 'a' + n1(r) + ',' + n1(r) + ' 0 1 0 ' + n1(2 * r) + ',0a' + n1(r) + ',' + n1(r) + ' 0 1 0 ' + n1(-2 * r) + ',0Z'; }
 
@@ -227,40 +289,46 @@
       }
       return smooth(outer.concat(inner.reverse()), true);
     }
+    var armNd0;
+    function legTube(L) { return limbTube([L.root, L.mid, L.end], [mapP(B.thigh_p, sc), mapP(B.shank_p, sc)], f, { capS: true, capE: false }); }
+    function armTube(A) { var d = unit(sub(A.end, A.mid)); return limbTube([A.root, A.mid, A.end, add(A.end, mul(d, 4.7 * sc))], [mapP(B.upper_p, sc), mapP(B.fore_p, sc), mapP(HAND_P, sc)], f, { capS: true }); }
+    armNd0 = armTube(g.armN);
     // ------ ordre de dessin
     var floorY = FLOOR;
     // ombre et décor
     (spec.scene || []).forEach(function (s) { out.push(sceneEl(s, p, g)); });
     // bras du fond
-    path(tubeSeg(g.armF.root, g.armF.mid, mapP(B.upper_p, sc), f, { capS: true, capE: false }), 'fbk');
-    path(tubeSeg(g.armF.mid, g.armF.end, mapP(B.fore_p, sc), f, { capE: false }), 'fbk');
-    path(circle(g.armF.mid, prof(mapP(B.upper_p, sc), 1)[0]), 'fbk');
-    path(handPath(g.armF, f, sc), 'fbk');
+    path(armTube(g.armF), 'fbk');
     // jambe du fond
-    path(tubeSeg(g.legF.root, g.legF.mid, mapP(B.thigh_p, sc), f, { capS: true, capE: false }), 'fbk');
-    path(tubeSeg(g.legF.mid, g.legF.end, mapP(B.shank_p, sc), f, { capE: false }), 'fbk');
-    path(circle(g.legF.mid, Math.max(prof(mapP(B.thigh_p, sc), 1)[0], prof(mapP(B.shank_p, sc), 0)[0])), 'fbk');
+    path(legTube(g.legF), 'fbk');
     path(footPath(g.footF, f, sc), 'fsh2');
     // tronc, jambe proche, puis vêtements découpés par la silhouette (clip) : coupes nettes et alignées
-    var uid = 'c' + (++CLIP_N), torsoD = torsoPts(-4.5, B.torso + 4.6, 0), thighN = tubeSeg(g.legN.root, g.legN.mid, mapP(B.thigh_p, sc), f, { capS: true, capE: false }),
-      thighF = tubeSeg(g.legF.root, g.legF.mid, mapP(B.thigh_p, sc), f, { capS: true, capE: false });
+    var uid = 'c' + (++CLIP_N), torsoD = torsoPts(-4.5, B.torso + 4.6, 0), legNd = legTube(g.legN),
+      legFd = legTube(g.legF);
     function bandTorso(s0, s1, W) {
       var fr = [], bk = [], j, n = 4, s, c, d, nn;
       for (j = 0; j <= n; j++) { s = s0 + (s1 - s0) * j / n; c = g.spinePos(s); d = mul(g.tang(Math.max(0, s)), -1); nn = frontNormal(d, f); fr.push(add(c, mul(nn, W))); bk.push(sub(c, mul(nn, W))); }
       return 'M' + fr.concat(bk.reverse()).map(P).join('L') + 'Z';
     }
+    function hemTorso(s0, s1, W, b0, b1) {   // bande du tronc à bords courbes (ourlets)
+      var fr = [], bk = [], j, n = 5, s, c, nn, tn;
+      for (j = 0; j <= n; j++) { s = s0 + (s1 - s0) * j / n; c = g.spinePos(s); tn = g.tang(Math.max(0, s)); nn = frontNormal(mul(tn, -1), f); fr.push(add(c, mul(nn, W))); bk.push(sub(c, mul(nn, W))); }
+      var c0 = g.spinePos(s0), c1 = g.spinePos(s1), t0 = g.tang(Math.max(0, s0)), t1 = g.tang(s1);
+      return 'M' + fr.map(P).join('L') + 'L' + P(fr[n]) + 'Q' + P(add(c1, mul(t1, b1))) + ' ' + P(bk[n]) + 'L' + bk.slice().reverse().map(P).join('L') + 'Q' + P(sub(c0, mul(t0, b0))) + ' ' + P(fr[0]) + 'Z';
+    }
+    function hemLimb(A, Bp, t0, t1, W, b1) {
+      var d = unit(sub(Bp, A)), nn = frontNormal(d, f), L = len(sub(Bp, A)), p0 = add(A, mul(d, L * t0)), p1 = add(A, mul(d, L * t1));
+      return 'M' + P(add(p0, mul(nn, W))) + 'L' + P(add(p1, mul(nn, W))) + 'Q' + P(add(p1, mul(d, b1))) + ' ' + P(sub(p1, mul(nn, W))) + 'L' + P(sub(p0, mul(nn, W))) + 'Z';
+    }
     function bandLimb(A, Bp, t0, t1, W) {
       var d = unit(sub(Bp, A)), nn = frontNormal(d, f), L = len(sub(Bp, A)), p0 = add(A, mul(d, L * t0)), p1 = add(A, mul(d, L * t1));
       return 'M' + [add(p0, mul(nn, W)), add(p1, mul(nn, W)), sub(p1, mul(nn, W)), sub(p0, mul(nn, W))].map(P).join('L') + 'Z';
     }
-    out.push('<clipPath id="' + uid + 'a"><path d="' + torsoD + '"/><path d="' + thighN + '"/></clipPath><clipPath id="' + uid + 'b"><path d="' + torsoD + '"/></clipPath><clipPath id="' + uid + 'c"><path d="' + thighF + '"/></clipPath>');
+    out.push('<clipPath id="' + uid + 'a"><path d="' + torsoD + '"/><path d="' + legNd + '"/></clipPath><clipPath id="' + uid + 'b"><path d="' + torsoD + '"/></clipPath>');
     path(torsoD, 'fb');
-    path(thighN, 'fb');
-    path(tubeSeg(g.legN.mid, g.legN.end, mapP(B.shank_p, sc), f, { capE: false }), 'fb');
-    path(circle(g.legN.mid, Math.max(prof(mapP(B.thigh_p, sc), 1)[0], prof(mapP(B.shank_p, sc), 0)[0]) * 1.0), 'fb');
-    out.push('<g clip-path="url(#' + uid + 'a)"><path class="fcl" d="' + bandTorso(-6, 2.8, 9) + '"/><path class="fcl" d="' + bandLimb(g.legN.root, g.legN.mid, -0.1, 0.36, 9) + '"/></g>');
-    if (spec.top !== false) out.push('<g clip-path="url(#' + uid + 'b)"><path class="fcl2" d="' + bandTorso(8.5, B.torso + 0.4, 9) + '"/></g>');
-    path(footPath(g.footN, f, sc), 'fsh');
+    path(legNd, 'fb');
+    out.push('<g clip-path="url(#' + uid + 'a)"><path class="fcl" d="' + hemTorso(-6, 3.4, 9, 0, -0.8) + '"/><path class="fcl" d="' + hemLimb(g.legN.root, g.legN.mid, -0.1, 0.4, 9, 1.4) + '"/></g>');
+    if (spec.top !== false) out.push('<g clip-path="url(#' + uid + 'b)"><path class="fcl2" d="' + hemTorso(2.8, B.torso + 0.5, 9, 1.6, -1.6) + '"/></g>');
     // cou + tête
     path(tubeSeg(g.NB, add(g.NB, mul(g.nd, (B.neck + 1.2) * sc)), [[0, B.neckR * sc, B.neckR * sc], [1, B.neckR * sc * 0.92, B.neckR * sc * 0.92]], f), 'fb');
     var hs = B.head;
@@ -287,16 +355,17 @@
         });
       });
     }
-    if (act.length) patches(act);
+    var soft = '<filter id="' + uid + 'f" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="0.55"/></filter>';
+    out.push('<clipPath id="' + uid + 'm"><path d="' + torsoD + '"/><path d="' + legNd + '"/></clipPath><clipPath id="' + uid + 'n"><path d="' + armNd0 + '"/><path d="' + torsoD + '"/></clipPath>' + soft);
+    if (act.length) { out.push('<g clip-path="url(#' + uid + 'm)"><g filter="url(#' + uid + 'f)">'); patches(act.filter(function (k) { return k !== 'biceps' && k !== 'triceps' && k !== 'avantbras' && k !== 'epaules'; })); out.push('</g></g>'); }
     // bras proche
-    path(tubeSeg(g.armN.root, g.armN.mid, mapP(B.upper_p, sc), f, { capS: true, capE: false }), 'fb');
-    path(tubeSeg(g.armN.mid, g.armN.end, mapP(B.fore_p, sc), f, { capE: false }), 'fb');
-    path(circle(g.armN.mid, prof(mapP(B.upper_p, sc), 1)[0] * 1.0), 'fb');
-    path(handPath(g.armN, f, sc), 'fb');
+    path(armNd0, 'fb');
     if (act.length) {   // muscles des bras par-dessus la peau du bras
       var armOnly = act.filter(function (k) { return k === 'biceps' || k === 'triceps' || k === 'avantbras' || k === 'epaules'; });
-      patches(armOnly);
+      out.push('<g clip-path="url(#' + uid + 'n)"><g filter="url(#' + uid + 'f)">'); patches(armOnly); out.push('</g></g>');
     }
+    out.push('<defs><linearGradient id="' + uid + 'g" gradientUnits="userSpaceOnUse" x1="0" y1="8" x2="0" y2="96"><stop offset="0" style="stop-color:var(--fbk);stop-opacity:0"/><stop offset="1" style="stop-color:var(--fbk);stop-opacity:.42"/></linearGradient></defs><clipPath id="' + uid + 's"><path d="' + torsoD + '"/><path d="' + legNd + '"/><path d="' + armNd0 + '"/></clipPath><rect x="0" y="0" width="160" height="100" fill="url(#' + uid + 'g)" clip-path="url(#' + uid + 's)" pointer-events="none"/>');
+    path(footPath(g.footN, f, sc), 'fsh');
     // accessoires devant
     (spec.props || []).forEach(function (pr) { out.push(propEl(pr, p, g, f, B)); });
     return out.join('');
@@ -447,12 +516,12 @@
     var g = solveFront(p, B, 1), tw = B.tw;
     function path(d, cls, extra) { out.push('<path class="' + cls + '" d="' + d + '"' + (extra || '') + '/>'); }
     (spec && spec.scene || []).forEach(function (s) { out.push(sceneEl(s, p, { H: g.H })); });
+    function legTubeF(L, sd) { return limbTube([L.root, L.mid, L.end], [mapP(B.thigh_p, sc), mapP(B.shank_p, sc)], sd, { capS: true, capE: false, round: 0.3 }); }
+    function armTubeF(A, sd) { var d = unit(sub(A.end, A.mid)); return limbTube([A.root, A.mid, A.end, add(A.end, mul(d, 4.4 * sc))], [mapP(B.upper_p, sc), mapP(B.fore_p, sc), mapP(HAND_P, sc)], sd, { capS: true, round: 0.3 }); }
     // jambes
     [[g.legL, -1], [g.legR, 1]].forEach(function (it) {
       var L = it[0], sd = it[1];
-      path(tubeSeg(L.root, L.mid, mapP(B.thigh_p, sc), sd, { capS: true, capE: false }), 'fb');
-      path(tubeSeg(L.mid, L.end, mapP(B.shank_p, sc), sd, { capE: false }), 'fb');
-      path(circle(L.mid, Math.max(prof(mapP(B.thigh_p, sc), 1)[0], prof(mapP(B.shank_p, sc), 0)[0])), 'fb');
+      path(legTubeF(L, sd), 'fb');
       path(shoeF(L.end, sd, sc, opt.footRot), 'fsh');
     });
     // tronc
@@ -471,11 +540,15 @@
     path(torsoD, 'fb');
     var uid = 'k' + (++CLIP_N);
     function bandF(s0, s1, W) { return 'M' + [add(g.sp(s0), mul(g.rt, W)), add(g.sp(s1), mul(g.rt, W)), sub(g.sp(s1), mul(g.rt, W)), sub(g.sp(s0), mul(g.rt, W))].map(P).join('L') + 'Z'; }
+    function hemF(s0, s1, W, b0, b1) { var a = add(g.sp(s0), mul(g.rt, W)), b = add(g.sp(s1), mul(g.rt, W)), c = sub(g.sp(s1), mul(g.rt, W)), d = sub(g.sp(s0), mul(g.rt, W));
+      return 'M' + P(a) + 'L' + P(b) + 'Q' + P(add(g.sp(s1), mul(g.up, b1))) + ' ' + P(c) + 'L' + P(d) + 'Q' + P(sub(g.sp(s0), mul(g.up, b0))) + ' ' + P(a) + 'Z'; }
+    function hemL(A, Bp, t0, t1, W, b1) { var d = unit(sub(Bp, A)), nn = [d[1], -d[0]], L = len(sub(Bp, A)), p0 = add(A, mul(d, L * t0)), p1 = add(A, mul(d, L * t1));
+      return 'M' + P(add(p0, mul(nn, W))) + 'L' + P(add(p1, mul(nn, W))) + 'Q' + P(add(p1, mul(d, b1))) + ' ' + P(sub(p1, mul(nn, W))) + 'L' + P(sub(p0, mul(nn, W))) + 'Z'; }
     function bandL(A, Bp, t0, t1, W) { var d = unit(sub(Bp, A)), nn = [d[1], -d[0]], L = len(sub(Bp, A)), p0 = add(A, mul(d, L * t0)), p1 = add(A, mul(d, L * t1)); return 'M' + [add(p0, mul(nn, W)), add(p1, mul(nn, W)), sub(p1, mul(nn, W)), sub(p0, mul(nn, W))].map(P).join('L') + 'Z'; }
-    var thR = tubeSeg(g.legR.root, g.legR.mid, mapP(B.thigh_p, sc), 1, { capS: true, capE: false }), thL = tubeSeg(g.legL.root, g.legL.mid, mapP(B.thigh_p, sc), -1, { capS: true, capE: false });
+    var thR = legTubeF(g.legR, 1), thL = legTubeF(g.legL, -1);
     out.push('<clipPath id="' + uid + 'a"><path d="' + torsoD + '"/><path d="' + thR + '"/><path d="' + thL + '"/></clipPath><clipPath id="' + uid + 'b"><path d="' + torsoD + '"/></clipPath>');
-    out.push('<g clip-path="url(#' + uid + 'a)"><path class="fcl" d="' + bandF(-7, 2.9, 14) + '"/><path class="fcl" d="' + bandL(g.legR.root, g.legR.mid, -0.1, 0.36, 9) + '"/><path class="fcl" d="' + bandL(g.legL.root, g.legL.mid, -0.1, 0.36, 9) + '"/></g>');
-    if (!spec || spec.top !== false) out.push('<g clip-path="url(#' + uid + 'b)"><path class="fcl2" d="' + bandF(9, 24.4, 14) + '"/></g>');
+    out.push('<g clip-path="url(#' + uid + 'a)"><path class="fcl" d="' + hemF(-7, 3.4, 14, 0, -0.8) + '"/><path class="fcl" d="' + hemL(g.legR.root, g.legR.mid, -0.1, 0.4, 9, 1.4) + '"/><path class="fcl" d="' + hemL(g.legL.root, g.legL.mid, -0.1, 0.4, 9, 1.4) + '"/></g>');
+    if (!spec || spec.top !== false) out.push('<g clip-path="url(#' + uid + 'b)"><path class="fcl2" d="' + hemF(2.8, 24.4, 14, 1.6, -1.2) + '"/></g>');
     // détails anatomiques légers
     out.push(frontDetails(g, B, view));
     // cou
@@ -489,19 +562,16 @@
     // bras
     [[g.armL, -1], [g.armR, 1]].forEach(function (it) {
       var A = it[0], sd = it[1];
-      path(tubeSeg(A.root, A.mid, mapP(B.upper_p, sc), sd, { capS: true, capE: false }), 'fb');
-      path(tubeSeg(A.mid, A.end, mapP(B.fore_p, sc), sd, { capE: false }), 'fb');
-      path(circle(A.mid, prof(mapP(B.upper_p, sc), 1)[0]), 'fb');
-      path(circle(A.root, 3.6 * sc), 'fb');
-      var dd = unit(sub(A.end, A.mid)), hand = add(A.end, mul(dd, 4.3 * sc));
-      path(smooth([add(A.end, mul([dd[1], -dd[0]], 1.9 * sc)), add(lerp2(A.end, hand, 0.6), mul([dd[1], -dd[0]], 2.2 * sc)), add(hand, mul(dd, 0.6)), sub(lerp2(A.end, hand, 0.6), mul([dd[1], -dd[0]], 2.2 * sc)), sub(A.end, mul([dd[1], -dd[0]], 1.7 * sc))], true), 'fb');
+      path(armTubeF(A, sd), 'fb');
     });
     // muscles
     var pat = frontPatches(g, B, view);
     if (opt.patches) { out.push(opt.patches(pat)); }
     else {
       var fx = p.fx || 0, alpha = (0.04 + 0.96 * Math.pow(Math.max(0, Math.min(1, fx)), 1.4)).toFixed(2);
+      out.push('<filter id="' + uid + 'f" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="0.55"/></filter><g filter="url(#' + uid + 'f)">');
       ((spec && spec.muscles) || []).forEach(function (k) { (pat[k] || []).forEach(function (d) { out.push('<path class="fm" d="' + d + '" style="opacity:' + alpha + '"/>'); }); });
+      out.push('</g>');
     }
     (spec && spec.props || []).forEach(function (pr) { out.push(propFront(pr, p, g, B)); });
     return out.join('');
@@ -606,5 +676,5 @@
   var STYLE_ID = 'fig-style';
   var VB_SIDE = '0 0 160 100';
 
-  window.FIG = { solveSide: solveSide, zoneBody: zoneBody, live: live, scan: scan, RAD: RAD, FLOOR: FLOOR, smooth: smooth, tubeSeg: tubeSeg, limbPatch: limbPatch, circle: circle, prof: prof, mapP: mapP, BODY: BODY, poseAt: poseAt, prepare: prepare, sideSvg: sideSvg, drawFront: drawFront, frontPatches: frontPatches, solveFront: solveFront, FB: FB, VB_SIDE: VB_SIDE, add: add, sub: sub, mul: mul, unit: unit, lerp2: lerp2, frontNormal: frontNormal, ik2: ik2, dirFK: dirFK, P: P, n1: n1, HEAD: HEAD, HAIR_M: HAIR_M, HAIR_F: HAIR_F, deepMerge: deepMerge, blend: blend };
+  window.FIG = { limbTube: limbTube, smoothQ: smoothQ, solveSide: solveSide, zoneBody: zoneBody, live: live, scan: scan, RAD: RAD, FLOOR: FLOOR, smooth: smooth, tubeSeg: tubeSeg, limbPatch: limbPatch, circle: circle, prof: prof, mapP: mapP, BODY: BODY, poseAt: poseAt, prepare: prepare, sideSvg: sideSvg, drawFront: drawFront, frontPatches: frontPatches, solveFront: solveFront, FB: FB, VB_SIDE: VB_SIDE, add: add, sub: sub, mul: mul, unit: unit, lerp2: lerp2, frontNormal: frontNormal, ik2: ik2, dirFK: dirFK, P: P, n1: n1, HEAD: HEAD, HAIR_M: HAIR_M, HAIR_F: HAIR_F, deepMerge: deepMerge, blend: blend };
 })();
