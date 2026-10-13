@@ -237,12 +237,15 @@
   const route = (method, re, fn) => R.push([method, new RegExp('^' + re + '$'), fn]);
 
   function exportData() {
-    return {
+    const jeu = window.JEU ? window.JEU.exportState() : null;
+    const out = {
       format: 'suivi-muscu', version: 1, exported_at: nowMs(),
       exercises: [...db.exercise].sort((a, b) => a.id - b.id).map(e => Object.assign({}, e)),
       workouts: workoutsList(db), sessions: sessionsList(db),
       bodyweight: [...db.bodyweight].sort((a, b) => a.id - b.id)
     };
+    if (jeu) out.jeu = jeu;   // état du mini-jeu : absent tant qu'on n'a pas ouvert l'onglet Esprits
+    return out;
   }
   const toDataUrl = b => new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(f.result); f.onerror = () => rej(f.error); f.readAsDataURL(b); });
   async function exportPhotos() {
@@ -412,6 +415,7 @@
       writeEntries(w, s.id, s.entries || []);
     }
     for (const x of o.bodyweight || []) { need(x, ['id', 'day', 'ts', 'kg']); w.bodyweight.push({id: x.id, day: x.day, ts: x.ts, kg: x.kg}); }
+    if (o.jeu && window.JEU) window.JEU.importState(o.jeu);
     return {mode: 'sauvegarde complète (remplacement)', exercices: (o.exercises || []).length, sessions: (o.sessions || []).length};
   }
   async function importPhotos(o) {

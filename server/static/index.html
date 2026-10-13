@@ -10,6 +10,8 @@
 <script src="/static/local-backend.js"></script>
 <script src="/static/figure.js"></script>
 <script src="/static/figure-data.js"></script>
+<script src="/static/creatures.js"></script>
+<script src="/static/jeu.js"></script>
 <script>
 var ACC = [['orange','Orange','#ff7a1a'],['blue','Bleu','#4dabf7'],['green','Vert','#51cf66'],['violet','Violet','#9775fa'],['red','Rouge','#ff6b6b']];
 var ACC_TC = {orange:'#e8590c', blue:'#1971c2', green:'#2b8a3e', violet:'#7048e8', red:'#e03131'};
@@ -254,7 +256,7 @@ body:not([data-view="seance"]) .bar{display:none}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--f1:#5a6d7d;--f2:#46576a;--f3:#2d3b47;--f4:#3b4b59;--f5:#8a6c58;--f6:#d9e1e7;--f7:#e8eef2}}
 :root[data-theme="dark"]{--f1:#5a6d7d;--f2:#46576a;--f3:#2d3b47;--f4:#3b4b59;--f5:#8a6c58;--f6:#d9e1e7;--f7:#e8eef2}
 .fb{fill:var(--f1)}.fbk{fill:var(--f2)}.fcl{fill:var(--f3)}.fcl2{fill:var(--f4)}.fhr{fill:var(--f5)}.fsh{fill:var(--f6)}.fsh2{fill:var(--f6);opacity:.75}
-.fm{fill:var(--a)}.fpr{fill:var(--l)}.fprl{fill:none;stroke:var(--l);stroke-width:2.2;stroke-linecap:round}
+.fm{fill:var(--fxc,var(--a))}.fpr{fill:var(--l)}.fprl{fill:none;stroke:var(--l);stroke-width:2.2;stroke-linecap:round}
 .fpl circle{fill:var(--f7);fill-opacity:.1;stroke:var(--f7);stroke-width:1.5;opacity:.85}.fpl .fhub{fill:var(--f7);stroke:none;fill-opacity:1;opacity:.85}
 .fhub{fill:var(--f7)}.fcab{fill:none;stroke:var(--f7);stroke-width:.6;opacity:.65}.fcab2{fill:none;stroke:var(--f7);stroke-width:1.2;opacity:.8}
 .fpl2{fill:var(--f7);opacity:.75}.fdb rect{fill:var(--f7);opacity:.85}.fdb path{stroke:var(--bg);stroke-width:.6;fill:none}
@@ -312,7 +314,7 @@ let EX = {}, WO = [], SESS = [], BW = [];
 let view = 'accueil', curW = null, F = null;          // F = formulaire de séance en cours
 let catQ = '', catArch = false, editEx = null;       // catalogue
 let progW = null, progDraft = null;                  // éditeur de programmes
-const VIEWS = [['accueil','Accueil'],['seance','Séance'],['zones','Zones'],['progres','Progrès'],['historique','Historique'],['exercices','Exercices'],['programmes','Programmes'],['donnees','Données']];
+const VIEWS = [['accueil','Accueil'],['seance','Séance'],['zones','Zones'],['progres','Progrès'],['historique','Historique'],['exercices','Exercices'],['programmes','Programmes'],['jeu','Esprits'],['donnees','Données']];
 const KIND_LABEL = {weight:'Charge × reps', reps:'Reps (lest facultatif)', time:'Durée en secondes', cardio:'Cardio (minutes)'};
 const GROUP_ORDER = ['Jambes','Pectoraux','Dos','Épaules','Bras','Abdos et gainage','Cardio'];
 
@@ -505,13 +507,16 @@ function advice(e, exceptSid) {
 
 /* ------------------------------------------------------------------ navigation */
 /* ------------------------------------------------------------------ navigation : barre du bas, menu, accueil */
-const TABS = ['accueil', 'seance', 'progres', 'historique'];
+const TABS_ALL = ['accueil', 'seance', 'progres', 'historique'];
+const jeuOn = () => !!(window.JEU && !JEU.hidden());
+const tabsNow = () => jeuOn() ? [...TABS_ALL.slice(0, 3), 'jeu', 'historique'] : TABS_ALL;
 const VL = Object.fromEntries(VIEWS);
 const IC = {
   accueil: '<svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
   seance: '<svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>',
   progres: '<svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>',
-  historique: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+  historique: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  jeu: '<svg viewBox="0 0 24 24"><path d="M12 3c4 0 7 3 7 7 0 3-1 5-2 7-1 2-3 4-5 4s-4-2-5-4c-1-2-2-4-2-7 0-4 3-7 7-7z"/><path d="M9.5 11v1M14.5 11v1M10 15c1 1 3 1 4 0"/></svg>'
 };
 const IC_MENU = '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
 const IC_CLOSE = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -519,8 +524,8 @@ let STYLE = 'b';
 document.documentElement.dataset.style = STYLE;
 function nav() {
   $('ttl').textContent = view === 'accueil' ? 'Fonte' : VL[view];
-  $('tabs').innerHTML = TABS.map(k => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}')" ${k === view ? 'aria-current="page"' : ''}><span class="ic">${IC[k]}</span>${VL[k]}</button>`).join('');
-  $('dnav').innerHTML = VIEWS.map(([k, t]) => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}');closeMenu()">${t}</button>`).join('');
+  $('tabs').innerHTML = tabsNow().map(k => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}')" ${k === view ? 'aria-current="page"' : ''}><span class="ic">${IC[k]}</span>${VL[k]}</button>`).join('');
+  $('dnav').innerHTML = VIEWS.filter(([k]) => k !== 'jeu' || jeuOn()).map(([k, t]) => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}');closeMenu()">${t}</button>`).join('');
   document.body.dataset.view = view;
   document.body.classList.toggle('foc', FOC !== null && view === 'seance');
 }
@@ -546,7 +551,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu();
 function go(v) { viewEx = null; view = v; store('muscu-view', v); R(); window.scrollTo(0, 0); }
 function R() {
   nav();
-  $('app').innerHTML = {accueil: vAccueil, seance: vSeance, zones: vZones, progres: vProgres, historique: vHisto, exercices: vCat, programmes: vProg, donnees: vData}[view]();
+  $('app').innerHTML = {accueil: vAccueil, seance: vSeance, zones: vZones, progres: vProgres, historique: vHisto, exercices: vCat, programmes: vProg, jeu: () => window.JEU ? JEU.view() : '', donnees: vData}[view]();
 }
 
 /* ------------------------------------------------------------------ accueil */
@@ -582,6 +587,7 @@ function vAccueil() {
       : nw ? `<button class="go" onclick="startFromHome(${nw.id})">Démarrer la séance</button>` : `<button class="go" onclick="go('seance')">Ouvrir la séance</button>`) + '</section>';
   h += `<section class="card wk"><h2>Cette semaine</h2><div class="wkm"><div class="wkbig"><b>${n}</b><span>sur ${WGOAL} séances</span></div><div class="dots">${Array.from({length: WGOAL}, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</div></div>
     <div class="tiles"><div><b>${streak}</b><span>semaine${streak > 1 ? 's' : ''} d’affilée</span></div><div><b>${Math.round(vol)}</b><span>kg soulevés</span></div><div><b>${esc(feel)}</b><span>dernier ressenti</span></div></div></section>`;
+  if (jeuOn()) h += JEU.homeCard();
   const tz = todayZones(), st = zoneStats();
   h += `<section class="card"><h2>Que travailler aujourd’hui ?</h2><p class="m">${SESS.length ? 'Les zones que tu as le moins travaillées récemment.' : 'Pas encore d’historique : voici un point de départ.'}</p>
     <div class="zrow">${tz.map(x => { const d = daysSince(x.k, st); return `<div class="zc">${ZL[x.k]}<small>${d === null ? 'jamais travaillée' : d === 0 ? 'aujourd’hui' : 'il y a ' + d + ' j'}</small></div>`; }).join('')}</div>
@@ -1087,7 +1093,7 @@ async function saveSession() {
     F = null;
     if (editing) view = 'historique';
   }, editing ? 'Séance modifiée' : 'Séance enregistrée');
-  if (!editing && SESS.length > nBefore) { const ns = SESS.reduce((a, b) => b.ts > a.ts ? b : a), pr = computePRs().bySession[ns.id]; if (pr && pr.length) celebrate(pr); }
+  if (!editing && SESS.length > nBefore) { const ns = SESS.reduce((a, b) => b.ts > a.ts ? b : a), pr = computePRs().bySession[ns.id]; if (pr && pr.length) celebrate(pr); if (window.JEU) { const rep = JEU.award(ns.id); if (rep && !JEU.hidden()) JEU.rewardOverlay(rep); } }
   window.scrollTo(0, 0);
 }
 function editSession(sid) {
@@ -1477,11 +1483,14 @@ function vPhotos() {
   return h;
 }
 
+/* passerelle lue par jeu.js (les let/const ci-dessus ne sont pas sur window) */
+window.APPX = {SESS: () => SESS, EX: () => EX, zonesOf, mondayOf, today, get WGOAL() { return WGOAL; }, computePRs, figSvg, toast, R, go, nav};
+
 /* ------------------------------------------------------------------ démarrage */
 if (!window.FONTE_LOCAL && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 (async () => {
   /* l'appli s'ouvre sur l'accueil */
-  try { await load(); R(); }
+  try { await load(); if (window.JEU) { JEU.init(); JEU.applyWardrobe(); } R(); }
   catch (e) { $('app').innerHTML = `<p class="empty">${window.FONTE_LOCAL ? 'Impossible de lire les données de l’appli' : 'Impossible de joindre le serveur'} : ${esc(e.message)}</p>`; }
 })();
 </script>

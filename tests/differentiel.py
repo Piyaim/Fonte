@@ -15,7 +15,7 @@ def jpeg(color, size):
     b = io.BytesIO(); Image.effect_noise((size, size), 60).convert("RGB").save(b, "JPEG", quality=80); return base64.b64encode(b.getvalue()).decode()
 IMG, THUMB = jpeg(0, 300), jpeg(0, 100)
 BAD = base64.b64encode(b"not a jpeg" * 100).decode()
-DROP = {"ts", "updated_at", "exported_at"}
+DROP = {"ts", "updated_at", "exported_at", "jeu"}   # « jeu » : état du mini-jeu, propre à la version locale
 def norm(x):
     # le champ diagram est un texte JSON : Python l'écrit avec des espaces, JavaScript sans ; on compare le contenu
     if isinstance(x, dict): return {k: (json.loads(v) if k == "diagram" and isinstance(v, str) else norm(v)) for k, v in x.items() if k not in DROP}
