@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Fonte</string>
+    <string name="setup_title">Server address</string>
+    <string name="setup_help">Enter the address of your Fonte server, for example https://fonte.example.org or http://192.168.1.20:8080. Plain http:// is only safe on a network you trust.</string>
+    <string name="setup_hint">https://…</string>
+    <string name="setup_save">Save</string>
+    <string name="setup_invalid">Invalid address. Use http:// or https:// followed by a host name.</string>
+    <string name="err_title">Cannot reach the server</string>
+    <string name="err_retry">Retry</string>
+    <string name="err_change">Change address</string>
+    <string name="err_ssl">The server certificate is not trusted. Use a valid HTTPS certificate or an http:// address on a trusted network.</string>
+</resources>

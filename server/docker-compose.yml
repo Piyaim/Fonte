@@ -1,0 +1,19 @@
+# Fonte : serveur de suivi de musculation.
+# Démarrage :  docker compose up -d --build
+# L'appli écoute sur 127.0.0.1:8080 (ta machine seulement). L'appli n'a AUCUNE authentification :
+# ne la publie jamais sur Internet sans VPN ou proxy inverse avec authentification.
+# Pour l'ouvrir sur ton réseau local, remplace 127.0.0.1 par l'adresse IP de la machine (ex. "192.168.1.20:8080:8000").
+name: fonte
+services:
+  fonte:
+    build: .
+    container_name: fonte
+    ports:
+      - "127.0.0.1:8080:8000"
+    volumes:
+      - fonte_data:/data
+    restart: unless-stopped
+
+volumes:
+  fonte_data:
+    name: fonte_data

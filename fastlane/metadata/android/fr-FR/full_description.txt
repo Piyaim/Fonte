@@ -1,0 +1,7 @@
+Fonte est un carnet d'entraînement de musculation que tu héberges toi-même. Cette application Android est une coque qui ouvre ton serveur Fonte : il faut donc un serveur Fonte (Docker) accessible depuis ton téléphone.
+
+Au programme : catalogue de 50 exercices modifiable, programmes et séances, séances par zones musculaires, jauge de difficulté ressentie avec conseil de charge, minuteur de repos dont l’affichage reste juste quand l’écran se verrouille, records, courbes de progression, poids de corps, photos de progression, import et export.
+
+Respect de la vie privée : aucune bibliothèque tierce, aucun traceur, une seule permission (réseau). Tes données restent sur ton serveur.
+
+Fonte n'est ni un coach ni un avis médical.
