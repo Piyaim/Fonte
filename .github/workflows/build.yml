@@ -65,4 +65,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         working-directory: .
-        run: gh release create "$GITHUB_REF_NAME" "fonte-${VERSION}.apk" --title "Fonte ${VERSION}" --generate-notes
+        run: |
+          NOTES="notes-de-version/${GITHUB_REF_NAME}.md"
+          if [ -f "$NOTES" ]; then
+            gh release create "$GITHUB_REF_NAME" "fonte-${VERSION}.apk" --title "Fonte ${VERSION}" --notes-file "$NOTES"
+          else
+            gh release create "$GITHUB_REF_NAME" "fonte-${VERSION}.apk" --title "Fonte ${VERSION}" --generate-notes
+          fi
