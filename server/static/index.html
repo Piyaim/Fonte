@@ -8,6 +8,8 @@
 <link rel="icon" type="image/png" href="/static/icons/icon-192.png">
 <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
 <script src="/static/local-backend.js"></script>
+<script src="/static/figure.js"></script>
+<script src="/static/figure-data.js"></script>
 <script>
 var ACC = [['orange','Orange','#ff7a1a'],['blue','Bleu','#4dabf7'],['green','Vert','#51cf66'],['violet','Violet','#9775fa'],['red','Rouge','#ff6b6b']];
 var ACC_TC = {orange:'#e8590c', blue:'#1971c2', green:'#2b8a3e', violet:'#7048e8', red:'#e03131'};
@@ -95,10 +97,8 @@ details{margin:8px 0}summary{font-weight:700;cursor:pointer}
 .body figure{margin:0;text-align:center;flex:1;max-width:210px}
 .body svg{width:100%;height:auto;display:block}
 .body figcaption{font-size:12px;color:var(--m)}
-.body .nf{fill:var(--m);opacity:.3}
-.body .nl{fill:none;stroke:var(--m);opacity:.3;stroke-linecap:round}
-.body .z{fill:var(--l);stroke:var(--m);stroke-width:.7;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.body .z.on{fill:var(--a);stroke:var(--a)}
+.body .z{fill:var(--m);fill-opacity:.16;stroke:var(--m);stroke-opacity:.5;stroke-width:.35;stroke-linejoin:round;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.body .z.on{fill:var(--a);fill-opacity:.95;stroke:var(--a);stroke-opacity:1}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 .chip{padding:8px 12px;border:2px solid var(--l);background:var(--bg);color:var(--t);border-radius:999px;font:inherit;font-size:14px}
 .chip.on{background:var(--a);border-color:var(--a);color:var(--on)}
@@ -249,6 +249,19 @@ body:not([data-view="seance"]) .bar{display:none}
 [data-style="b"] .go{font-weight:800;letter-spacing:.01em}
 [data-style="b"] .zc{border-width:2px;border-radius:999px}
 
+/* ---- personnage (figure.js) ---- */
+:root{--f1:#cdd4da;--f2:#b2bcc5;--f3:#6f7e8a;--f4:#8d9ba6;--f5:#4a3b33;--f6:#2a3640;--f7:#10202b}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--f1:#5a6d7d;--f2:#46576a;--f3:#2d3b47;--f4:#3b4b59;--f5:#8a6c58;--f6:#d9e1e7;--f7:#e8eef2}}
+:root[data-theme="dark"]{--f1:#5a6d7d;--f2:#46576a;--f3:#2d3b47;--f4:#3b4b59;--f5:#8a6c58;--f6:#d9e1e7;--f7:#e8eef2}
+.fb{fill:var(--f1)}.fbk{fill:var(--f2)}.fcl{fill:var(--f3)}.fcl2{fill:var(--f4)}.fhr{fill:var(--f5)}.fsh{fill:var(--f6)}.fsh2{fill:var(--f6);opacity:.75}
+.fm{fill:var(--a)}.fpr{fill:var(--l)}.fprl{fill:none;stroke:var(--l);stroke-width:2.2;stroke-linecap:round}
+.fpl circle{fill:var(--f7);fill-opacity:.1;stroke:var(--f7);stroke-width:1.5;opacity:.85}.fpl .fhub{fill:var(--f7);stroke:none;fill-opacity:1;opacity:.85}
+.fhub{fill:var(--f7)}.fcab{fill:none;stroke:var(--f7);stroke-width:.6;opacity:.65}.fcab2{fill:none;stroke:var(--f7);stroke-width:1.2;opacity:.8}
+.fpl2{fill:var(--f7);opacity:.75}.fdb rect{fill:var(--f7);opacity:.85}.fdb path{stroke:var(--bg);stroke-width:.6;fill:none}
+.fsh0{fill:none;stroke:var(--l);stroke-width:1}.fsd{fill:var(--f7);opacity:.09}
+.fln{fill:none;stroke:var(--f2);stroke-width:.5;opacity:.7;stroke-linecap:round}.flh{fill:var(--f2)}
+svg.fig{width:100%;display:block}
+
 /* ---- couleur de l'appli (patch F) ---- */
 :root{--g1:#ff8f2e;--g2:#ea5a0c;--g3:#b63a08;--gs:232,89,12}
 .lg{width:36px;height:36px;border-radius:9px;margin-left:2px}
@@ -290,6 +303,7 @@ body:not([data-view="seance"]) .bar{display:none}
   <div class="dh"><img id="lg" class="lg" alt="" width="36" height="36"><b>Fonte</b><button class="ib" onclick="closeMenu()" aria-label="Fermer le menu"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div id="dnav"></div>
   <div class="dstyle" id="daccent"></div>
+  <div class="dstyle" id="dgender"></div>
 </aside>
 <script>
 'use strict';
@@ -433,7 +447,13 @@ function poseFrames(g) {   // pour chaque trait : liste d'images (points) ou d'o
   return out;
 }
 const PLA = 'fill="none" stroke="var(--a)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"';
+let GENDER = recall('muscu-gender') === 'f' ? 'f' : 'm'; window.FIG_GENDER = GENDER;
+function figSvg(e, fd, anim) {
+  const live = anim && !REDUCED;
+  return `<svg class="fig" viewBox="${fd.vb || '0 0 160 100'}" role="img" aria-label="Animation ${esc(e.name)}"${live ? ` data-fig="${esc(e.slug)}" style="cursor:pointer" title="Touche pour mettre en pause"` : ''}><g>${FIG.sideSvg(fd, live ? 0 : (fd.thumb || 0), {g: GENDER})}</g></svg>`;
+}
 function diagram(e, anim) {
+  if (window.FIGDATA && e.slug && window.FIGDATA[e.slug]) return figSvg(e, window.FIGDATA[e.slug], anim);
   const g = e.diagram; if (!g) return '';
   const ghost = `${pl(g.q,'var(--m)')}${pl(g.a,'var(--m)',1)}`, hd = `<circle cx="${g.h[0]}" cy="${g.h[1]}" r="5" fill="none" stroke="var(--m)" stroke-width="2" stroke-dasharray="3 3"/>`;
   if (!anim || REDUCED || !g.a || !g.b) return `<svg viewBox="0 0 100 64" role="img" aria-label="Schéma ${esc(e.name)}">${ghost}${pl(g.b,'var(--a)')}${hd}<circle cx="${g.h[2]}" cy="${g.h[3]}" r="5" fill="var(--a)"/></svg>`;
@@ -444,6 +464,8 @@ function diagram(e, anim) {
   const hx = seqOf(t => g.h[0] + (g.h[2] - g.h[0]) * t).map(x => x.toFixed(1)).join(';'), hy = seqOf(t => g.h[1] + (g.h[3] - g.h[1]) * t).map(x => x.toFixed(1)).join(';');
   return `<svg viewBox="0 0 100 64" role="img" aria-label="Animation ${esc(e.name)}" style="cursor:pointer" title="Touche pour mettre en pause" onclick="this.animationsPaused() ? this.unpauseAnimations() : this.pauseAnimations()">${ghost}${hd}${mv}<circle cx="${g.h[0]}" cy="${g.h[1]}" r="5" fill="var(--a)"><animate attributeName="cx" dur="${D}" repeatCount="indefinite" values="${hx}"/><animate attributeName="cy" dur="${D}" repeatCount="indefinite" values="${hy}"/></circle></svg>`;
 }
+
+new MutationObserver(() => FIG.scan()).observe(document.documentElement, {childList: true, subtree: true});
 
 function advice(e, exceptSid) {
   const l = lastSets(e.id, exceptSid);
@@ -506,8 +528,12 @@ function stylePick() {
   $('dstyle').innerHTML = '<p class="m">Apparence</p>' + [['a', 'Cartes', 'Sobre, cartes arrondies'], ['b', 'Dynamique', 'Gros chiffres, anneau de progression']]
     .map(([k, t, d]) => `<button class="sopt ${STYLE === k ? 'on' : ''}" onclick="setStyle('${k}')"><b>${t}</b><span>${d}</span></button>`).join('');
 }
+function genderPick() {
+  $('dgender').innerHTML = '<p class="m">Personnage des animations</p><div class="chips">' + [['m', 'Homme'], ['f', 'Femme']].map(([k, t]) => `<button class="chip ${GENDER === k ? 'on' : ''}" onclick="setGender('${k}')" aria-pressed="${GENDER === k}">${t}</button>`).join('') + '</div>';
+}
+function setGender(k) { GENDER = k; window.FIG_GENDER = k; store('muscu-gender', k); genderPick(); R(); }
 function openMenu() {
-  accentPick();
+  accentPick(); genderPick();
   $('drawer').classList.add('open'); $('scrim').classList.add('open');
   $('drawer').setAttribute('aria-hidden', 'false'); $('menu-btn').setAttribute('aria-expanded', 'true');
 }
@@ -663,30 +689,9 @@ function Z(k, shapes) {
   }
   return `<g class="z ${ZSEL.has(k) ? 'on' : ''}" onclick="togZone('${k}')"><title>${ZL[k]}</title>${shapes}</g>`;
 }
-const BODY_BASE = `<circle class="nf" cx="50" cy="13" r="9"/><line class="nl" x1="50" y1="22" x2="50" y2="29" stroke-width="7"/>
-<path class="nf" d="M33,30 L67,30 L63,62 L62,93 L38,93 L37,62 Z"/>
-<line class="nl" x1="28" y1="37" x2="22" y2="68" stroke-width="9"/><line class="nl" x1="22" y1="68" x2="17" y2="98" stroke-width="7"/><circle class="nf" cx="16" cy="103" r="4"/>
-<line class="nl" x1="72" y1="37" x2="78" y2="68" stroke-width="9"/><line class="nl" x1="78" y1="68" x2="83" y2="98" stroke-width="7"/><circle class="nf" cx="84" cy="103" r="4"/>
-<line class="nl" x1="43" y1="96" x2="42" y2="132" stroke-width="16"/><line class="nl" x1="42" y1="132" x2="41" y2="176" stroke-width="11"/><path class="nf" d="M36,178 L46,178 L46,184 L33,184 Z"/>
-<line class="nl" x1="57" y1="96" x2="58" y2="132" stroke-width="16"/><line class="nl" x1="58" y1="132" x2="59" y2="176" stroke-width="11"/><path class="nf" d="M54,178 L64,178 L67,184 L54,184 Z"/>`;
-const ELL = (cx, cy, rx, ry, rot) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"${rot ? ` transform="rotate(${rot} ${cx} ${cy})"` : ''}/>`;
 function bodySvg(side) {
-  const sh = Z('epaules', ELL(29.5, 38, 6.5, 8.5) + ELL(70.5, 38, 6.5, 8.5));
-  let z;
-  if (side === 'front') {
-    z = sh + Z('pectoraux', ELL(43, 49, 7.5, 8) + ELL(57, 49, 7.5, 8))
-      + Z('biceps', ELL(25.5, 53, 4.5, 11, 12) + ELL(74.5, 53, 4.5, 11, -12))
-      + Z('abdos', '<rect x="43" y="60" width="14" height="28" rx="5"/>')
-      + Z('quadriceps', ELL(43, 113, 8, 19) + ELL(57, 113, 8, 19));
-  } else {
-    z = sh + Z('dos', '<path d="M38,30 L62,30 L66,56 L58,72 L42,72 L34,56 Z"/>')
-      + Z('lombaires', '<rect x="42" y="74" width="16" height="15" rx="4"/>')
-      + Z('triceps', ELL(25.5, 53, 4.5, 11, 12) + ELL(74.5, 53, 4.5, 11, -12))
-      + Z('fessiers', ELL(43.5, 99, 8, 8.5) + ELL(56.5, 99, 8, 8.5))
-      + Z('ischios', ELL(43, 121, 7.5, 14) + ELL(57, 121, 7.5, 14))
-      + Z('mollets', ELL(42, 152, 6, 13) + ELL(58, 152, 6, 13));
-  }
-  return `<figure><svg viewBox="0 0 100 190" role="group" aria-label="Corps vu de ${side === 'front' ? 'face' : 'dos'}">${BODY_BASE}${z}</svg><figcaption>${side === 'front' ? 'Face' : 'Dos'}</figcaption></figure>`;
+  const wrap = pat => ZONES.map(([k]) => pat[k] ? Z(k, pat[k].map(d => `<path d="${d}"/>`).join('')) : '').join('');
+  return `<figure><svg viewBox="46 4 68 92" role="group" aria-label="Corps vu de ${side === 'front' ? 'face' : 'dos'}">${FIG.zoneBody(side === 'front' ? 'front' : 'back', GENDER, wrap)}</svg><figcaption>${side === 'front' ? 'Face' : 'Dos'}</figcaption></figure>`;
 }
 function vZones() {
   if (ZMODE === 'heat') ZST = zoneStats();
