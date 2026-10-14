@@ -137,6 +137,15 @@ Démarche imposée, dans cet ordre :
 5. Intégration dans la garde-robe (la boutique et les aperçus existent déjà) et dans les animations d'exercices (`figure.js`), sans casser les 50 animations existantes.
 Contraintes : tout fonctionne hors ligne dans l'APK, reste lisible en vignette, s'accorde avec les 27 esprits, respecte les budgets de la section 7.
 
+### Décisions prises (octobre 2026)
+- **Piste B retenue** : modèle glTF (.glb) affiché avec three.js (copié dans le dépôt avec son fichier LICENSE, jamais de CDN ; three.js exige WebGL 2). **Image de secours prérendue** (WebP) pour les téléphones sans WebGL 2 et pour les vignettes.
+- **Style** : 3D au ton héroïque sérieux, proportions humaines réelles, épaules jamais exagérées.
+- **Corps** : à l'inscription, l'utilisateur règle la corpulence avec un **curseur libre**, du très fin à la forte corpulence (obésité comprise), et règle aussi la taille. L'entraînement **ajoute** du muscle zone par zone (11 zones) : jamais de régression, jamais de logique « gros vers mince ».
+- **Base du corps** : MakeHuman via l'extension Blender **MPFB** (2.0.18, plateforme officielle des extensions). On n'utilise que le maillage de base, les cibles (targets) et les peaux, tous **sous CC0**. Le code de MPFB (GPL) reste un outil dans Blender. Les packs CC-BY et tout élément sous une autre licence sont exclus.
+- **Tenue de base** : t-shirt, short et baskets, **sans accessoire**.
+- **Clés de forme exportées** (essai du 14/10/2026) : `corpulence_moins`, `corpulence_plus`, `obesite`, `musculature_moins`, `musculature_plus`, plus 4 clés `croise_*`. Les clés `croise_*` corrigent l'interaction corpulence × musculature : MakeHuman est bilinéaire, et sans ces clés l'erreur atteint 8 cm. L'influence d'une clé `croise_*` = influence de corpulence × influence de musculature, avec la formule de `cle_valeurs()`.
+- **Sources Blender** : dans `/home/PM/fonte-blender` (hors dépôt, à sauvegarder sur le Nextcloud) : `fonte_homme_base.blend` et `fonte_corps.py`.
+
 ---
 
 ## 9. À faire ensuite
