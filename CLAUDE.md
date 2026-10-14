@@ -146,6 +146,12 @@ Contraintes : tout fonctionne hors ligne dans l'APK, reste lisible en vignette, 
 - **Clés de forme exportées** (essai du 14/10/2026) : `corpulence_moins`, `corpulence_plus`, `obesite`, `musculature_moins`, `musculature_plus`, plus 4 clés `croise_*`. Les clés `croise_*` corrigent l'interaction corpulence × musculature : MakeHuman est bilinéaire, et sans ces clés l'erreur atteint 8 cm. L'influence d'une clé `croise_*` = influence de corpulence × influence de musculature, avec la formule de `cle_valeurs()`.
 - **Sources Blender** : dans `/home/PM/fonte-blender` (hors dépôt, à sauvegarder sur le Nextcloud) : `fonte_homme_base.blend` et `fonte_corps.py`.
 
+### Personnage de référence (décision du 14/10/2026, remplace la base MPFB pour la partie artistique)
+- **Base retenue** : Quaternius « Superhero Male » (pack Universal Base Characters, version gratuite Standard, **CC0 1.0**, licence lue dans `License_Standard.txt`). Coiffure **rasée** (Hair_Buzzed du même pack) teinte brun foncé pour la référence. Georgio le juge « parfait comme ça » : **ne pas modifier** le visage, la peau peinte ni les proportions.
+- **Refusés** : les personnages générés par scripts (essais 1 et 2, base MPFB + tête Human Base Meshes) pour la partie artistique (« le rendu est nul »). Bruno (100Avatars n° 233) abandonné car **incomplet** : sans casque ni costume, il n'a ni haut de tête, ni dos, ni jambes. Règle : un candidat n'est proposé que s'il est complet sans ses accessoires (capture face, trois quarts et dos du corps seul).
+- **Progression** : la carrure du Superhero représente le **haut** de la progression. Au niveau 0, la silhouette est ordinaire et les muscles peints dans la texture s'estompent ; ils reviennent zone par zone avec l'entraînement. Le système technique déjà construit (clés de corpulence, zones, abdos, contrôle anti-amincissement, export three.js) est conservé et sera rebranché sur ce modèle.
+- **Fichiers de travail** : essais dans `/home/PM/fonte-travail/reference*` et `essai3` à `essai5` ; sources Blender dans `/home/PM/fonte-blender` (`essai5/candidats5.blend`). Brouillon des crédits : `/home/PM/fonte-travail/silhouettes/CREDITS.md`.
+
 ---
 
 ## 9. À faire ensuite
