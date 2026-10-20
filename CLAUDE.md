@@ -11,7 +11,7 @@ Ce fichier est la **référence** du projet pour Claude Code. Le lire en entier 
 
 - Georgio, francophone, **non-développeur**. Répondre **toujours en français**, en langage simple : dire ce que fait chaque commande en une phrase.
 - Il travaille sur son PC Bazzite (Linux), dans `/home/PM/Fonte`, et juge le résultat **sur captures d'écran** et sur son téléphone Android.
-- Il veut de la **qualité, pas de la quantité**. L'avatar sera « l'élément phare » de l'appli : il doit être soigné et donner envie de progresser.
+- Il veut de la **qualité, pas de la quantité**. Les éléments phares de l'appli sont la **collection des Esprits** et les **démonstrations d'exercice en 2D** (section 8) : ils doivent être soignés et donner envie de progresser.
 - Commandes à lui donner : **complètes, prêtes à copier-coller, avec les vraies valeurs**. Jamais de chevrons ni de placeholders (il les colle tels quels).
 - Il ne colle **jamais** de secrets (clé de signature, mots de passe, jetons). Ne jamais lui en demander, ne jamais afficher un fichier de config entier : filtrer à la source (`grep -v`, `sed`).
 - Réponses courtes : ce qui a été fait, le fichier ou la capture à regarder, la prochaine étape si elle est réelle. Pas de récit des étapes.
@@ -24,10 +24,10 @@ Ce fichier est la **référence** du projet pour Claude Code. Le lire en entier 
 - **Signaler ce qui n'a pas été vérifié**. Si une affirmation passée se révèle fausse, le dire à voix haute et la corriger.
 
 ### Quand demander, quand décider
-- **Demander d'abord** (une question courte, choix proposés) : tout ce qui touche au rendu visuel validé par lui, au choix technique de l'avatar, à un changement de règle du jeu, à une dépense de poids notable dans l'APK.
+- **Demander d'abord** (une question courte, choix proposés) : tout ce qui touche au rendu visuel validé par lui, à la direction artistique des Esprits, à un changement de règle du jeu, à une dépense de poids notable dans l'APK.
 - **Toujours demander avant** : publier une release, supprimer des fichiers ou des données, réécrire l'historique Git, `git push --force`, toucher à la signature ou aux secrets GitHub, modifier `.github/workflows/build.yml`.
 - **Décider seul** : les détails d'implémentation, le nommage, la structure interne, tant que les règles ci-dessous sont respectées. Le dire dans le résumé.
-- Il aime **voir des propositions avant que tu ne t'engages** sur du design. Ses trois premières directions d'avatar ont été refusées sans détail : avant de repartir, lui demander **2 ou 3 références visuelles** (jeux, personnages, illustrations) qu'il aime et ce qui lui déplaisait.
+- Il aime **voir des propositions avant que tu ne t'engages** sur du design. Avant toute nouvelle direction visuelle, lui demander **2 ou 3 références visuelles** (jeux, personnages, illustrations) qu'il aime et ce qui lui déplaisait, et poser les questions de cadrage **une par une**.
 
 ---
 
@@ -37,13 +37,14 @@ Ce fichier est la **référence** du projet pour Claude Code. Le lire en entier 
   - `index.html` : appli entière (vues, état `EX`, `WO`, `SESS`, `BW`, `go()`, `R()`), exposée au reste par la passerelle `window.APPX`.
   - `local-backend.js` : remplace `fetch('/api/...')` par IndexedDB en mode local (`/?local=1`, ou toujours dans l'appli Android).
   - `figure.js` + `figure-data.js` : moteur d'animation 2D des exercices (squelette, IK, `limbTube`), 50 animations. `figure-data.js` est **généré** et fait foi (les sources `d0..d4.js` + `merge.py` n'ont pas été conservées).
-  - `creatures.js` : dessin des 27 esprits (6 silhouettes × 3 stades, auras par rareté). `jeu.js` : règles du jeu (jetons, tirages, quêtes, boutique, garde-robe par variables CSS `--f3 --f4 --f5 --fxc`).
+  - `creatures.js` : dessin actuel des 27 esprits en SVG (6 silhouettes × 3 stades, auras par rareté), à remplacer par les sprites pixel art (section 8). `jeu.js` : règles du jeu (jetons, tirages, quêtes, boutique, garde-robe par variables CSS `--f3 --f4 --f5 --fxc`).
+  - `profil.js` : questionnaire de départ et programme généré (section 8 bis).
   - `sw.js` : service worker du mode serveur (cache à l'exécution, rien à lister).
 - `android/` : coque Java (`MainActivity.java`), icônes alternatives par couleur, `gradle.properties` (`VERSION_CODE`, `VERSION_NAME`).
 - `tests/` : voir section 5.
 - `notes-de-version/vX.Y.Z.md` : texte de chaque release, en français.
 - `fastlane/metadata/android/` : fiches de store (en-US, fr-FR). Visée probable F-Droid : voir les contraintes de licence en section 7.
-- `design/avatar/` : prototypes SVG d'avatar **refusés** (conservés pour mémoire, ne pas les reprendre tels quels).
+- `design/avatar/` : prototypes SVG d'avatar **refusés** (conservés pour mémoire ; l'avatar humain est abandonné, voir section 8).
 - `.github/workflows/build.yml` : construit et signe l'APK quand une release est **publiée** (ou en lancement manuel). Secrets déjà créés : `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`.
 
 ---
@@ -72,8 +73,8 @@ Valeurs actuelles (v0.3.1) :
 - Niveau d'une zone = 1 + partie entière de la racine carrée du nombre de séries dans la zone ; stade 2 au niveau 6, stade 3 au niveau 14.
 - Jetons : 3 séries ou plus +1, 10 séries ou plus +1, record battu +1, effort moyen entre 3 et 4,5 +1 (tout cela exige au moins 3 séries ; « À fond » ne donne rien de plus). L'historique existant ne donne aucun jeton. Cadeau de bienvenue : 3 jetons + l'esprit Gloumi.
 - Quêtes : objectif de séances `WGOAL` +2, 5 zones différentes +1, équipe complète +2.
-- État dans `localStorage`, clé `muscu-jeu`. 27 esprits, 25 objets (tenue, cheveux, muscle). L'onglet « Esprits » peut être masqué dans les options.
-- L'avatar **ne régresse jamais** si l'utilisateur fait une pause : une zone oubliée reste visible pour inviter à la travailler, sans punir.
+- État dans `localStorage`, clé `muscu-jeu`. 27 esprits dans le code (45 prévus par le bestiaire v3), 25 objets (tenue, cheveux, muscle). L'onglet « Esprits » peut être masqué dans les options.
+- Un esprit **ne régresse jamais** si l'utilisateur fait une pause : une zone oubliée reste visible pour inviter à la travailler, sans punir.
 
 ---
 
@@ -81,6 +82,9 @@ Valeurs actuelles (v0.3.1) :
 
 Fichiers dans `tests/`, à lancer avec `python3 tests/nom.py` (Playwright et Flask requis). Chacun doit finir **sans « ÉCHEC »**.
 - `figures.py` : moteur d'animation. `ui_local.py` : interface en mode local. `jeu.py` : règles du jeu (environ 40 contrôles). `simulation_android.py` : simulation de la coque. `differentiel.py` : le mode serveur et le mode local doivent répondre à l'identique (69 comparaisons ; la clé `jeu` est dans `DROP`). `icone_app.py` : icônes.
+- `profil.py` : questionnaire de départ et programme généré (IMC, exemple du cahier des charges, blessures, santé, IMC caché, « Garder mes programmes », export/import).
+- **Polices sur Bazzite** : le Chromium de Playwright ne lit pas la configuration de polices du système (aucun texte rendu, `inner_text` vide, tests en échec). Toujours lancer les tests ainsi, depuis `/home/PM/Fonte` :
+  `FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/profil.py` (même chose pour chaque fichier de test ; chemin complet obligatoire, un chemin relatif ne marche pas).
 - **Tout lancer avant chaque commit qui touche au code** ; si un test est ajouté ou modifié, vérifier qu'il **échoue** quand l'hypothèse est fausse.
 - Pour tout changement visuel : faire des **captures Playwright à 390×844** (et 360 de large), les regarder réellement, les enregistrer dans un dossier de travail hors dépôt et dire à Georgio où les ouvrir.
 - Sur Bazzite (système immuable), si Python, Flask ou Playwright manquent : utiliser un environnement virtuel (`python3 -m venv .venv`, dossier ignoré par Git) ou une boîte `distrobox`. Ne pas installer de paquets système sans lui expliquer pourquoi. (À vérifier sur sa machine : je n'y ai pas accès.)
@@ -117,45 +121,64 @@ Version actuelle : voir `android/gradle.properties` (0.3.1, VERSION_CODE 6, au m
 
 - Projet **AGPL-3.0-or-later**. Tout élément tiers (modèle 3D, texture, police, bibliothèque, son) doit avoir une licence **compatible** et utilisable sans réseau ; préférer CC0, MIT, SIL OFL. Noter chaque élément tiers (nom, auteur, licence, origine) dans un fichier `CREDITS.md` à la racine. Ce qui est créé par Georgio ou par Claude pour le projet est sous la licence du projet.
 - Le dossier `fastlane` laisse penser à une visée F-Droid (non confirmée) : donc pas de composant propriétaire, pas de pistage, pas de dépendance réseau.
-- **Budget de poids** : l'avatar et ses variantes doivent tenir en **quelques Mo au total** dans l'APK ; annoncer le poids de chaque lot d'images avant de l'intégrer, privilégier WebP et les calques réutilisables.
+- **Budget de poids** : les Esprits et les démonstrations d'exercice doivent tenir en **quelques Mo au total** dans l'APK ; annoncer le poids de chaque lot d'images avant de l'intégrer, privilégier WebP et les calques réutilisables.
 
 ---
 
-## 8. Chantier en cours : l'avatar
+## 8. Cap du projet (décisions de Georgio, 15/10/2026 et 20/10/2026)
 
-Georgio veut un **avatar personnalisable, homme ou femme**, qui soit l'élément phare de l'appli, qui **évolue avec l'entraînement** (idéalement zone par zone, sans jamais régresser), personnalisable avec la garde-robe du jeu (tenue, cheveux, muscle), présent aussi dans les animations d'exercices.
+### Avatar humain : abandonné (15/10/2026)
+- On **abandonne l'avatar humain personnalisable et évolutif** (homme/femme, corpulence, Blender, three.js, vêtements séparés). Ne plus y travailler sans nouvelle décision de Georgio.
+- **Aucun fichier n'est supprimé** : tout reste conservé hors dépôt (`/home/PM/fonte-blender`, `/home/PM/fonte-travail`, journal `/home/PM/fonte-blender/JOURNAL.md`) et dans le dépôt (`design/avatar/`).
+- Les deux éléments phares sont désormais : **la collection des Esprits** et **les démonstrations d'exercice en 2D**.
 
-Déjà fait : trois directions SVG dessinées à la main (A « Héros », B « Mascotte » chibi, C « Sticker »), **toutes refusées** (`design/avatar/`). Des maquettes d'écrans (accueil, tenues, évolution) existent dans un canvas de design Claude (`https://claude.ai/artifact/KNbGbY24Bkv64X7rKLGzsL`, privé), **non validées** : à n'utiliser que comme idées de composition, pas de style.
+### Élément phare : la collection des Esprits (bestiaire v3, 45 esprits)
+- **Bestiaire v3** (`/home/PM/fonte-travail/esprits/bestiaire.html` et `.md`) : 15 zones × 3 = **45 esprits** (Commune 15, Peu commune 12, Rare 9, Épique 6, Légendaire 3). Les 27 identifiants actuels sont gardés avec leur rareté et leur zone (aucune migration de l'état du jeu) ; 18 nouveaux, dont 12 pour les nouvelles zones. Ordre de livraison : esprit de référence, 27 existants, 6 nouveaux des zones existantes, 12 des nouvelles zones.
+- Dans le code actuel (`creatures.js`, `jeu.js`), il y a toujours **27 esprits dessinés par SVG** (6 silhouettes) : rien de la nouvelle direction n'est encore intégré à l'appli.
+- **Direction artistique : PIXEL ART** (décision du 20/10/2026). Le rendu 3D Blender (velours, WebP 3D) est **abandonné** ; les fichiers 3D de Pomo restent conservés hors dépôt. Choix fait après l'essai de 3 directions 2D sur Pomo et Gloumi (A vectoriel peint, B pixel art, C ombres franches) : **B retenue**, A et C écartées.
+- Règles du style : sprite natif dans une case de **64 × 64**, affiché seulement en multiple entier (×1 à ×4, `image-rendering: pixelated`) ; **12 à 16 couleurs par espèce** ; ombres qui changent de teinte, jamais vers le noir ; contour sélectif coloré ; pixels placés avec intention ; **halo en calque séparé** (80 × 80 centré sur la case), de forme et de matière propres à l'espèce, intensité selon la rareté (barème commun des 5 raretés), toujours une lueur claire sur fond sombre. Un contour continu propre à l'espèce, jamais un empilement de cercles et d'ellipses.
+- **Pomo validé aux 3 stades** (20/10/2026) : il sert de référence de style. Gloumi : première passe faite, en attente d'avis.
+- **Caractère selon le stade** (règle durable, tous les esprits) : stade 1 mignon ; stade 2 plus affirmé ; stade 3 **un peu plus menaçant**, mais attachant et reconnaissable (sourcils froncés, regard dur, une ou deux petites crocs, pointes modérées). Jamais d'arme, de sang, ni rien d'effrayant pour un enfant.
+- **On garde** : les 3 stades, la diversité des espèces, et les règles de silhouette : écart de forme ≥ 20 % entre deux stades (viser 30 %), ≥ 25 % entre deux espèces au même stade, mesuré à 64 px avec cas témoins ; place occupée 65 / 80 / 95 % de la case ; un fil rouge visible aux 3 stades ; stade 2 = deux changements parmi proportions, posture, pièce attachée ; membres rattachés visiblement au corps (séparés tolérés pour Pomo seul).
+- **Méthode** : les **cartes de pixels** (`<espèce>_s1.txt` à `_s3.txt`, 64 lignes de 64 caractères, une lettre par couleur) sont la source de vérité ; outils communs dans `/home/PM/fonte-travail/esprits/da2d/outils/` (carte → PNG et retour, halo, planche, mesures, page de test téléphone). Détails et historique : `JOURNAL.md`.
+- **Un esprit ne régresse jamais** : si l'utilisateur fait une pause ou si un exercice change de zone, le stade affiché reste le plus haut stade atteint (`s.stg` le mémorise déjà dans `jeu.js`, mais **l'affichage ne s'en sert pas encore** : à brancher à l'intégration des nouveaux sprites).
+- Contraintes : lisibles en vignette (64 px) sur fond sombre et clair, hors ligne, budget de poids de la section 7 (Pomo : 7,6 Ko les 3 stades avec halos, en PNG), garde-fous du jeu (section 4) inchangés, export et import de l'état du jeu toujours compatibles.
 
-Outils : PC Bazzite (Ryzen 9800X3D, RX 9070) avec **Blender connecté** à Claude Code. Vérifier au tout début que Blender répond réellement (essai simple : créer un cube et en faire un rendu).
+### Démonstrations d'exercice : moteur 2D `figure.js`
+- Les démonstrations s'inspirent de la **présentation d'exercice de l'appli LEVELING: Fitness**, en **améliorant le moteur 2D `figure.js`**, pas en passant à des vidéos ni à de la 3D.
+- **Inspiration seulement** : on ne copie ni personnage, ni monstre, ni interface, ni nom, ni logo, ni slogan de cette appli.
+- Ne pas casser les 50 animations existantes (`tests/figures.py`). La garde-robe (tenue, cheveux, couleur des muscles) s'applique au personnage de `figure.js`.
 
-Démarche imposée, dans cet ordre :
-1. Poser les questions de cadrage (références visuelles qu'il aime, ce qui lui déplaisait).
-2. Trancher la piste technique **avec lui, sur essais réels** : (a) calques PNG/WebP rendus depuis Blender, empilés comme des sprites (léger, compatible WebView, personnalisation par superposition) ; (b) modèle glTF affiché avec three.js (rotation possible, plus lourd, plus risqué sur téléphones modestes). Mesurer poids et fluidité avant de choisir.
-3. Produire **un seul personnage de référence**, le lui montrer en capture, **attendre sa validation**. Aucune variante avant.
-4. Seulement ensuite : version homme et femme, paliers d'évolution par zone, coiffures, tenues, accessoires.
-5. Intégration dans la garde-robe (la boutique et les aperçus existent déjà) et dans les animations d'exercices (`figure.js`), sans casser les 50 animations existantes.
-Contraintes : tout fonctionne hors ligne dans l'APK, reste lisible en vignette, s'accorde avec les 27 esprits, respecte les budgets de la section 7.
+---
 
-### Décisions prises (octobre 2026)
-- **Piste B retenue** : modèle glTF (.glb) affiché avec three.js (copié dans le dépôt avec son fichier LICENSE, jamais de CDN ; three.js exige WebGL 2). **Image de secours prérendue** (WebP) pour les téléphones sans WebGL 2 et pour les vignettes.
-- **Style** : 3D au ton héroïque sérieux, proportions humaines réelles, épaules jamais exagérées.
-- **Corps** : à l'inscription, l'utilisateur règle la corpulence avec un **curseur libre**, du très fin à la forte corpulence (obésité comprise), et règle aussi la taille. L'entraînement **ajoute** du muscle zone par zone (11 zones) : jamais de régression, jamais de logique « gros vers mince ».
-- **Base du corps** : MakeHuman via l'extension Blender **MPFB** (2.0.18, plateforme officielle des extensions). On n'utilise que le maillage de base, les cibles (targets) et les peaux, tous **sous CC0**. Le code de MPFB (GPL) reste un outil dans Blender. Les packs CC-BY et tout élément sous une autre licence sont exclus.
-- **Tenue de base** : t-shirt, short et baskets, **sans accessoire**.
-- **Clés de forme exportées** (essai du 14/10/2026) : `corpulence_moins`, `corpulence_plus`, `obesite`, `musculature_moins`, `musculature_plus`, plus 4 clés `croise_*`. Les clés `croise_*` corrigent l'interaction corpulence × musculature : MakeHuman est bilinéaire, et sans ces clés l'erreur atteint 8 cm. L'influence d'une clé `croise_*` = influence de corpulence × influence de musculature, avec la formule de `cle_valeurs()`.
-- **Sources Blender** : dans `/home/PM/fonte-blender` (hors dépôt, à sauvegarder sur le Nextcloud) : `fonte_homme_base.blend` et `fonte_corps.py`.
+## 8 bis. Questionnaire et programme généré
 
-### Personnage de référence (décision du 14/10/2026, remplace la base MPFB pour la partie artistique)
-- **Base retenue** : Quaternius « Superhero Male » (pack Universal Base Characters, version gratuite Standard, **CC0 1.0**, licence lue dans `License_Standard.txt`). Coiffure **rasée** (Hair_Buzzed du même pack) teinte brun foncé pour la référence. Georgio le juge « parfait comme ça » : **ne pas modifier** le visage, la peau peinte ni les proportions.
-- **Refusés** : les personnages générés par scripts (essais 1 et 2, base MPFB + tête Human Base Meshes) pour la partie artistique (« le rendu est nul »). Bruno (100Avatars n° 233) abandonné car **incomplet** : sans casque ni costume, il n'a ni haut de tête, ni dos, ni jambes. Règle : un candidat n'est proposé que s'il est complet sans ses accessoires (capture face, trois quarts et dos du corps seul).
-- **Progression** : la carrure du Superhero représente le **haut** de la progression. Au niveau 0, la silhouette est ordinaire et les muscles peints dans la texture s'estompent ; ils reviennent zone par zone avec l'entraînement. Le système technique déjà construit (clés de corpulence, zones, abdos, contrôle anti-amincissement, export three.js) est conservé et sera rebranché sur ce modèle.
-- **Fichiers de travail** : essais dans `/home/PM/fonte-travail/reference*` et `essai3` à `essai5` ; sources Blender dans `/home/PM/fonte-blender` (`essai5/candidats5.blend`). Brouillon des crédits : `/home/PM/fonte-travail/silhouettes/CREDITS.md`.
+### Lot 1 (20/10/2026, commit local 805eba3, validé sur le téléphone de Georgio)
+- Fichier `server/static/profil.js` (chargé par `<script>`, passe par `window.APPX`). Cahier des charges : PDF « Appli fitness questionnaire et génération de programme » (11 pages).
+- Profil dans `localStorage`, clé `muscu-profil` (`version: 1`) ; réponses en cours dans `muscu-profil-brouillon`, enregistrées à chaque saisie. Le profil suit l'export local (clé `profil`, comme `jeu`) ; un export sans cette clé reste accepté. En mode serveur, il n'est pas dans `/api/export`.
+- Questionnaire de 17 écrans (16 du PDF + « Veux-tu voir le détail santé ? », réponse par défaut « Non »), imposé une fois tant que le profil n'existe pas ; n'efface jamais de données. Avec « Non », aucun écran n'affiche « IMC », une tranche ou « kcal ».
+- Règles, dans l'ordre : sécurité (santé « Oui » → programme allégé, 2 séries, ni intervalles ni course ; moins de 18 ans → 8 répétitions au minimum ; IMC ≥ 30 → cardio à faible impact ; blessure → remplaçant, sinon autre exercice de la même famille de schéma moteur, sinon retrait expliqué, jamais un exercice déconseillé), niveau et phase (phase 1 sans isolation, 5 exercices au plus ; Avancé = paramètres de phase 2), fréquence (A/B, Haut/Bas, Poussée/Tirage/Jambes/Haut/Bas), durée (4 à 7 exercices, cardio d'après le tableau des durées), objectif.
+- Blessures (décision de Georgio) : si l'exercice et son remplaçant sont déconseillés, prendre un autre exercice du même type (interprétation de Claude : même **famille** de schéma moteur, poussée horizontale ou verticale, tirage horizontal ou vertical), de préférence absent de l'autre séance ; sinon le retirer avec « … : aucun exercice de ce type ne convient à ta blessure … Demande conseil à un professionnel de santé. » « Aucune » est exclusive.
+- Choix techniques validés : phase 1 sans isolation ; durée du cardio d'après le tableau des durées ; intervalles en fin de 1re séance seulement (endurance ou athlétique, phase 2).
+- Programmes remplacés seulement après confirmation (création des nouveaux programmes, puis suppression des anciens ; historique intact, chaque séance passée garde son nom ; séance en cours non enregistrée rattachée à « séance libre »). « Garder mes programmes » enregistre le profil sans rien toucher ; « Mon profil » permet de générer plus tard.
+- La table des 50 exercices (`LIB` dans `profil.js`) est **à relire par un professionnel** : contre-indications, impacts, types et une partie des niveaux et remplaçants sont des propositions de Claude. Elle n'est pas validée médicalement.
+
+### Lot 2A : réglages propres à chaque séance (décidé le 20/10/2026)
+- Un même exercice peut avoir des séries, une cible (min, max) et un repos **différents selon le programme** (par exemple 4 × 5 en séance force, 3 × 12 en séance volume). Prépare la phase 3 (lot 2B).
+- Réglages **facultatifs** sur `workout_item` (séries, cible min, cible max, repos) : vide = valeurs de l'exercice, comme avant. Mêmes règles dans `app.py` et `local-backend.js`, comparées par `tests/differentiel.py`.
+- Migration sans perte d'une base SQLite et de données IndexedDB créées par le code de 805eba3 ; un ancien export s'importe toujours, un nouvel export restitue les réglages.
+- L'écran Séance affiche les réglages de la séance et le conseil de charge les utilise ; l'écran Programmes permet de les voir, de les modifier et de revenir aux valeurs de l'exercice.
+- Le générateur écrit ses séries, répétitions et repos **dans les réglages de séance** et **ne modifie plus le catalogue d'exercices**. La confirmation montre les réglages de chaque nouvelle séance (plus de section « Exercices modifiés »). « Garder mes programmes » et « Annuler » ne changent rien.
+
+### Lot 2B (à venir, rien de commencé)
+- Phases 1, 2 et 3 (changement de phase **proposé puis confirmé** par l'utilisateur, jamais imposé), séances ondulatoires de phase 3 (force, volume et endurance, puissance et cardio) grâce aux réglages par séance ; semaine allégée ; reprise en douceur à 80 % après plus de 3 semaines sans séance ; placement des séances sur les jours choisis ; conseil de charge combiné (double progression, régression, ressenti, semaine allégée, reprise) ; repos plus longs si IMC de 30 ou plus.
+- Plus tard : bouton « J'ai mal », circuit d'endurance.
 
 ---
 
 ## 9. À faire ensuite
-- Avatar (section 8).
+- Questionnaire : lot 2A (réglages par séance), puis lot 2B (section 8 bis).
+- Esprits : avis de Georgio sur Gloumi (première passe pixel art), puis les autres espèces du bestiaire v3 une par une, puis intégration dans l'appli (sprites PNG, halo, stade jamais en recul). Puis démonstrations d'exercice (`figure.js`).
 - Zones et exercices manquants : avant-bras, trapèzes, obliques, adducteurs (les formes musculaires sont dessinées mais absentes de `ZONES` et `EXZ`).
 - Non vérifié sur téléphone réel : changement d'icône du lanceur, fluidité des animations dans la WebView, empreinte de la signature, animations/sons/vibrations du tirage.
 - Mettre à jour le wiki (voir section 10), en une seule écriture, après confirmation de Georgio.
@@ -165,5 +188,5 @@ Contraintes : tout fonctionne hors ligne dans l'APK, reste lisible en vignette, 
 ## 10. Tenir ce fichier et le wiki à jour
 
 - Après toute décision durable (choix technique, règle du jeu, version publiée, incident résolu), mettre à jour **ce fichier** (sections 4, 8, 9 en priorité) dans le même commit que le changement.
-- Georgio tient un wiki BookStack (projet Raspberry Pi, hors Fonte) avec une page « Suivi muscu » (id 71) : résumé fonctionnel du projet (dépôt local-first, alias d'icônes, moteur d'animation, jeu des Esprits, avatar). Si le connecteur BookStack est disponible dans cette session, la mettre à jour **en une seule écriture** (BookStack n'a pas de mise à jour partielle : chaque écriture renvoie la page entière), après sa confirmation. Sinon, préparer le texte et le lui remettre pour qu'il le fasse passer par sa conversation Claude habituelle.
+- Georgio tient un wiki BookStack (projet Raspberry Pi, hors Fonte) avec une page « Suivi muscu » (id 71) : résumé fonctionnel du projet (dépôt local-first, alias d'icônes, moteur d'animation, jeu des Esprits ; l'avatar humain est abandonné). Si le connecteur BookStack est disponible dans cette session, la mettre à jour **en une seule écriture** (BookStack n'a pas de mise à jour partielle : chaque écriture renvoie la page entière), après sa confirmation. Sinon, préparer le texte et le lui remettre pour qu'il le fasse passer par sa conversation Claude habituelle.
 - **Ne pas dupliquer** : la procédure de publication et les règles de code vivent dans ce fichier ; le wiki n'en garde qu'un résumé et y renvoie.
