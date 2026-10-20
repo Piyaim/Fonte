@@ -75,7 +75,7 @@ Ce fichier est la **référence** du projet pour Claude Code. Le lire en entier 
 
 Aucun argent réel, aucune série à perdre, jetons gagnés **seulement par effort réel**, plafond quotidien, taux de tirage affichés. Ne pas assouplir ces règles sans accord explicite de Georgio.
 
-Valeurs actuelles (v0.3.1) :
+Valeurs actuelles (inchangées depuis v0.3.1, toujours valables en v0.4.0) :
 - Taux : Commun 58, Peu commun 26, Rare 11, Épique 4, Légendaire 1. Compassion (pity) : Épique à 30, Légendaire à 90 tirages.
 - Tirage : 1 jeton, ×5 possible. Plafond : 4 jetons par jour.
 - Éclats par doublon : C 4, U 10, R 30, E 80, L 200. Prix boutique : 40, 100, 300, 800, 2000.
@@ -98,6 +98,9 @@ Fichiers dans `tests/`, à lancer avec `python3 tests/nom.py` (Playwright et Fla
 - `import_profil.py` : un import réussi fait sauter le questionnaire (depuis « Bienvenue » et depuis Données, modes local et serveur) ; import en échec ou annulé : rien ne change.
 - `lot2c.py` : règles d'écriture (cartes courtes, un seul conseil par exercice, replis fermés et de 44 px, avertissements toujours visibles).
 - `lot2b.py` : dates simulées (horloge de Playwright, `page.clock.set_fixed_time`) : phases, « Plus tard », semaine allégée, reprise, mot « manquée », placement (624 choix de jours), conseil combiné, IMC ≥ 30, bouton « Démarrer la séance » en tête, boutons de 44 px. `migration_lot2b.py` : données créées par le code de 64e77a8 (programme généré par l'interface) rouvertes par le code actuel, et nouvel export importé dans l'ancien code.
+- `migration_v031.py` : le code de la **dernière version publiée** (tag `v0.3.1`, sorti par `git archive`, ou dossier `ANCIEN_DIR`) crée de vraies données en mode serveur et en mode local (deux origines : 127.0.0.1 et localhost), exports compris ; le code actuel les rouvre (tout identique, photos octet par octet, jeu), questionnaire affiché une fois, « Garder mes programmes » sans effet sur les données, exports 0.3.1 importés dans une appli neuve (questionnaire sauté), aucune requête sortante. **À chaque nouvelle version** : copier ce test en `migration_vX.py` avec le tag de la version publiée précédente (ou changer `TAG`).
+- **Typographie** : espace insécable (`\u00a0`) avant « % » et avant le « : » qui suit une valeur calculée ; contrôlé par `lot2c.py` (carte rétrécie de 360 à 100 px, aucun « % » précédé d'une espace sécable sur les écrans principaux). Les tests qui cherchent « Conseil : », « Dernière : » ou un pourcentage écrivent donc `\u00a0`.
+- Réseau : `simulation_android.py` bloque et note toute requête hors de l'adresse de la coque, sur les 10 onglets, les sous-onglets des Esprits, une fiche d'exercice et le questionnaire (témoin inclus).
 - Témoins par mutation : script de session `temoins.py` (une règle faussée à la fois dans le code, test relancé, fichier remis à l'identique, empreinte vérifiée). Piège : dans un test Playwright synchrone, `time.sleep` bloque les boîtes `alert` ; attendre avec `pg.wait_for_timeout`.
 - **Polices sur Bazzite** : le Chromium de Playwright ne lit pas la configuration de polices du système (aucun texte rendu, `inner_text` vide, tests en échec). Toujours lancer les tests ainsi, depuis `/home/PM/Fonte` :
   `FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/profil.py` (même chose pour chaque fichier de test ; chemin complet obligatoire, un chemin relatif ne marche pas).
@@ -132,7 +135,7 @@ Fichiers dans `tests/`, à lancer avec `python3 tests/nom.py` (Playwright et Fla
 ### APK de test (identifiant `app.fonte.suivi.test`, construit sur le PC)
 - Conteneur podman `eclipse-temurin:17-jdk`, SDK `/home/PM/Android/Sdk`, cache Gradle `/home/PM/.cache/fonte-gradle`, `sh ./gradlew --no-daemon --offline -q -PAPP_ID=app.fonte.suivi.test assembleRelease` (commande complète dans JOURNAL.md).
 - **Toujours monter la clé de test fixe** : `-v /home/PM/fonte-travail/cle-test:/root/.android` (créée le 20/10/2026, hors dépôt, mot de passe public « android »). Sans elle, chaque construction crée une clé jetable : les APK de test du lot 1 et du lot 2A ont deux clés différentes, et aucun APK ne peut s'installer par-dessus eux.
-Version actuelle : voir `android/gradle.properties` (0.3.1, VERSION_CODE 6, au moment du passage de relais).
+Version actuelle : voir `android/gradle.properties` (0.4.0, VERSION_CODE 7, préparée le 20/10/2026 ; publiée seulement si la release v0.4.0 existe sur GitHub). Dernière version publiée avant elle : 0.3.1 (APK de 195 728 octets).
 
 ---
 
@@ -183,7 +186,7 @@ Version actuelle : voir `android/gradle.properties` (0.3.1, VERSION_CODE 6, au m
 - Programmes remplacés seulement après confirmation (création des nouveaux programmes, puis suppression des anciens ; historique intact, chaque séance passée garde son nom ; séance en cours non enregistrée rattachée à « séance libre »). « Garder mes programmes » enregistre le profil sans rien toucher ; « Mon profil » permet de générer plus tard.
 - La table des 50 exercices (`LIB` dans `profil.js`) est **à relire par un professionnel** : contre-indications, impacts, types et une partie des niveaux et remplaçants sont des propositions de Claude. Elle n'est pas validée médicalement.
 
-### Lot 2A : réglages propres à chaque séance (20/10/2026, fait, en attente de validation sur téléphone)
+### Lot 2A : réglages propres à chaque séance (20/10/2026, validé sur le téléphone de Georgio)
 - Un même exercice peut avoir des séries, une cible (min, max) et un repos **différents selon le programme** (par exemple 4 × 5 en séance force, 3 × 12 en séance volume). Prépare la phase 3 (lot 2B).
 - Réglages **facultatifs** sur `workout_item` (séries, cible min, cible max, repos) : vide = valeurs de l'exercice, comme avant. Mêmes règles dans `app.py` et `local-backend.js`, comparées par `tests/differentiel.py`.
 - Migration sans perte d'une base SQLite et de données IndexedDB créées par le code de 805eba3 ; un ancien export s'importe toujours, un nouvel export restitue les réglages.
@@ -207,7 +210,8 @@ Version actuelle : voir `android/gradle.properties` (0.3.1, VERSION_CODE 6, au m
 - Boutons ↑ ↓ ✕ de l'écran Programmes : 44 × 44 px.
 - Plus tard : bouton « J'ai mal », circuit d'endurance.
 
-### Lot 2C : séance C « puissance et cardio » (20/10/2026, fait, EN ATTENTE DE VALIDATION : captures, téléphone)
+### Lot 2C : séance C « puissance et cardio » (20/10/2026, validé sur le téléphone de Georgio ; version 0.4.0)
+- Détails de la carte « Phase 3 prête » : liste de la séance C, une ligne « A : force · B : volume et endurance · C : puissance et cardio » (nom du programme sans « Séance »), « Ton historique reste le même. » Rien d'autre.
 - Décision de Georgio : avec 2 programmes générés (A/B ou Haut/Bas : 2, 3 ou 4 séances), le passage en phase 3 propose d'**ajouter une 3e séance**. Carte « Phase 3 prête » / « Une 3e séance s'ajoute : puissance et cardio. », exercices de C dans « Détails ». « Accepter » crée C (nom « Séance C »), puis réécrit les réglages : A = force, B = volume, C = puissance et cardio. « Plus tard » ne change rien. Rien n'est supprimé, historique intact.
 - Composition de C (`FB_C`, `planC`, `structOf` dans `profil.js`) : corps entier, exercices **polyarticulaires seulement** (ni isolation ni tronc ; remplaçants de blessure aussi polyarticulaires), nombre selon la durée (4 à 7), de préférence absents de A et B ; mêmes règles que le générateur (lieu, niveau, blessures, exercices à éviter, profils protégés) ; cardio à la fin, durée haute de `x.cardio` (donc durée basse pour l'objectif force et un IMC sous 18,5, comme ailleurs) ; intervalles seulement pour endurance et athlétique, jamais pour un profil protégé. Si aucun exercice de force n'est possible, pas de séance C.
 - Rotation A, B, C, A… continue d'une semaine à l'autre, quel que soit le nombre de séances (`seqFor` : séance n° (semaine × séances + i) modulo programmes, comptée depuis `program.rot`, lundi de l'ajout de C ou de la génération ; sans `rot`, depuis `program.start`). Pour 2 programmes, c'est exactement l'alternance du lot 2B.
@@ -216,7 +220,9 @@ Version actuelle : voir `android/gradle.properties` (0.3.1, VERSION_CODE 6, au m
 - Tests : `tests/lot2c.py` (acceptation, « Plus tard », genoux sur 36 programmes, santé « Oui », moins de 18 ans, IMC 32, rotation sur 3 semaines avec 2, 3 et 4 séances, C supprimée, Avancé avec 2, 4 et 5 séances, « Garder mes programmes »), 7 témoins par mutation.
 
 ## 9. À faire ensuite
-- Questionnaire : validation par Georgio du lot 2C (captures avant/après, APK de test sur téléphone) ; ensuite bouton « J'ai mal » et circuit d'endurance.
+- Version 0.4.0 : préparée (lots 1 à 2C, postures) ; publication après le « publie » de Georgio, puis installation par-dessus sa vraie appli 0.3.1 (export d'abord).
+- Questionnaire : ensuite bouton « J'ai mal » et circuit d'endurance.
+- Contrastes en thème clair (mesurés le 20/10/2026, inchangés depuis la 0.3.1, non corrigés : c'est un choix de couleurs à faire avec Georgio) : texte blanc sur l'orange `#e8590c` (boutons « Commencer », « Accepter », carte de séance de l'accueil) 3,6 pour 1, texte gris `#6a7884` sur `#eef1f4` 4,0 pour 1 ; le seuil WCAG AA est 4,5. Le thème sombre passe partout. Mesure : `/home/PM/fonte-travail/v040/captures.py`.
 - Esprits : avis de Georgio sur Gloumi (première passe pixel art), puis les autres espèces du bestiaire v3 une par une, puis intégration dans l'appli (sprites PNG, halo, stade jamais en recul). Puis démonstrations d'exercice (`figure.js`).
 - Zones et exercices manquants : avant-bras, trapèzes, obliques, adducteurs (les formes musculaires sont dessinées mais absentes de `ZONES` et `EXZ`).
 - Non vérifié sur téléphone réel : changement d'icône du lanceur, fluidité des animations dans la WebView, empreinte de la signature, animations/sons/vibrations du tirage.

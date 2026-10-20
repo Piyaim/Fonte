@@ -14,8 +14,9 @@ Il y a deux façons de l'utiliser, avec la même interface :
 ## Ce que fait l'appli
 
 - Un catalogue de 50 exercices que tu modifies librement (ajout, changement, archivage), avec schéma animé, consignes d'exécution et erreurs courantes.
-- Programmes, séances libres ou parallèles, séances composées par zones musculaires, mode focus.
-- Une jauge de difficulté ressentie (1 à 5) qui influence le conseil de charge de la séance suivante.
+- Un questionnaire de départ (objectif, niveau, temps, jours, douleurs) qui propose un programme adapté, ou te laisse garder tes programmes. Le programme avance par phases, avec semaine légère et reprise en douceur proposées, jamais imposées ; l'accueil montre la séance du jour selon tes jours.
+- Programmes, séances libres ou parallèles, séances composées par zones musculaires, mode focus. Un même exercice peut avoir des séries, répétitions et repos différents d'un programme à l'autre.
+- Une jauge de difficulté ressentie (1 à 5) qui influence le conseil de charge de la séance suivante (une ligne par exercice, d'après ta dernière séance du même programme).
 - Un minuteur de repos dont l'affichage reste juste quand l'écran se verrouille.
 - Records (1RM estimé), courbes de progression, poids de corps, photos de progression, import et export.
 - Des animations de personnage (homme ou femme, au choix dans le menu ☰) montrent chaque mouvement, avec les muscles travaillés qui s'allument. Les 50 exercices du catalogue de départ ont leur animation (musculation, gainage, cardio).
@@ -24,7 +25,7 @@ Il y a deux façons de l'utiliser, avec la même interface :
 
 ## ⚠️ À lire avant d'utiliser
 
-- **Ce n'est ni un coach ni un avis médical.** Les textes d'exécution des exercices, les erreurs courantes, les animations et la règle de conseil de charge ont été rédigés **sans source externe ni relecture par un professionnel**. Certaines animations sont des approximations. En cas de douleur ou de doute, demande l'avis d'un coach ou d'un médecin.
+- **Ce n'est ni un coach ni un avis médical.** Les textes d'exécution des exercices, les erreurs courantes, les animations, la règle de conseil de charge, le questionnaire et les programmes générés (contre-indications comprises) ont été rédigés **sans source externe ni relecture par un professionnel**. Certaines animations sont des approximations. En cas de douleur ou de doute, demande l'avis d'un coach ou d'un médecin.
 - **Tes données ne sont que sur ton téléphone.** Si tu désinstalles l'appli ou effaces ses données, tout disparaît. **Exporte régulièrement** (Données > Télécharger l'export, puis Télécharger les photos) et garde les fichiers ailleurs. Il n'y a pas de synchronisation entre appareils dans la version autonome.
 - **Les photos de progression** sont dans un fichier d'export séparé de celui des séances.
 - L'appli demande la permission « réseau » par précaution technique (la WebView d'Android l'attend), mais elle **bloque elle-même toute requête vers l'extérieur** : rien ne quitte le téléphone.
@@ -80,6 +81,8 @@ python3 tests/ui_local.py           # parcours dans l'interface en mode local (p
 python3 tests/simulation_android.py # imite la coque : page servie sous l'adresse interne de la WebView
 python3 tests/figures.py            # animations de personnage : valeurs valides, mains sur la barre, pieds au sol
 python3 tests/icone_app.py          # le choix d'une couleur appelle bien le changement d'icône de la coque
+python3 tests/profil.py             # questionnaire de départ et programme généré (aussi : lot2b.py, lot2c.py, reglages_seance.py, import_profil.py)
+python3 tests/migration_v031.py     # données créées par la dernière version publiée (0.3.1), rouvertes sans perte
 ```
 
 Lancer le serveur sans Docker :
