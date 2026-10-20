@@ -327,6 +327,14 @@ body.onb main{padding-bottom:40px}
 .qbig{font-size:18px}
 .qtog{min-height:48px}
 .go:disabled,.sm:disabled{opacity:.55}
+/* ---- progression (lot 2B) : cartes de proposition sous le bouton de séance, ligne de jour de repos ---- */
+.hero .rest{margin:12px 0 0;font-size:15px;font-weight:600}
+[data-style="b"] .hero .rest{color:rgba(255,255,255,.95)}
+.offer{border-left:5px solid var(--a)}
+.offer h2{margin-bottom:6px}
+.offb{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:12px}
+.offb .go{margin:0}.offb .sm{min-height:48px}
+.li .mv{min-width:44px;min-height:44px;padding:0;font-size:18px;flex:none}
 </style>
 </head>
 <body>
@@ -416,21 +424,12 @@ function inputLabels(e) {
   return {weight: [e.assisted ? 'assist. kg' : 'kg', 'reps'], reps: ['lest kg', 'reps'], time: ['lest kg', 'secondes'], cardio: ['niveau', 'minutes']}[e.kind];
 }
 function setsOf(s, exId) { const x = s.entries.find(e => e.exercise_id === exId); return x ? x.sets : null; }
-function lastSets(exId, exceptSid) {
-  for (let i = SESS.length - 1; i >= 0; i--) {
-    if (SESS[i].id === exceptSid) continue;
-    const x = setsOf(SESS[i], exId); if (x) return x;
-  }
-  return null;
+function refSessions(exId, wid, exceptSid) {   // séances qui contiennent l'exercice, de la plus récente à la plus ancienne : celles du même programme s'il y en a
+  const all = SESS.filter(s => s.id !== exceptSid && setsOf(s, exId)).reverse(), same = wid ? all.filter(s => s.workout_id === wid) : [];
+  return same.length ? same : all;
 }
+function lastSets(exId, exceptSid, wid) { const s = refSessions(exId, wid, exceptSid)[0]; return s ? setsOf(s, exId) : null; }
 const EFF = ['Très facile', 'Facile', 'Juste bien', 'Dur', 'À fond'];
-function lastEffort(exId, exceptSid) {   // ressenti noté lors de la dernière séance (la même que celle de lastSets)
-  for (let i = SESS.length - 1; i >= 0; i--) {
-    if (SESS[i].id === exceptSid) continue;
-    const x = SESS[i].entries.find(e => e.exercise_id === exId); if (x) return x.effort || 0;
-  }
-  return 0;
-}
 function effBox(e) {
   if (e.kind === 'cardio') return '';
   const v = (F.eff && F.eff[e.id]) || 0;
@@ -521,29 +520,65 @@ function diagram(e, anim) {
 
 new MutationObserver(() => FIG.scan()).observe(document.documentElement, {childList: true, subtree: true});
 
-function advice(e, exceptSid) {
-  const l = lastSets(e.id, exceptSid);
-  const mx = e.target_max || e.target_min || 0;
+/* conseil de charge combiné : un seul conseil, dans cet ordre de priorité :
+   1. reprise en douceur (80 %), 2. semaine allégée (−20 %), 3. deux séances de suite sous la fourchette (−5 à 10 %),
+   4. ressenti 5 (garder), 5. montée (double progression, ou ressenti 1-2 avec toutes les séries au moins au minimum).
+   Les séances de semaine allégée et de reprise ne comptent pas comme séances sous la fourchette. */
+const r05 = v => Math.round(v * 2) / 2;
+function loadTip(e, ref, cs, ef) {
+  const inLight = d => (cs.periods || []).some(p => p.start <= d && d <= p.end);
+  const l = setsOf(ref[0], e.id), mn = e.target_min || e.target_max || 0, mx = e.target_max || mn;
+  const top = (s, k) => { const v = setsOf(s, e.id).map(a => a[k]).filter(x => x != null && x > 0); return v.length ? Math.max(...v) : null; };
+  const L = top(ref[0], 0), V = top(ref[0], 1);
+  const w = e.kind === 'weight' && !e.assisted, as = e.kind === 'weight' && e.assisted;
+  if (cs.light) {   // 1 et 2 : base = dernière séance hors semaine allégée et reprise
+    const b = ref.find(s => !inLight(s.day)) || ref[0], bL = top(b, 0), bV = top(b, 1);
+    const pre = cs.light.kind === 'reprise' ? 'Reprise en douceur' : 'Semaine allégée', pc = cs.light.kind === 'reprise' ? '80 % de' : 'environ 20 % de moins que';
+    if (w && bL) return `${pre} : vise environ ${fmt(r05(bL * .8))} kg (${pc} ${fmt(bL)} kg), mêmes séries.`;
+    if (as && bL) return `${pre} : ajoute environ 20 % d’assistance, soit ${fmt(r05(bL * 1.2))} kg.`;
+    if (e.kind === 'time' && bV) return `${pre} : tiens environ ${Math.round(bV * .8)} s par série.`;
+    if (e.kind === 'reps' && bV) return `${pre} : vise environ ${Math.max(1, Math.round(bV * .8))} reps par série.`;
+    if (e.kind === 'cardio') { const m = setsOf(b, e.id).reduce((t, a) => t + (a[1] || 0), 0); return `${pre} : durée et allure plus douces${m ? ', environ ' + Math.round(m * .8) + ' min' : ''}.`; }
+    return `${pre} : environ 20 % plus léger que d’habitude.`;
+  }
+  if (e.kind === 'cardio') return 'Garde la durée, ou ajoute 2-3 min si c\'était confortable.';
+  const counted = ref.filter(s => !inLight(s.day));
+  const under = s => { const v = setsOf(s, e.id).filter(a => a[1] != null); return v.length > 0 && v.filter(a => a[1] < mn).length * 2 >= v.length; };
+  if (counted.length >= 2 && under(counted[0]) && under(counted[1])) {   // 3
+    const cL = top(counted[0], 0), pre = 'Deux séances de suite sous ta fourchette';
+    if (w && cL) return `${pre} : baisse un peu, entre ${fmt(r05(cL * .9))} et ${fmt(r05(cL * .95))} kg (5 à 10 % de moins), et vise ${mn} reps.`;
+    if (as) return `${pre} : ajoute 5 kg d’assistance et vise ${mn} reps.`;
+    if (e.kind === 'time') return `${pre} : vise ${mn} s par série, sans forcer.`;
+    if (e.kind === 'reps') return `${pre} : vise ${mn} reps propres, sans forcer.`;
+    return `${pre} : allège la charge de 5 à 10 % et vise ${mn} reps.`;
+  }
+  if (ef >= 5) return w && L ? `Ressenti « à fond » : garde ${fmt(L)} kg la prochaine fois.` : 'Ressenti « à fond » : garde le même objectif la prochaine fois.';   // 4
+  const full = l.length >= e.sets, atTop = full && l.every(a => (a[1] || 0) >= mx), atMin = full && l.every(a => (a[1] || 0) >= mn);
+  if (atTop || (ef && ef <= 2 && atMin)) {   // 5
+    const why = atTop ? 'Toutes les séries au haut de la fourchette' : `Ressenti ${EFF[ef - 1].toLowerCase()}`;
+    if (w && L) return `${why} : passe à ${fmt(L + r05(Math.min(2.5, Math.max(1, L * .025))))} kg (ou au cran suivant) et repars à ${mn} reps.`;
+    if (w) return `${why} : monte de 1 à 2 kg (ou d’un cran) et repars à ${mn} reps.`;
+    if (as) return `${why} : réduis l’assistance de 5 kg.`;
+    if (e.kind === 'time') return `${why} : ajoute 5 à 10 s par série, ou une série de plus.`;
+    return `${why} : ajoute 1 à 2 reps par série, ou une série de plus.`;
+  }
+  if (e.kind === 'time') return `Objectif : tenir ${mx} s partout.`;
+  if (e.kind === 'reps') return `Vise ${mx} reps contrôlées partout.`;
+  return w && L ? `Garde ${fmt(L)} kg et vise ${mx} reps sur chaque série.` : `Garde la charge et vise ${mx} reps sur chaque série.`;
+}
+function advice(e, exceptSid, wid) {   // wid : programme de la séance en cours (« dernière fois » = même programme s'il a déjà été fait)
+  const ref = refSessions(e.id, wid, exceptSid), l = ref.length ? setsOf(ref[0], e.id) : null;
   if (!l) {
     return e.kind === 'cardio' ? '<p class="sug">Première fois : allure confortable, tu dois pouvoir parler.</p>'
       : e.kind === 'weight' ? '<p class="sug">Première fois : charge légère, finis chaque série à 2-3 reps de l\'échec.</p>'
       : '<p class="sug">Première fois : vise une exécution propre, sans forcer.</p>';
   }
-  const ef = e.kind === 'cardio' ? 0 : lastEffort(e.id, exceptSid);
-  let h = `<p class="m">Dernière fois : ${l.map(a => setText(e, a)).join(' · ')}${ef ? ' · ressenti : ' + EFF[ef - 1] + ' (' + ef + '/5)' : ''}</p>`;
-  const ok = e.kind !== 'cardio' && l.length >= e.sets && l.every(a => (a[1] || 0) >= mx);
-  const upTxt = e.assisted ? 'Réduis l\'assistance de 5 kg la prochaine fois.' : 'Monte de 1 à 2 kg (ou d\'un cran) la prochaine fois.';
-  const done = e.kind !== 'cardio' && l.length >= e.sets && l.every(a => (a[1] || 0) >= (e.target_min || 0));
-  const wsug = ef >= 5 ? 'Ressenti « à fond » : garde la même charge (ou baisse un peu) la prochaine fois.'
-    : (ef && ef <= 2 && done) ? 'Ressenti ' + EFF[ef - 1].toLowerCase() + ' : ' + upTxt
-    : ok ? upTxt : `Garde la charge et vise ${mx} reps sur chaque série.`;
-  const sug = {
-    weight: wsug,
-    reps: ok ? 'Ajoute 2 reps par série, ou ralentis le mouvement.' : `Vise ${mx} reps contrôlées partout.`,
-    time: ok ? 'Objectif : +10 s sur chaque série.' : `Objectif : tenir ${mx} s partout.`,
-    cardio: 'Garde la durée, ou ajoute 2-3 min si c\'était confortable.'
-  }[e.kind];
-  h += `<p class="sug">${sug}</p>`;
+  const cs = window.PROFIL && PROFIL.coach ? PROFIL.coach() : {};
+  const en = ref[0].entries.find(x => x.exercise_id === e.id), ef = e.kind === 'cardio' ? 0 : (en && en.effort) || 0;
+  const other = wid && ref[0].workout_id !== wid && ref[0].workout_name ? ` (${esc(ref[0].workout_name)})` : '';
+  let h = `<p class="m">Dernière fois${other} : ${l.map(a => setText(e, a)).join(' · ')}${ef ? ' · ressenti : ' + EFF[ef - 1] + ' (' + ef + '/5)' : ''}</p>`;
+  h += `<p class="sug">${esc(loadTip(e, ref, cs, ef))}</p>`;
+  if (cs.phase === 1 && e.kind !== 'cardio') h += '<p class="m">Phase 1 : garde 2 à 3 répétitions en réserve, jamais jusqu’à l’échec.</p>';
   if (e.kind === 'weight' && !e.assisted) {
     let b = 0;
     SESS.forEach(s => (setsOf(s, e.id) || []).forEach(a => b = Math.max(b, (a[0] || 0) * (1 + (a[1] || 0) / 30))));
@@ -621,24 +656,33 @@ function todayZones() {   // les 3 zones travaillées le moins récemment (jamai
     .sort((a, b) => ((b.d ?? 999) - (a.d ?? 999)) || (a.i - b.i)).slice(0, 3);
 }
 function startFromHome(wid) { pickWorkout(wid); go('seance'); }
+function dayWord(iso) {   // « demain », sinon le jour de la semaine
+  const d = Math.round((dayDate(iso) - dayDate(today())) / 864e5);
+  return d === 1 ? 'demain' : d < 7 ? dayDate(iso).toLocaleDateString('fr-FR', {weekday: 'long'}) : 'le ' + dayDate(iso).toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long'});
+}
 function acceptZones() { ZSEL = new Set(todayZones().map(x => x.k)); store('muscu-zones', [...ZSEL]); genZones(); }
 function vAccueil() {
   const ws = weekStart(), wk = SESS.filter(s => dayDate(s.day) >= ws), n = wk.length;
   const vol = wk.reduce((a, s) => a + sessionVolume(s), 0), {streak} = streakInfo();
-  const pending = XS.length > 0 || !!(F && F.mode === 'new' && F.dirty), nw = nextWorkout();
+  const pending = XS.length > 0 || !!(F && F.mode === 'new' && F.dirty);
+  const sch = window.PROFIL && PROFIL.schedule ? PROFIL.schedule(today()) : null, slot = sch && (sch.today || sch.next);
+  const nw = (slot && WO.find(w => w.id === slot.wid)) || nextWorkout();   // avec le placement : la séance prévue ; sinon celle qui suit la dernière faite
   const ls = SESS.length ? SESS[SESS.length - 1] : null;
   const ago = ls ? Math.round((dayDate(today()) - dayDate(ls.day)) / 864e5) : null;
   const nEx = nw ? nw.items.filter(i => EX[i] && !EX[i].archived).length : 0;
   const efs = ls ? ls.entries.map(e => e.effort).filter(Boolean) : [];
   const feel = efs.length ? EFF[Math.max(1, Math.round(efs.reduce((a, b) => a + b, 0) / efs.length)) - 1] : '—';
   const dt0 = new Date().toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long'}), dt = dt0.charAt(0).toUpperCase() + dt0.slice(1);
-  const sub = (pending ? 'Tu as une séance commencée.' : nw ? `${nEx} exercice${nEx > 1 ? 's' : ''} au programme.` : 'Compose ta séance depuis l’onglet Séance.')
+  const when = !sch || !slot ? '' : sch.today ? 'Prévue aujourd’hui. ' : `Prévue ${dayWord(slot.day)}. `;
+  const sub = (pending ? 'Tu as une séance commencée.' : nw ? `${when}${nEx} exercice${nEx > 1 ? 's' : ''} au programme.` : 'Compose ta séance depuis l’onglet Séance.')
     + (ls ? ` Dernière séance ${ago === 0 ? 'aujourd’hui' : ago === 1 ? 'hier' : 'il y a ' + ago + ' jours'}.` : ' Aucune séance enregistrée pour l’instant.');
   const pct = Math.min(n / WGOAL, 1), C = 251.3;
   const ring = `<svg class="ring" viewBox="0 0 100 100" role="img" aria-label="${n} séance${n > 1 ? 's' : ''} sur ${WGOAL} cette semaine"><circle class="tr" cx="50" cy="50" r="40"/><circle class="pg" cx="50" cy="50" r="40" style="stroke-dasharray:${(pct * C).toFixed(1)} ${C}"/><text x="50" y="58" font-size="26">${n}/${WGOAL}</text></svg>`;
   let h = `<section class="hero"><p class="dt">${esc(dt)}</p>${ring}<h2>${pending ? 'Séance en cours' : nw ? esc(nw.name) : 'Séance libre'}</h2><p class="sub">${esc(sub)}</p>`
     + (pending ? `<button class="go" onclick="go('seance')">Reprendre la séance</button>`
-      : nw ? `<button class="go" onclick="startFromHome(${nw.id})">Démarrer la séance</button>` : `<button class="go" onclick="go('seance')">Ouvrir la séance</button>`) + '</section>';
+      : nw ? `<button class="go" onclick="startFromHome(${nw.id})">Démarrer la séance</button>` : `<button class="go" onclick="go('seance')">Ouvrir la séance</button>`)
+    + (sch && !sch.planned ? '<p class="rest">Jour de repos : la récupération fait partie du progrès.</p>' : '') + '</section>';
+  if (window.PROFIL && PROFIL.homeCards) h += PROFIL.homeCards();   // proposition (phase, semaine allégée, reprise) : toujours sous le bouton
   h += `<section class="card wk"><h2>Cette semaine</h2><div class="wkm"><div class="wkbig"><b>${n}</b><span>sur ${WGOAL} séances</span></div><div class="dots">${Array.from({length: WGOAL}, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</div></div>
     <div class="tiles"><div><b>${streak}</b><span>semaine${streak > 1 ? 's' : ''} d’affilée</span></div><div><b>${Math.round(vol)}</b><span>kg soulevés</span></div><div><b>${esc(feel)}</b><span>dernier ressenti</span></div></div></section>`;
   if (jeuOn()) h += JEU.homeCard();
@@ -649,11 +693,10 @@ function vAccueil() {
   return h;
 }
 
+// sans questionnaire rempli, pas de phase : un conseil général
+const phaseNow = () => (window.PROFIL && PROFIL.phaseLine()) || 'Technique avant charge ; ajoute charge ou reps dès que toutes les séries sont réussies.';
 function seanceIntro() {   // l'essentiel du résumé est maintenant sur l'accueil et dans Progrès
-  const n = SESS.length;
-  const ph = (window.PROFIL && PROFIL.phaseLine()) || (n < 12 ? 'Phase 1 : réadaptation. Reste à 2-3 reps de l\'échec, technique avant charge.'
-    : n < 36 ? 'Phase 2 : progression. Ajoute charge ou reps dès que toutes les séries sont réussies.'
-    : 'Phase 3 : allège les charges d\'environ 20 % une semaine sur six.');
+  const ph = phaseNow();
   return `<p class="m">${ph}</p><details><summary>Échauffement (8-10 min)</summary><p class="m">5 min de cardio léger, 10 rotations d'épaules et de hanches, 10 squats au poids du corps, puis 1-2 séries légères du premier exercice.</p></details>`;
 }
 
@@ -975,7 +1018,7 @@ function vFocus() {
   let h = `<div class="focus"><div class="fhead"><b>Exercice ${FOC + 1}/${ids.length}</b><button class="sm" onclick="exitFocus()">Quitter le focus</button></div><div class="pbar"><i style="width:${nDone / ids.length * 100}%"></i></div>`;
   h += `<div class="fdia">${diagram(e, true)}</div><h2 class="ft">${esc(e.name)}</h2><p class="fta">${esc(target(e))}${ownTag(e)}</p>`;
   if (e.tip) h += `<p class="m">${esc(e.tip)}</p>`;
-  h += advice(e, F.sid);
+  h += advice(e, F.sid, F.wid);
   rows.forEach((a, i) => {
     h += `<div class="frow ${dn[i] ? 'ok' : ''}"><span>${e.kind === 'cardio' ? '' : 'S' + (i + 1)}</span>
       <input id="v${e.id}_${i}l" type="number" inputmode="decimal" step="0.5" placeholder="${l1}" value="${esc(a[0])}" oninput="touched()">
@@ -1039,7 +1082,7 @@ function hasValues() { return !!F.dirty; }
 function touched() { F.dirty = true; syncForm(); }
 function rowsFor(e) {
   if (F.vals[e.id]) return F.vals[e.id];
-  const src = F.mode === 'new' ? lastSets(e.id) : null;
+  const src = F.mode === 'new' ? lastSets(e.id, null, F.wid) : null;
   const n = e.kind === 'cardio' ? 1 : Math.max(e.sets, src ? src.length : 0);
   const rows = [];
   for (let i = 0; i < n; i++) rows.push(src && src[i] ? [src[i][0] ?? '', src[i][1] ?? ''] : ['', '']);
@@ -1068,9 +1111,7 @@ function statsHeader() {
   const ws = weekStart();
   const w = SESS.filter(s => dayDate(s.day) >= ws), n = SESS.length;
   const v = w.reduce((a, s) => a + sessionVolume(s), 0);
-  const ph = (window.PROFIL && PROFIL.phaseLine()) || (n < 12 ? 'Phase 1 : réadaptation. Reste à 2-3 reps de l\'échec, technique avant charge.'
-    : n < 36 ? 'Phase 2 : progression. Ajoute charge ou reps dès que toutes les séries sont réussies.'
-    : 'Phase 3 : allège les charges d\'environ 20 % une semaine sur six.');
+  const ph = phaseNow();
   return `<div class="st"><div><b>${w.length}/3</b><span>séances cette semaine</span></div><div><b>${Math.round(v)}</b><span>kg soulevés (semaine)</span></div><div><b>${n}</b><span>séances au total</span></div></div>
   ${streakBar()}<p class="m">${ph}</p><details><summary>Échauffement (8-10 min)</summary><p class="m">5 min de cardio léger, 10 rotations d'épaules et de hanches, 10 squats au poids du corps, puis 1-2 séries légères du premier exercice.</p></details>`;
 }
@@ -1081,7 +1122,7 @@ function exCard(e) {
   let h = `<div class="card"><div class="top${window.FIGDATA && e.slug && window.FIGDATA[e.slug] ? ' topf' : ''}">${diagram(e, true)}<div style="flex:1;min-width:0"><h2>${esc(e.name)}</h2><b>${esc(target(e))}</b>${ownTag(e)}`;
   if (e.rest) h += `<p class="m">Repos entre séries : ${e.rest} s</p>`;
   if (e.tip) h += `<p class="m">${esc(e.tip)}</p>`;
-  h += `</div></div>${advice(e, F.sid)}`;
+  h += `</div></div>${advice(e, F.sid, F.wid)}`;
   rows.forEach((a, i) => {
     h += `<div class="row"><span>${e.kind === 'cardio' ? '' : 'S' + (i + 1)}</span>
       <input id="v${e.id}_${i}l" type="number" inputmode="decimal" step="0.5" placeholder="${l1}" value="${esc(a[0])}" oninput="touched()">
@@ -1398,9 +1439,9 @@ function vProg() {
     const e = exIn(e0, D), op = D.open === id;
     h += `<div class="li"><div class="n"><b>${i + 1}. ${esc(e.name)}</b><p class="m">${esc(target(e))}${e.rest && e.kind !== 'cardio' ? ' · repos ' + e.rest + ' s' : ''}${ownTag(e)}</p>
       <button class="sm" onclick="cfgProg(${id})" aria-expanded="${op}" aria-label="Régler ${esc(e.name)} dans ce programme">Régler</button></div>
-      <button class="sm" ${i ? '' : 'disabled'} onclick="mvProg(${i},-1)" aria-label="Monter">↑</button>
-      <button class="sm" ${i < D.items.length - 1 ? '' : 'disabled'} onclick="mvProg(${i},1)" aria-label="Descendre">↓</button>
-      <button class="sm danger" onclick="rmProg(${i})" aria-label="Retirer">✕</button></div>`;
+      <button class="sm mv" ${i ? '' : 'disabled'} onclick="mvProg(${i},-1)" aria-label="Monter">↑</button>
+      <button class="sm mv" ${i < D.items.length - 1 ? '' : 'disabled'} onclick="mvProg(${i},1)" aria-label="Descendre">↓</button>
+      <button class="sm danger mv" onclick="rmProg(${i})" aria-label="Retirer">✕</button></div>`;
     if (op) h += cfgBox(e0, D.settings[id] || {});
   });
   h += `<div class="row" style="grid-template-columns:1fr auto;margin-top:10px"><select id="p-add"><option value="">Ajouter un exercice…</option>${exOptions(D.items)}</select><button class="sm" onclick="addProg()">Ajouter</button></div>

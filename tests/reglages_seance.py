@@ -58,11 +58,11 @@ try:
             # ---------------------------------------------------- écran Séance : chaque programme affiche le sien
             seance(pg, d["force"]); t = carte(pg, x["id"])
             ok("4 × 5" in t and "propre à ce programme" in t and "Repos entre séries : 180 s" in t and "Repos · 180 s" in t, f"{mode} · Séance « Force » : 4 × 5, repos 180 s")
-            ok("Monte de 1 à 2 kg" in t, f"{mode} · Séance « Force » : 4 séries de 5 réussies → le conseil propose de monter la charge")
+            ok("passe à 61,5 kg" in t, f"{mode} · Séance « Force » : 4 séries de 5 à 60 kg réussies → le conseil propose 61,5 kg (+2,5 %)")
             ok(lignes(pg, x["id"]) == 4, f"{mode} · Séance « Force » : 4 lignes de série")
             seance(pg, d["volume"]); t = carte(pg, x["id"])
             ok("3 × 12" in t and "Repos entre séries : 60 s" in t and "propre à ce programme" in t, f"{mode} · Séance « Volume » : 3 × 12, repos 60 s")
-            ok("Garde la charge et vise 12 reps" in t and "Monte" not in t, f"{mode} · Séance « Volume » : mêmes séries passées, cible 12 → garder la charge")
+            ok("Garde 60 kg et vise 12 reps" in t and "passe à" not in t, f"{mode} · Séance « Volume » : mêmes séries passées, cible 12 → garder la charge")
             seance(pg, d["libre"]); t = carte(pg, x["id"]); cible = f"{x['target_min']}-{x['target_max']}" if x["target_min"] != x["target_max"] else f"{x['target_max']}"
             ok(f"{x['sets']} × {cible}" in t and f"Repos entre séries : {x['rest']} s" in t and "propre à ce programme" not in t, f"{mode} · Séance « Libre réglage » (témoin) : valeurs du catalogue")
             ok(f"vise {x['target_max']} reps" in t and "Monte" not in t, f"{mode} · témoin : avec la cible du catalogue ({x['target_max']}), le conseil n'est pas celui de « Force »")
