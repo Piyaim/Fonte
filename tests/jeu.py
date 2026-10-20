@@ -101,7 +101,7 @@ try:
         for k in ["tirage", "collection", "garde", "boutique", "regles"]:
             ev("JEU.sub('%s')" % k); time.sleep(.2); ok(len(pg.inner_text("#app")) > 80, f"vue Esprits/{k} affichée")
         ev("JEU.sub('regles')"); t = pg.inner_text("#app")
-        ok("58 %" in t and "Aucun achat" in t and "n'expirent jamais" in t, "règles : taux et garde-fous affichés")
+        ok("58\u00a0%" in t and "Aucun achat" in t and "n'expirent jamais" in t, "règles : taux et garde-fous affichés")
         ev("JEU.sub('tirage'); JEU.state().tokens = 5; R()"); time.sleep(.2)
         pg.click("text=Tirer (1 jeton)"); pg.wait_for_selector(".j-ov", timeout=3000); time.sleep(1.8)
         pg.screenshot(path="/tmp/jeu_pull.png")

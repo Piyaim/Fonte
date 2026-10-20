@@ -197,7 +197,7 @@
     init(); var s = st(); n = n === MULTI ? MULTI : 1; var cost = n * PULL_COST;
     if (s.tokens < cost) return null;
     s.tokens -= cost; var out = []; for (var i = 0; i < n; i++) out.push(pullOne());
-    s.log.unshift({ t: Date.now(), m: n + ' tirage' + (n > 1 ? 's' : '') + ' : ' + out.map(function (r) { return r.rar; }).join(' ') }); s.log.length = Math.min(s.log.length, 30);
+    s.log.unshift({ t: Date.now(), m: n + ' tirage' + (n > 1 ? 's' : '') + '\u00a0: ' + out.map(function (r) { return r.rar; }).join(' ') }); s.log.length = Math.min(s.log.length, 30);
     save(); return out;
   }
   function buy(kind, id) {
@@ -230,7 +230,7 @@
 
   /* ------------------------------------------------------------------ rendu */
   var CSS = '.j-top{display:flex;gap:8px;margin:6px 0 10px}.j-top>div{flex:1;background:var(--c);border:1px solid var(--l);border-radius:12px;padding:8px 10px;text-align:center}.j-top b{display:block;font-size:22px}.j-top span{font-size:12px;color:var(--m)}'
-    + '.j-sub{display:flex;gap:6px;margin:6px 0 10px;overflow-x:auto}.j-sub button{flex:1 0 auto;padding:9px 12px;border:2px solid var(--l);background:var(--c);color:var(--t);border-radius:10px;font:inherit;font-size:14px;font-weight:700}.j-sub button.on{background:var(--a);border-color:var(--a);color:var(--on)}'
+    + '.j-sub{display:flex;gap:6px;margin:6px 0 10px;overflow-x:auto}.j-sub button{flex:1 0 auto;padding:9px 12px;min-height:44px;border:2px solid var(--l);background:var(--c);color:var(--t);border-radius:10px;font:inherit;font-size:14px;font-weight:700}.j-sub button.on{background:var(--a);border-color:var(--a);color:var(--on)}'
     + '.j-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.j-card{position:relative;background:var(--c);border:2px solid var(--l);border-radius:12px;padding:4px 4px 8px;text-align:center;font-size:12px;color:var(--t);font-family:inherit;cursor:pointer}.j-card svg{width:100%;display:block}.j-card b{display:block;font-size:13px}.j-card small{color:var(--m)}'
     + '.j-card.lock{opacity:.55}.j-card.sel{outline:3px solid var(--a)}.j-r-C{border-color:#8fa3b3}.j-r-U{border-color:#52c27a}.j-r-R{border-color:#4aa3ff}.j-r-E{border-color:#b06bff}.j-r-L{border-color:#ffc233;box-shadow:0 0 12px #ffc23388}'
     + '.j-badge{position:absolute;top:4px;right:4px;font-size:11px;font-weight:700;border-radius:8px;padding:1px 6px;background:var(--bg);color:var(--t)}'
@@ -319,9 +319,9 @@
     return h + '<div class="card">' + rows.map(function (r) { var p = PRICE[r[3]], can = s.shards >= p; return '<div class="j-q" style="cursor:pointer;align-items:center" onclick="JEU.preview(\'' + r[0] + '\',\'' + r[1] + '\')"><span>' + E(r[2]) + ' ' + tag(r[3]) + '<br><small class="m">' + r[4] + ' · toucher pour voir</small></span><button class="sm" ' + (can ? '' : 'disabled style="opacity:.5"') + ' onclick="event.stopPropagation();JEU.buy(\'' + r[0] + '\',\'' + r[1] + '\')">' + p + ' éclats</button></div>'; }).join('') + '</div>';
   }
   function vRegles() {
-    var s = st(), pct = function (k) { return Math.round(RATES[k] * 100) + ' %'; };
+    var s = st(), pct = function (k) { return Math.round(RATES[k] * 100) + '\u00a0%'; };
     return '<section class="card"><h2>Taux de tirage</h2><p class="m">Affichés tels qu\'ils sont codés.</p><table>' + RK.slice().reverse().map(function (k) { return '<tr><td>' + tag(k) + '</td><td style="text-align:right">' + pct(k) + '</td></tr>'; }).join('') + '</table>'
-      + '<p class="m">Garantie : Épique ou mieux tous les ' + PITY_E + ' tirages au plus, Légendaire tous les ' + PITY_L + ' au plus (compteurs actuels : ' + s.pe + ' et ' + s.pl + '). Chaque tirage donne 65 % d\'esprit et 35 % d\'objet de garde-robe, quand il en reste de cette rareté.</p></section>'
+      + '<p class="m">Garantie : Épique ou mieux tous les ' + PITY_E + ' tirages au plus, Légendaire tous les ' + PITY_L + ' au plus (compteurs actuels : ' + s.pe + ' et ' + s.pl + '). Chaque tirage donne 65\u00a0% d\'esprit et 35\u00a0% d\'objet de garde-robe, quand il en reste de cette rareté.</p></section>'
       + '<section class="card"><h2>Garde-fous</h2><ul class="j-rule" style="padding-left:18px"><li>Aucun achat, aucun argent réel, aucune publicité.</li><li>Les jetons ne s\'obtiennent qu\'en s\'entraînant. Maximum ' + DAY_CAP + ' par jour : s\'entraîner plus ne rapporte pas plus.</li><li>Aucune série à perdre : si tu pauses, tu ne perds rien, tes jetons n\'expirent jamais.</li><li>Le niveau d\'un esprit vient des séries réellement faites sur sa zone.</li><li>Tout est stocké sur ton téléphone, rien n\'est envoyé.</li><li>Les jeux de tirage peuvent donner envie d\'en refaire : si tu le sens, tu peux masquer l\'onglet ci-dessous.</li></ul></section>'
       + '<section class="card"><h2>Réglages</h2><div class="chips"><button class="chip ' + (s.opts.sound ? 'on' : '') + '" onclick="JEU.opt(\'sound\')">Sons</button><button class="chip ' + (s.opts.haptic ? 'on' : '') + '" onclick="JEU.opt(\'haptic\')">Vibrations</button><button class="chip ' + (s.opts.hide ? 'on' : '') + '" onclick="JEU.opt(\'hide\')">Masquer l\'onglet Esprits</button></div></section>';
   }

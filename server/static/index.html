@@ -73,7 +73,7 @@ label.ck input{width:auto}
 input,select,textarea{width:100%;padding:10px;font:inherit;border:1px solid var(--l);border-radius:8px;background:var(--bg);color:var(--t)}
 textarea{min-height:60px}
 .go{width:100%;padding:14px;border:0;border-radius:10px;background:var(--a);color:var(--on);font:inherit;font-weight:700;margin-top:6px}
-.sm{padding:9px 12px;border:1px solid var(--l);background:var(--bg);color:var(--t);border-radius:8px;font:inherit;font-size:14px}
+.sm{padding:9px 12px;min-height:44px;border:1px solid var(--l);background:var(--bg);color:var(--t);border-radius:8px;font:inherit;font-size:14px}
 .sm.w{width:100%;margin-top:8px}
 .danger{color:var(--warn);border-color:var(--warn)}
 .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
@@ -108,7 +108,7 @@ details{margin:8px 0}summary{font-weight:700;cursor:pointer;min-height:44px;padd
 .body .z{fill:var(--m);fill-opacity:.16;stroke:var(--m);stroke-opacity:.5;stroke-width:.35;stroke-linejoin:round;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .body .z.on{fill:var(--a);fill-opacity:.95;stroke:var(--a);stroke-opacity:1}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-.chip{padding:8px 12px;border:2px solid var(--l);background:var(--bg);color:var(--t);border-radius:999px;font:inherit;font-size:14px}
+.chip{padding:8px 12px;min-height:44px;border:2px solid var(--l);background:var(--bg);color:var(--t);border-radius:999px;font:inherit;font-size:14px}
 .chip.on{background:var(--a);border-color:var(--a);color:var(--on)}
 .chip small{opacity:.7}
 
@@ -539,29 +539,29 @@ function loadTip(e, ref, cs, ef) {
   if (cs.light) {   // 1 et 2 : base = dernière séance hors semaine légère et reprise
     const b = ref.find(s => !inLight(s.day)) || ref[0], bL = top(b, 0), bV = top(b, 1);
     const tag = cs.light.kind === 'reprise' ? ' (reprise)' : ' (semaine légère)', pre = cs.light.kind === 'reprise' ? 'Reprise en douceur' : 'Semaine légère';
-    const why = cs.light.kind === 'reprise' ? '80 % de' : 'environ 20 % de moins que';
-    if (w && bL) return [`${fmt(r05(bL * .8))} kg${bV ? ' × ' + bV : ''}${tag}`, `${pre} : ${why} ${fmt(bL)} kg, mêmes séries.`];
-    if (as && bL) return [`${fmt(r05(bL * 1.2))} kg d’assistance${tag}`, `${pre} : environ 20 % d’assistance en plus.`];
-    if (e.kind === 'time' && bV) return [`${Math.round(bV * .8)} s par série${tag}`, `${pre} : environ 20 % de moins.`];
-    if (e.kind === 'reps' && bV) return [`${Math.max(1, Math.round(bV * .8))} reps par série${tag}`, `${pre} : environ 20 % de moins.`];
-    if (e.kind === 'cardio') { const m = setsOf(b, e.id).reduce((t, a) => t + (a[1] || 0), 0); return [`${m ? Math.round(m * .8) + ' min, ' : ''}allure douce${tag}`, `${pre} : durée et allure plus douces.`]; }
-    return [`20 % plus léger${tag}`, `${pre}.`];
+    const why = cs.light.kind === 'reprise' ? '80\u00a0% de' : 'environ 20\u00a0% de moins que';
+    if (w && bL) return [`${fmt(r05(bL * .8))} kg${bV ? ' × ' + bV : ''}${tag}`, `${pre}\u00a0: ${why} ${fmt(bL)} kg, mêmes séries.`];
+    if (as && bL) return [`${fmt(r05(bL * 1.2))} kg d’assistance${tag}`, `${pre}\u00a0: environ 20\u00a0% d’assistance en plus.`];
+    if (e.kind === 'time' && bV) return [`${Math.round(bV * .8)} s par série${tag}`, `${pre}\u00a0: environ 20\u00a0% de moins.`];
+    if (e.kind === 'reps' && bV) return [`${Math.max(1, Math.round(bV * .8))} reps par série${tag}`, `${pre}\u00a0: environ 20\u00a0% de moins.`];
+    if (e.kind === 'cardio') { const m = setsOf(b, e.id).reduce((t, a) => t + (a[1] || 0), 0); return [`${m ? Math.round(m * .8) + ' min, ' : ''}allure douce${tag}`, `${pre}\u00a0: durée et allure plus douces.`]; }
+    return [`20\u00a0% plus léger${tag}`, `${pre}.`];
   }
   if (e.kind === 'cardio') return ['même durée, ou +2-3 min', 'Ajoute 2 à 3 minutes si c’était confortable.'];
   const counted = ref.filter(s => !inLight(s.day));
   const under = s => { const v = setsOf(s, e.id).filter(a => a[1] != null); return v.length > 0 && v.filter(a => a[1] < mn).length * 2 >= v.length; };
   if (counted.length >= 2 && under(counted[0]) && under(counted[1])) {   // 3
-    const cL = top(counted[0], 0), why = 'Deux séances de suite sous ta fourchette : on baisse un peu, 5 à 10 %.';
+    const cL = top(counted[0], 0), why = 'Deux séances de suite sous ta fourchette : on baisse un peu, 5 à 10\u00a0%.';
     if (w && cL) return [`${fmt(r05(cL * .9))}-${fmt(r05(cL * .95))} kg × ${mn}`, why];
     if (as) return [`+5 kg d’assistance × ${mn}`, why];
     if (e.kind === 'time') return [`${mn} s par série, sans forcer`, why];
     if (e.kind === 'reps') return [`${mn} reps propres, sans forcer`, why];
-    return [`−5 à 10 % de charge × ${mn}`, why];
+    return [`−5 à 10\u00a0% de charge × ${mn}`, why];
   }
   if (ef >= 5) return [w && L ? `garde ${fmt(L)} kg` : 'même objectif', 'Ressenti « à fond » la dernière fois : on garde.'];   // 4
   const full = l.length >= e.sets, atTop = full && l.every(a => (a[1] || 0) >= mx), atMin = full && l.every(a => (a[1] || 0) >= mn);
   if (atTop || (ef && ef <= 2 && atMin)) {   // 5
-    const why = (atTop ? 'Toutes les séries au haut de la fourchette' : `Ressenti ${EFF[ef - 1].toLowerCase()}`) + ' : on monte.';
+    const why = (atTop ? 'Toutes les séries au haut de la fourchette' : `Ressenti ${EFF[ef - 1].toLowerCase()}`) + '\u00a0: on monte.';
     if (w && L) return [`${fmt(L + r05(Math.min(2.5, Math.max(1, L * .025))))} kg × ${mn}`, why + ' Ou le cran suivant de la machine.'];
     if (w) return [`+1 à 2 kg × ${mn}`, why];
     if (as) return ['−5 kg d’assistance', why];
@@ -591,7 +591,7 @@ function advice(e, exceptSid, wid) {   // wid : programme de la séance en cours
   const en = ref[0].entries.find(x => x.exercise_id === e.id), ef = e.kind === 'cardio' ? 0 : (en && en.effort) || 0;
   const other = wid && ref[0].workout_id !== wid && ref[0].workout_name ? ` (${esc(ref[0].workout_name)})` : '';
   const [tip, why] = loadTip(e, ref, cs, ef);
-  let h = `<p class="m">Dernière${other} : ${esc(lastTxt(e, l))}</p><p class="sug">Conseil : ${esc(tip)}</p>`;
+  let h = `<p class="m">Dernière${other}\u00a0: ${esc(lastTxt(e, l))}</p><p class="sug">Conseil\u00a0: ${esc(tip)}</p>`;
   let d = (why ? `<p class="m">${esc(why)}</p>` : '') + ph1 + (e.tip ? `<p class="m">${esc(e.tip)}</p>` : '');
   if (ef) d += `<p class="m">Dernière fois : ${l.map(a => setText(e, a)).join(' · ')} · ressenti : ${EFF[ef - 1]} (${ef}/5)</p>`;
   if (e.own) d += '<p class="m">Réglage propre à ce programme.</p>';
@@ -991,7 +991,7 @@ function zoneStats() {
 function daysSince(z, st) { if (!st.last[z]) return null; const t = new Date(); t.setHours(0, 0, 0, 0); return Math.round((t - st.last[z]) / 864e5); }
 function zInfo(k) {
   const n = Math.round((ZST.sets[k] || 0) * 10) / 10, d = daysSince(k, ZST);
-  ZINFO = `${ZL[k]} : ${fmt(n)} série${n > 1 ? 's' : ''} sur 7 jours, ` + (d === null ? 'jamais travaillée.' : d === 0 ? "travaillée aujourd'hui." : `dernière fois il y a ${d} jour${d > 1 ? 's' : ''}.`);
+  ZINFO = `${ZL[k]}\u00a0: ${fmt(n)} série${n > 1 ? 's' : ''} sur 7 jours, ` + (d === null ? 'jamais travaillée.' : d === 0 ? "travaillée aujourd'hui." : `dernière fois il y a ${d} jour${d > 1 ? 's' : ''}.`);
   R();
 }
 function suggestZones() {
@@ -1539,7 +1539,7 @@ function doImport() {
     F = null; progDraft = null; store(draftKey());
     if (window.PROFIL) PROFIL.afterImport(o);   // import réussi : le questionnaire saute (un import annulé ou refusé n'arrive jamais ici)
     if (imposed) { view = 'accueil'; store('muscu-view', view); }
-    alert('Import terminé : ' + Object.entries(r).map(([k, v]) => `${k} : ${v}`).join(', '));
+    alert('Import terminé\u00a0: ' + Object.entries(r).map(([k, v]) => `${k}\u00a0: ${v}`).join(', '));
   });
 }
 
@@ -1637,7 +1637,7 @@ if (!window.FONTE_LOCAL && 'serviceWorker' in navigator) navigator.serviceWorker
 (async () => {
   /* l'appli s'ouvre sur l'accueil */
   try { await load(); if (window.JEU) { JEU.init(); JEU.applyWardrobe(); } if (window.PROFIL && PROFIL.init()) view = 'profil'; R(); }
-  catch (e) { $('app').innerHTML = `<p class="empty">${window.FONTE_LOCAL ? 'Impossible de lire les données de l’appli' : 'Impossible de joindre le serveur'} : ${esc(e.message)}</p>`; }
+  catch (e) { $('app').innerHTML = `<p class="empty">${window.FONTE_LOCAL ? 'Impossible de lire les données de l’appli' : 'Impossible de joindre le serveur'}\u00a0: ${esc(e.message)}</p>`; }
 })();
 </script>
 </body>

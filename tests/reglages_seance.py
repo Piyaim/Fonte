@@ -60,14 +60,14 @@ try:
             # ---------------------------------------------------- écran Séance : chaque programme affiche le sien
             seance(pg, d["force"]); t = carte(pg, x["id"])
             ok("4 × 5" in t and "propre à ce programme" in t and "repos 180 s" in t and "Repos · 180 s" in t, f"{mode} · Séance « Force » : 4 × 5, repos 180 s")
-            ok(conseil(t) == "Conseil : 61,5 kg × 5", f"{mode} · Séance « Force » : 4 séries de 5 à 60 kg réussies → le conseil propose 61,5 kg (+2,5 %)")
+            ok(conseil(t) == "Conseil\u00a0: 61,5 kg × 5", f"{mode} · Séance « Force » : 4 séries de 5 à 60 kg réussies → le conseil propose 61,5 kg (+2,5 %)")
             ok(lignes(pg, x["id"]) == 4, f"{mode} · Séance « Force » : 4 lignes de série")
             seance(pg, d["volume"]); t = carte(pg, x["id"])
             ok("3 × 12" in t and "repos 60 s" in t and "propre à ce programme" in t, f"{mode} · Séance « Volume » : 3 × 12, repos 60 s")
-            ok(conseil(t) == "Conseil : 60 kg × 12", f"{mode} · Séance « Volume » : mêmes séries passées, cible 12 → garder la charge")
+            ok(conseil(t) == "Conseil\u00a0: 60 kg × 12", f"{mode} · Séance « Volume » : mêmes séries passées, cible 12 → garder la charge")
             seance(pg, d["libre"]); t = carte(pg, x["id"]); cible = f"{x['target_min']}-{x['target_max']}" if x["target_min"] != x["target_max"] else f"{x['target_max']}"
             ok(f"{x['sets']} × {cible}" in t and f"repos {x['rest']} s" in t and "propre à ce programme" not in t, f"{mode} · Séance « Libre réglage » (témoin) : valeurs du catalogue")
-            ok(conseil(t) == f"Conseil : 60 kg × {x['target_max']}", f"{mode} · témoin : avec la cible du catalogue ({x['target_max']}), le conseil n'est pas celui de « Force »")
+            ok(conseil(t) == f"Conseil\u00a0: 60 kg × {x['target_max']}", f"{mode} · témoin : avec la cible du catalogue ({x['target_max']}), le conseil n'est pas celui de « Force »")
             # mode focus et minuteur de repos
             seance(pg, d["force"]); pg.evaluate("startFocus()"); time.sleep(.3); pg.evaluate("document.querySelectorAll('.focus details').forEach(d => d.open = true)")
             ok("4 × 5" in pg.inner_text(".focus") and "propre à ce programme" in pg.inner_text(".focus"), f"{mode} · mode focus : 4 × 5")

@@ -40,6 +40,15 @@ VISIBLE = """([el, sansBoutons]) => { const c = el.cloneNode(true); c.querySelec
 mots = lambda t: len(re.findall(r"[\w’'\-,.]*[^\W_][\w’'\-,.]*", t))
 phrases = lambda t: [p for p in re.split(r"(?<=[.!?])\s+(?=[A-ZÀ-Ý«])", t.strip()) if p]
 
+OUVRIR = "document.querySelectorAll('#app details').forEach(d => d.open = true)"
+VUES = ["accueil", "seance", "progres", "jeu", "profil"]
+# pour chaque largeur, « % » et « : » doivent être sur la même ligne que le caractère qui précède l'espace
+COUPURE = """sel => { const el = document.querySelector(sel), b = el.querySelector('b'), tn = b.firstChild, s = tn.textContent, out = [];
+  const top = i => { const r = document.createRange(); r.setStart(tn, i); r.setEnd(tn, i + 1); return Math.round(r.getBoundingClientRect().top); };
+  for (let w = 360; w >= 100; w -= 2) { el.style.width = w + 'px';
+    for (const ch of ['%', ':']) { const i = s.lastIndexOf(ch); if (i > 1 && top(i) !== top(i - 2)) out.push(w + ' px : « ' + ch + ' » seul'); } }
+  el.style.width = ''; return out; }"""
+
 def carte_ok(pg, sel, nom):
     """règles d'écriture d'une carte de proposition"""
     el = pg.locator(sel).first
@@ -132,7 +141,7 @@ try:
         ok(pg.evaluate("document.getElementById('app').firstElementChild.classList.contains('hero')"), "accueil : « Démarrer la séance » en tête")
         le(pg, J(28), "seance"); pg.evaluate(f"pickWorkout({wa})"); time.sleep(.3)
         r = bloc_exercice(pg, "Séance, phase 1")
-        ok(any(l == ["Conseil : 50 kg × 12"] for _, _, l in r), f"Séance : conseil chiffré sur une ligne {r[:1]}")
+        ok(any(l == ["Conseil\u00a0: 50 kg × 12"] for _, _, l in r), f"Séance : conseil chiffré sur une ligne {r[:1]}")
         ok("jamais jusqu’à l’échec" in pg.text_content("#app") and "jamais jusqu’à l’échec" not in visible(pg), "Séance : rappel de phase 1 présent, mais dans « Détails »")
         ok("1RM" in pg.text_content("#app") and "1RM" not in visible(pg), "Séance : 1RM sorti de l'écran, dans « Détails »")
         details_fermes(pg, "Séance")
@@ -151,10 +160,20 @@ try:
         le(pg, J(35)); carte_ok(pg, "[data-offer=allegee]", "carte « Semaine légère ? »")
         pg.click("[data-offer=allegee] button:has-text('Accepter')"); time.sleep(.4)
         t = carte_ok(pg, "[data-light]", "semaine légère en cours")
-        ok(re.fullmatch(r"Semaine légère jusqu’au [a-z]{3}\. \d\d/\d\d : −20 %", t.strip()) is not None, f"semaine légère en cours : une ligne {t.strip()!r}")
+        ok(re.fullmatch(r"Semaine légère jusqu’au [a-z]{3}\. \d\d/\d\d\u00a0: −20\u00a0%", t.strip()) is not None, f"semaine légère en cours : une ligne, espaces insécables avant « : » et « % » {t.strip()!r}")
+        # « % » et « : » jamais seuls en début de ligne : la carte est rétrécie de 360 à 100 px, 2 px par 2 px
+        seuls = pg.evaluate(COUPURE, "[data-light]")
+        ok(not seuls, f"semaine légère en cours : « % » et « : » restent sur la ligne de la valeur, de 100 à 360 px de large {seuls[:3]}")
+        vus, petits = [], []
+        for v in VUES:
+            pg.evaluate(f"go('{v}')" + ("; JEU.sub('regles')" if v == "jeu" else "")); time.sleep(.2); pg.evaluate(OUVRIR)   # Esprits : les taux sont dans « Règles »
+            vus += [f"{v} : …{m.group(0)}" for m in re.finditer(r".{0,25}[^\S\u00a0][%]", pg.inner_text("#app"))]
+            petits += pg.evaluate("v => [...document.querySelectorAll('#app button, #app summary')].filter(e => e.offsetParent && e.getBoundingClientRect().height < 44).map(e => v + ' : ' + e.innerText.trim().slice(0, 20) + ' (' + Math.round(e.getBoundingClientRect().height) + ' px)')", v)
+        ok(not vus, f"aucun « % » précédé d'une espace sécable (accueil, Séance, Progrès, Esprits > Règles, Mon profil, replis ouverts) {vus[:3]}")
+        ok(not petits, f"tous les boutons visibles font au moins 44 px de haut (accueil, Séance, Progrès, Esprits > Règles, Mon profil) {petits[:4]}")
         le(pg, J(35), "seance"); pg.evaluate(f"pickWorkout({wa})"); time.sleep(.3)
         r = bloc_exercice(pg, "Séance, semaine légère")
-        ok(any(l == ["Conseil : 40 kg × 10 (semaine légère)"] for _, _, l in r), f"Séance, semaine légère : « Conseil : 40 kg × 10 (semaine légère) » {r[:1]}")
+        ok(any(l == ["Conseil\u00a0: 40 kg × 10 (semaine légère)"] for _, _, l in r), f"Séance, semaine légère : « Conseil : 40 kg × 10 (semaine légère) » {r[:1]}")
         ok(not errs, f"aucune erreur JavaScript (accueil, Séance) {errs[:2]}"); ctx.close()
 
         # reprise (22 jours sans séance) et semaine légère après une pause (8 jours)
@@ -174,7 +193,7 @@ try:
         ok("3 séances au total" in pg.evaluate("go('progres'), document.getElementById('app').innerText"), "Progrès : « 3 séances au total »")
         pg.evaluate("go('accueil')"); time.sleep(.2)
         t = carte_ok(pg, "[data-offer=reprise]", "carte « Bon retour ! » (reprise)")
-        ok("Bon retour !" in t and "On reprend à 80 % pendant 7 jours." in t, "reprise : titre et phrase")
+        ok("Bon retour !" in t and "On reprend à 80\u00a0% pendant 7 jours." in t, "reprise : titre et phrase")
         pg.click("[data-offer=reprise] button:has-text('Accepter')"); time.sleep(.4); carte_ok(pg, "[data-light]", "reprise en cours")
         ok(not errs, f"aucune erreur JavaScript (reprise) {errs[:2]}"); ctx.close()
 
@@ -206,6 +225,13 @@ try:
         LIB = pg.evaluate("PROFIL._.LIB")
         t = pg.inner_text("[data-offer=phase]")
         ok("Phase 3 prête" in t and "Une 3e séance s’ajoute : puissance et cardio." in t, f"carte de phase 3 : « Phase 3 prête », « Une 3e séance s’ajoute : puissance et cardio. » {t[:90]!r}")
+        pg.evaluate(OUVRIR); d = pg.inner_text("[data-offer=phase] details")
+        lignes = [l.strip() for l in d.splitlines() if l.strip() and l.strip() != "Détails"]
+        n_c = pg.locator("[data-offer=phase] details ul.qnames li").count()
+        ok(lignes[0] == "Séance C\u00a0: puissance et cardio" and n_c >= 4 and lignes[1:1 + n_c] == [l.strip() for l in pg.locator("[data-offer=phase] details ul.qnames li").all_inner_texts()]
+           and lignes[1 + n_c:] == ["A\u00a0: force · B\u00a0: volume et endurance · C\u00a0: puissance et cardio", "Ton historique reste le même."],
+           f"Détails de « Phase 3 prête » : liste de la séance C ({n_c} exercices), une ligne par séance, l'historique, rien d'autre {lignes[:1] + lignes[1 + n_c:]}")
+        ok("bravo" not in d and "Tes semaines" not in d and "gardent leurs exercices" not in d and "hybride" not in d, "Détails de « Phase 3 prête » : l'ancien long texte a disparu")
         avant = pg.evaluate(ETAT)
         pg.click("[data-offer=phase] button:has-text('Accepter')"); pg.wait_for_timeout(1200)
         apres = pg.evaluate(ETAT); pr = pg.evaluate(PROF)["program"]

@@ -299,8 +299,8 @@
         const r = LIB[slug][6], zt = z.map(k => ZL[k]).join(', ');
         const pool = [...new Set([...s.c, ...Object.keys(LIB).filter(k => family(k) === family(slug))])].filter(fit);
         const alt = r && fit(r) ? r : pool.find(sl => !usedAll.has(sl)) || pool[0];
-        if (!alt) { w.notes.push(`${FAM[family(slug)]} : aucun exercice de ce type ne convient à ta blessure ${zonePhrase(z)}. Demande conseil à un professionnel de santé.`); w.removed.push(s.label); continue; }
-        w.notes.push(`à la place de ${exName(slug, x)} : ${exName(alt, x)} (${zt}).`); slug = alt;
+        if (!alt) { w.notes.push(`${FAM[family(slug)]}\u00a0: aucun exercice de ce type ne convient à ta blessure ${zonePhrase(z)}. Demande conseil à un professionnel de santé.`); w.removed.push(s.label); continue; }
+        w.notes.push(`à la place de ${exName(slug, x)}\u00a0: ${exName(alt, x)} (${zt}).`); slug = alt;
       }
       picked.push({slug, role: s.role});
     }
@@ -375,7 +375,7 @@
     const x = pl.x, a = x.a, out = [], show = a.detail === 'oui';
     out.push(phaseTxt(x.phase, a.niveau));
     if (x.phase < 3) out.push('Le passage à la phase suivante te sera proposé sur l’accueil, au bon moment : rien ne change sans ton accord.');
-    if (x.phase === 3) out.push(pl.workouts.map(w => `${w.name} : ${TYPE_TXT[w.type]}`).join(' ; ') + '.');
+    if (x.phase === 3) out.push(pl.workouts.map(w => `${w.name}\u00a0: ${TYPE_TXT[w.type]}`).join(' ; ') + '.');
     if (x.sante) out.push('Programme allégé (2 séries par exercice), sans effort maximal, sans intervalles ni course.');
     if (x.minor) out.push('Charges légères et technique d’abord, sans répétitions maximales, cardio continu et facile.');
     if (x.bmi >= 30 && !x.sante) out.push(show ? 'IMC de 30 ou plus : cardio à faible impact, sans sauts ni course.' : 'Cardio à faible impact, sans sauts ni course.');
@@ -585,10 +585,10 @@
   const rangeTxt = s => `${s.sets} × ${s.target_min === s.target_max ? s.target_min : s.target_min + '-' + s.target_max}`;
   function offerCard(f, o) {
     let title, line, more;
-    if (f.k === 'reprise') { title = 'Bon retour !'; line = 'On reprend à 80 % pendant 7 jours.'; more = '<p>Environ 80 % de tes dernières charges. Ensuite, la progression reprend normalement.</p>'; }
+    if (f.k === 'reprise') { title = 'Bon retour !'; line = 'On reprend à 80\u00a0% pendant 7 jours.'; more = '<p>Environ 80\u00a0% de tes dernières charges. Ensuite, la progression reprend normalement.</p>'; }
     else if (f.k === 'allegee') {
       title = f.why === 'pause' ? 'Bon retour !' : 'Semaine légère ?';
-      line = f.why === 'pause' ? 'Semaine légère : −20 % sur les charges pendant 7 jours.' : '−20 % sur les charges pendant 7 jours.';
+      line = f.why === 'pause' ? 'Semaine légère : −20\u00a0% sur les charges pendant 7 jours.' : '−20\u00a0% sur les charges pendant 7 jours.';
       more = (f.why === 'pause' ? '' : '<p>Tu t’entraînes régulièrement depuis 5 semaines : bravo ! Une semaine plus légère aide le corps à récupérer, et donc à progresser.</p>')
         + '<p>Même nombre de séances. Elle se termine seule au bout de 7 jours.</p>';
     } else {
@@ -598,17 +598,24 @@
       title = `Phase ${f.to} prête`;
       line = f.to === 2 ? (ex[0] ? `Charges un peu plus lourdes : ${rangeTxt(ex[0].s)}.` : 'Charges un peu plus lourdes.')
         : pc ? 'Une 3e séance s’ajoute : puissance et cardio.' : 'Chaque séance prend un rôle : force, volume ou puissance.';
-      more = (pc ? `<p><b>${C_NAME} : puissance et cardio</b></p><ul class="qnames">${pc.w.items.map(q => `<li>${esc(pc.x.ex[q.slug].name)} · ${esc(prmTxt(pc.x.ex[q.slug], pc.w.prm[q.slug]))}</li>`).join('')}</ul>`
-        + pc.w.notes.map(n => `<p class="qmiss">${esc(n.startsWith('à la place') ? 'Blessure ou douleur : ' + n : n)}</p>`).join('') : '') + `<p>${f.to === 2 ? `Tes ${P1_DAYS(o.answers.niveau) / 7} semaines de réadaptation sont faites : bravo !` : 'Tes semaines de progression sont faites : bravo !'} ${esc(phaseTxt(f.to, o.answers.niveau))}</p>`
-        + lst.map(({w, type}, i) => { const e = ex[i], s = e && e.s;
-          return `<div class="qex"><b>${esc(w.name)}${type ? ' : ' + TYPE_TXT[type] : ''}</b>${s ? `<span>par exemple ${esc(EX[e.id].name)} : ${esc(prmTxt(EX[e.id], {sets: s.sets, min: s.target_min, max: s.target_max, rest: s.rest}))}</span>` : ''}</div>`; }).join('')
-        + `<p class="m">${pc ? 'Tes séances actuelles gardent leurs exercices : seuls leurs réglages changent. Ton historique reste le même.' : 'Seuls les réglages de tes séances changent (séries, répétitions, repos) : tes exercices et ton historique restent les mêmes.'}</p>`;
+      if (f.to === 3) {   // phase 3 : la liste de la séance C, une ligne par séance, l'historique
+        const short = n => n.replace(/^Séance /, '');
+        more = (pc ? `<p><b>${C_NAME}\u00a0: puissance et cardio</b></p><ul class="qnames">${pc.w.items.map(q => `<li>${esc(pc.x.ex[q.slug].name)} · ${esc(prmTxt(pc.x.ex[q.slug], pc.w.prm[q.slug]))}</li>`).join('')}</ul>`
+          + pc.w.notes.map(n => `<p class="qmiss">${esc(n.startsWith('à la place') ? 'Blessure ou douleur : ' + n : n)}</p>`).join('') : '')
+          + `<p>${[...lst.map(({w, type}) => [w.name, type]), ...(pc ? [[C_NAME, 'puissance']] : [])].map(([n, type]) => `${esc(short(n))}\u00a0: ${TYPE_TXT[type]}`).join(' · ')}</p>`
+          + '<p class="m">Ton historique reste le même.</p>';
+      } else {   // phase 2
+        more = `<p>Tes ${P1_DAYS(o.answers.niveau) / 7} semaines de réadaptation sont faites : bravo ! ${esc(phaseTxt(2, o.answers.niveau))}</p>`
+          + lst.map(({w}, i) => { const e = ex[i], s = e && e.s;
+            return `<div class="qex"><b>${esc(w.name)}</b>${s ? `<span>par exemple ${esc(EX[e.id].name)}\u00a0: ${esc(prmTxt(EX[e.id], {sets: s.sets, min: s.target_min, max: s.target_max, rest: s.rest}))}</span>` : ''}</div>`; }).join('')
+          + '<p class="m">Seuls les réglages de tes séances changent (séries, répétitions, repos) : tes exercices et ton historique restent les mêmes.</p>';
+      }
     }
     return `<section class="card offer" data-offer="${f.k}"><h2>${esc(title)}</h2><p>${esc(line)}</p>${det(more)}<div class="offb"><button class="go" onclick="PROFIL.accept('${f.k}')">Accepter</button><button class="sm" onclick="PROFIL.later('${f.k}')">Plus tard</button></div></section>`;
   }
   function lightCard(l) {   // une ligne : « Semaine légère jusqu'au dim. 13/12 : −20 % »
     const end = frDay(l.end, {weekday: 'short', day: '2-digit', month: '2-digit'});
-    return `<section class="card offer" data-light="${l.kind}"><p><b>${l.kind === 'reprise' ? 'Reprise' : 'Semaine légère'} jusqu’au ${esc(end)} : ${l.kind === 'reprise' ? '80 %' : '−20 %'}</b></p></section>`;
+    return `<section class="card offer" data-light="${l.kind}"><p><b>${l.kind === 'reprise' ? 'Reprise' : 'Semaine légère'} jusqu’au ${esc(end)}\u00a0: ${l.kind === 'reprise' ? '80\u00a0%' : '−20\u00a0%'}</b></p></section>`;
   }
   function homeCards() {   // une seule carte à la fois : la semaine allégée ou la reprise en cours, sinon la première proposition
     const o = profile(); if (!o) return '';
@@ -623,7 +630,7 @@
       h += `<p><b>Phase ${p.phase} · semaine ${wk}</b></p>`;
       if (sch) h += `<p>Cette semaine : ${sch.week.map(s => `${esc(frDay(s.day, {weekday: 'short', day: undefined, month: undefined}))} ${esc((A().WO().find(w => w.id === s.wid) || {}).name || '')}`).join(', ')}.</p>`;
       h += det(`<p class="m">Depuis le ${esc(frDay(p.phase_start || p.start, {weekday: undefined}))}. ${esc(phaseTxt(p.phase, o.answers.niveau))}</p>`
-        + (p.phase === 3 ? `<p class="m">${p.ids.map((id, i) => { const w = A().WO().find(v => v.id === id); return `${esc(w.name)} : ${TYPE_TXT[typeOf(i, 3)]}`; }).join(' ; ')}.</p>` : ''));
+        + (p.phase === 3 ? `<p class="m">${p.ids.map((id, i) => { const w = A().WO().find(v => v.id === id); return `${esc(w.name)}\u00a0: ${TYPE_TXT[typeOf(i, 3)]}`; }).join(' ; ')}.</p>` : ''));
     } else h += '<p class="m">Phases et placement : avec un programme généré par l’appli.</p>';
     h += '</div>';
     if (l) h += lightCard(l);
@@ -925,7 +932,7 @@
     const p = managed(o), ph = p ? p.phase : START[o.answers.niveau] || 1, l = lightNow(o, todayIso());
     const txt = {1: 'Phase 1 : réadaptation. Reste à 2-3 reps de l\'échec, technique avant charge.', 2: 'Phase 2 : progression. Ajoute charge ou reps dès que toutes les séries sont réussies.',
       3: 'Phase 3 : hybride. Chaque séance a son rôle : force, volume et endurance, puissance et cardio.'}[ph];
-    return (l ? (l.kind === 'reprise' ? 'Reprise en douceur : environ 80 % de tes charges cette semaine. ' : 'Semaine légère : charges environ 20 % plus basses. ') : '') + txt;
+    return (l ? (l.kind === 'reprise' ? 'Reprise en douceur : environ 80\u00a0% de tes charges cette semaine. ' : 'Semaine légère : charges environ 20\u00a0% plus basses. ') : '') + txt;
   }
 
   window.PROFIL = {
