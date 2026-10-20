@@ -16,6 +16,8 @@ DB_PATH = os.environ.get("DB_PATH", "/data/suivi.db")
 KINDS = ("weight", "reps", "time", "cardio")
 EX_FIELDS = ("name", "grp", "kind", "sets", "target_min", "target_max", "rest",
              "focus", "tip", "green", "per_side", "assisted")
+# réglages propres à un exercice dans un programme (lot 2A) : NULL = valeur de l'exercice
+ITEM_FIELDS = ("sets", "target_min", "target_max", "rest")
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 
@@ -48,6 +50,10 @@ CREATE TABLE IF NOT EXISTS workout_item(
   workout_id INTEGER NOT NULL REFERENCES workout(id) ON DELETE CASCADE,
   exercise_id INTEGER NOT NULL REFERENCES exercise(id),
   position INTEGER NOT NULL,
+  sets INTEGER,
+  target_min INTEGER,
+  target_max INTEGER,
+  rest INTEGER,
   PRIMARY KEY(workout_id, exercise_id)
 );
 CREATE TABLE IF NOT EXISTS session(
@@ -143,17 +149,27 @@ def insert_exercise(c, d, slug=None):
     return cur.lastrowid
 
 
+def migrate(c):
+    """Bases créées avant le lot 2A : ajoute les réglages par séance (colonnes vides = valeurs de l'exercice)."""
+    have = {r["name"] for r in c.execute("PRAGMA table_info(workout_item)")}
+    for f in ITEM_FIELDS:
+        if f not in have:
+            c.execute(f"ALTER TABLE workout_item ADD COLUMN {f} INTEGER")
+
+
 def init_db():
     c = connect()
     with c:
         c.executescript(SCHEMA)
+        migrate(c)
         if not c.execute("SELECT 1 FROM exercise LIMIT 1").fetchone():
             ids = {e["slug"]: insert_exercise(c, e, e["slug"]) for e in CATALOGUE}
             for pos, (name, slugs) in enumerate(WORKOUTS):
                 wid = c.execute("INSERT INTO workout(name,position) VALUES(?,?)",
                                 (name, pos)).lastrowid
                 for i, s in enumerate(slugs):
-                    c.execute("INSERT INTO workout_item VALUES(?,?,?)", (wid, ids[s], i))
+                    c.execute("INSERT INTO workout_item(workout_id,exercise_id,position) VALUES(?,?,?)",
+                              (wid, ids[s], i))
     c.close()
 
 
@@ -233,6 +249,39 @@ def clean_exercise(d):
     )
 
 
+def clean_item(d):
+    """Réglages d'un exercice dans un programme ; None ou {} = valeurs de l'exercice."""
+    if d is None:
+        d = {}
+    if not isinstance(d, dict):
+        raise Bad("Réglage invalide : objet attendu")
+    tmin = clean_int(d.get("target_min"), 1, 1000)
+    tmax = clean_int(d.get("target_max"), 1, 1000, tmin)
+    if tmin is None:
+        tmin = tmax
+    if tmin and tmax and tmax < tmin:
+        tmin, tmax = tmax, tmin
+    return dict(sets=clean_int(d.get("sets"), 1, 10), target_min=tmin, target_max=tmax,
+                rest=clean_int(d.get("rest"), 0, 600))
+
+
+def clean_settings(v):
+    """{"id d'exercice": réglages} -> {id: réglages nettoyés}."""
+    if v is None:
+        return {}
+    if not isinstance(v, dict):
+        raise Bad("settings doit être un objet")
+    return {clean_int(k, 1, 10**9): clean_item(d) for k, d in v.items()}
+
+
+def write_items(c, wid, items, settings):
+    c.execute("DELETE FROM workout_item WHERE workout_id=?", (wid,))
+    for p, i in enumerate(items):
+        s = settings.get(i) or {}
+        c.execute("""INSERT INTO workout_item(workout_id,exercise_id,position,sets,target_min,target_max,rest)
+                     VALUES(?,?,?,?,?,?,?)""", (wid, i, p, *(s.get(f) for f in ITEM_FIELDS)))
+
+
 def ex_row(r):
     d = dict(r)
     d["diagram"] = json.loads(d["diagram"]) if d["diagram"] else None
@@ -244,10 +293,12 @@ def ex_row(r):
 def workouts_list(c):
     out = []
     for w in c.execute("SELECT * FROM workout ORDER BY position, id"):
-        items = [r[0] for r in c.execute(
-            "SELECT exercise_id FROM workout_item WHERE workout_id=? ORDER BY position",
-            (w["id"],))]
-        out.append(dict(id=w["id"], name=w["name"], position=w["position"], items=items))
+        rows = c.execute("SELECT * FROM workout_item WHERE workout_id=? ORDER BY position",
+                         (w["id"],)).fetchall()
+        settings = {str(r["exercise_id"]): {f: r[f] for f in ITEM_FIELDS}
+                    for r in rows if any(r[f] is not None for f in ITEM_FIELDS)}
+        out.append(dict(id=w["id"], name=w["name"], position=w["position"],
+                        items=[r["exercise_id"] for r in rows], settings=settings))
     return out
 
 
@@ -396,12 +447,15 @@ def wo_update(wid):
             raise Bad(f"Exercice inconnu ou archivé : {i}")
         if i not in seen:
             seen.append(i)
+    if "settings" in d:   # réglages envoyés : ils remplacent les anciens
+        settings = clean_settings(d["settings"])
+    else:                 # pas envoyés (ancienne interface) : on garde ceux des exercices restés dans le programme
+        settings = {r["exercise_id"]: {f: r[f] for f in ITEM_FIELDS}
+                    for r in c.execute("SELECT * FROM workout_item WHERE workout_id=?", (wid,))}
     with c:
         if not c.execute("UPDATE workout SET name=? WHERE id=?", (name, wid)).rowcount:
             return jsonify(error="Programme introuvable"), 404
-        c.execute("DELETE FROM workout_item WHERE workout_id=?", (wid,))
-        for p, i in enumerate(seen):
-            c.execute("INSERT INTO workout_item VALUES(?,?,?)", (wid, i, p))
+        write_items(c, wid, seen, settings)
     return jsonify(ok=True)
 
 
@@ -719,8 +773,7 @@ def import_full(c, o):
     for w in o.get("workouts") or []:
         c.execute("INSERT INTO workout(id,name,position) VALUES(?,?,?)",
                   (w["id"], w["name"], w.get("position", 0)))
-        for p, i in enumerate(w.get("items") or []):
-            c.execute("INSERT INTO workout_item VALUES(?,?,?)", (w["id"], i, p))
+        write_items(c, w["id"], w.get("items") or [], clean_settings(w.get("settings")))   # export d'avant le lot 2A : pas de « settings »
     for s in o.get("sessions") or []:
         c.execute("INSERT INTO session(id,day,ts,workout_id,workout_name,notes) VALUES(?,?,?,?,?,?)",
                   (s["id"], s["day"], s["ts"], s.get("workout_id"), s.get("workout_name", ""),

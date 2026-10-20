@@ -237,8 +237,12 @@
     g.footN = footGeom(g.legN, legN, p, f, 0); g.footF = footGeom(g.legF, legF, p, f, 1);
     return g;
   }
+  /* pied posé au sol (cible du pied à moins de 6 du sol) : son angle se mesure par rapport au sol (ft = 0 : pied à plat).
+     Sinon (pied en l'air, sur une plateforme) il se mesure par rapport au tibia. Dans la jambe : ftAbs: true force la mesure
+     par rapport au sol (pied arrière sur la pointe, pied posé sur un banc), ftRel: true force la mesure par rapport au tibia. */
+  function footOnFloor(spec) { return !!(spec && !spec.ftRel && (spec.ftAbs || (spec.ik && spec.ik !== 'bar' && spec.ik[1] >= FLOOR - 6))); }
   function footGeom(leg, spec, p, f, far) {
-    var sd = unit(sub(leg.end, leg.mid)), n = frontNormal(sd, f), ft = (far ? (p.ft2 != null ? p.ft2 : p.ft) : p.ft) || 0, al = -ft * f * RAD;
+    var sd = unit(sub(leg.end, leg.mid)), n = footOnFloor(spec) ? [f, 0] : frontNormal(sd, f), ft = (far ? (p.ft2 != null ? p.ft2 : p.ft) : p.ft) || 0, al = -ft * f * RAD;
     var fd = [n[0] * cos(al) - n[1] * sin(al), n[0] * sin(al) + n[1] * cos(al)], up = [fd[1] * f * -1, fd[0] * f];
     // repère du pied : x = avant (fd), y = bas (perpendiculaire côté sol)
     var down = [-fd[1] * f, fd[0] * f];
@@ -450,7 +454,8 @@
       pectoraux: [[[24.8, 0.1], [25.2, 0.6], [23.8, 0.93], [21, 0.98], [18.3, 0.86], [16.8, 0.55], [17.4, 0.14], [21, 0.05]]],
       abdos: [[[14.8, 0.05], [14.9, 0.33], [12.7, 0.35], [12.6, 0.05]], [[12.2, 0.05], [12.3, 0.36], [10.1, 0.36], [10, 0.05]], [[9.6, 0.05], [9.7, 0.36], [7.5, 0.35], [7.4, 0.05]], [[7.0, 0.05], [7.1, 0.34], [4.9, 0.32], [4.8, 0.05]], [[4.4, 0.05], [4.5, 0.3], [2.6, 0.26], [2.5, 0.05]]],
       obliques: [[[14.2, 0.44], [14.6, 0.78], [10.5, 0.95], [5.5, 0.92], [3.6, 0.66], [6.5, 0.5], [11, 0.46]]],
-      trapezes: [[[28.4, 0.22], [27.2, 0.62], [25.2, 1.0], [24.2, 0.84], [26.2, 0.5], [27.6, 0.2]]]
+      trapezes: [[[28.4, 0.22], [27.2, 0.62], [25.2, 1.0], [24.2, 0.84], [26.2, 0.5], [27.6, 0.2]]],
+      moyenfessier: [[[4.2, 0.74], [3.6, 1.0], [0, 1.03], [-3.4, 0.97], [-3.6, 0.76], [0, 0.72]]]
     },
     back: {
       trapezes: [[[28.6, 0.1], [27.4, 0.55], [25.2, 0.96], [22.5, 0.62], [18.5, 0.22], [16.8, 0.05], [21, 0.04], [25, 0.05]]],
@@ -462,13 +467,16 @@
   };
 
   function solveFront(p, B, f) {
-    var sc = B.sc || 1, g = { sc: sc }, lean = (p.lean || 0) * RAD, up = [sin(lean), -cos(lean)], rt = [cos(lean), sin(lean)], H = p.hip;
+    var sc = B.sc || 1, g = { sc: sc }, lean = (p.lean || 0) * RAD, up = [sin(lean), -cos(lean)], rt = [cos(lean), sin(lean)], H = p.hip, tk = p.tk || 1;
     g.H = H; g.up = up; g.rt = rt;
-    function sp(s) { return add(H, mul(up, s * sc)); }
+    // tk < 1 : tronc vu en raccourci (buste penché vers le spectateur)
+    function sp(s) { return add(H, mul(up, s * sc * tk)); }
     g.sp = sp;
     g.shR = add(sp(23.8), mul(rt, B.sw * sc)); g.shL = sub(sp(23.8), mul(rt, B.sw * sc));
     function limb(spec, root, l1, l2, side) {
       var o = { root: root, side: side }, th1, th2, d1, d2;
+      // k, k1, k2 < 1 : membre vu en raccourci (dirigé vers le spectateur)
+      l1 *= spec.k1 || spec.k || 1; l2 *= spec.k2 || spec.k || 1;
       if (spec.ik) {
         var tgt = spec.ik === 'bar' ? p.bar : spec.ik, r = ik2(root, tgt, l1 * sc, l2 * sc, (spec.bend == null ? 1 : spec.bend) * side, 1);
         o.mid = r.mid; o.end = r.end; return o;
@@ -480,7 +488,8 @@
     var aR = p.armR || p.arm || { a: [6, 4] }, aL = p.armL || p.arm || { a: [6, 4] }, lR = p.legR || p.leg || { a: [3, 0] }, lL = p.legL || p.leg || { a: [3, 0] };
     g.armR = limb(aR, g.shR, B.upper, B.fore, 1); g.armL = limb(aL, g.shL, B.upper, B.fore, -1);
     g.legR = limb(lR, add(H, mul(rt, B.hipx * sc)), B.thigh, B.shank, 1); g.legL = limb(lL, sub(H, mul(rt, B.hipx * sc)), B.thigh, B.shank, -1);
-    var nb = sp(B.torso + 4.6); g.NB = nb; g.head = add(nb, mul(up, 7.6 * sc));
+    // hk < 1 : tête plus basse, vue de face quand le buste est penché vers le spectateur
+    var nb = sp(B.torso + 4.6), hk = p.hk || 1; g.NB = nb; g.hk = hk; g.head = add(nb, mul(up, 7.6 * sc * hk));
     return g;
   }
   function shoeF(A, side, sc, rot) {
@@ -574,12 +583,13 @@
     // détails anatomiques légers
     out.push(frontDetails(g, B, view));
     // cou
-    path(tubeSeg(g.NB, add(g.NB, mul(g.up, 4.2 * sc)), [[0, B.neckR * sc, B.neckR * sc], [1, B.neckR * sc * 0.92, B.neckR * sc * 0.92]], 1), 'fb');
+    path(tubeSeg(g.NB, add(g.NB, mul(g.up, 4.2 * sc * g.hk)), [[0, B.neckR * sc, B.neckR * sc], [1, B.neckR * sc * 0.92, B.neckR * sc * 0.92]], 1), 'fb');
     // tête
     var hs = B0.head, hw = B.head[0] / 4.6;
     function hp(q) { return add(g.head, add(mul(g.rt, q[0] * hs * hw), mul(g.up, q[1] * hs))); }
     path(smooth(HEADF.map(hp), true), 'fb');
-    var hairD = view === 'back' ? (B0.hair === 'pony' ? HAIRB_F : HAIRB_M) : (B0.hair === 'pony' ? HAIRF_F : HAIRF_M);
+    // tête penchée vers le spectateur (hk < 1) : on voit le dessus de la tête, donc la chevelure entière
+    var hairD = view === 'back' || g.hk < 1 ? (B0.hair === 'pony' ? HAIRB_F : HAIRB_M) : (B0.hair === 'pony' ? HAIRF_F : HAIRF_M);
     path(smooth(hairD.map(hp), true), 'fhr');
     // bras
     [[g.armL, -1], [g.armR, 1]].forEach(function (it) {
@@ -620,6 +630,7 @@
     if (t === 'barH') { a = hand(g.armL); b = hand(g.armR); var ext = pr.ext == null ? 12 : pr.ext, y = (a[1] + b[1]) / 2, x0 = Math.min(a[0], b[0]) - ext, x1 = Math.max(a[0], b[0]) + ext;
       return '<path class="fcab2" d="M' + n1(x0) + ',' + n1(y) + 'H' + n1(x1) + '"/><rect class="fpl2" x="' + n1(x0 + 1.4) + '" y="' + n1(y - 6.5) + '" width="2.6" height="13" rx="1"/><rect class="fpl2" x="' + n1(x1 - 4) + '" y="' + n1(y - 6.5) + '" width="2.6" height="13" rx="1"/>'; }
     if (t === 'cable') { var tgt = pr.to === 'handL' ? hand(g.armL) : hand(g.armR); return '<path class="fcab" d="M' + P(pr.from) + 'L' + P(tgt) + '"/>'; }
+    if (t === 'kneepads') { return [[g.legL, -1], [g.legR, 1]].map(function (it) { var k = it[0].mid, x = k[0] + it[1] * 4.6; return '<rect class="fpl2" x="' + n1(x - 1.7) + '" y="' + n1(k[1] - 4.5) + '" width="3.4" height="9" rx="1.7"/>'; }).join(''); }
     if (t === 'handles') { return [g.armL, g.armR].map(function (A) { var h = hand(A); return '<circle class="fhub" cx="' + n1(h[0]) + '" cy="' + n1(h[1]) + '" r="1.8"/>'; }).join(''); }
     return '';
   }

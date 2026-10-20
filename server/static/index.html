@@ -12,6 +12,7 @@
 <script src="/static/figure-data.js"></script>
 <script src="/static/creatures.js"></script>
 <script src="/static/jeu.js"></script>
+<script src="/static/profil.js"></script>
 <script>
 var ACC = [['orange','Orange','#ff7a1a'],['blue','Bleu','#4dabf7'],['green','Vert','#51cf66'],['violet','Violet','#9775fa'],['red','Rouge','#ff6b6b']];
 var ACC_TC = {orange:'#e8590c', blue:'#1971c2', green:'#2b8a3e', violet:'#7048e8', red:'#e03131'};
@@ -90,6 +91,10 @@ details{margin:8px 0}summary{font-weight:700;cursor:pointer}
 .li .th{width:64px;flex:none}
 .li .th svg{width:64px;display:block;background:var(--bg);border-radius:6px}
 .li .n b{font-weight:700}
+.li .n .sm{margin-top:4px;min-height:44px}
+.cfg{border:1px solid var(--l);border-radius:10px;padding:10px;margin:2px 0 8px;background:var(--bg)}
+.cfg .m b{color:var(--t)}
+.cfg .sm,.cfg input{min-height:44px}
 .arch{opacity:.55}
 .tag{display:inline-block;font-size:11px;padding:1px 6px;border-radius:6px;border:1px solid var(--l);color:var(--m);margin-left:4px;vertical-align:middle}
 .toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--t);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:9;max-width:90vw;text-align:center}
@@ -284,6 +289,55 @@ svg.fig{width:100%;display:block}
 :root[data-accent="red"]{--a:#e03131;--on:#fff;--g1:#ff6b6b;--g2:#e03131;--g3:#9c1c1c;--gs:224,49,49}
 @media(prefers-color-scheme:dark){:root[data-accent="red"]:not([data-theme="light"]){--a:#ff6b6b;--on:#240808}}
 :root[data-accent="red"][data-theme="dark"]{--a:#ff6b6b;--on:#240808}
+
+/* ---- questionnaire de départ et profil (profil.js) ---- */
+body.onb .tabbar,body.onb #menu-btn{display:none}
+body.onb main{padding-bottom:40px}
+.qt{font-size:22px;line-height:1.25;margin:2px 0 6px;outline:none}
+.qprog{margin:4px 2px 8px}
+.qopt{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;text-align:left;margin-top:8px;padding:12px 14px;border:2px solid var(--l);border-radius:14px;background:var(--bg);color:var(--t);font:inherit;font-size:16px}
+.qopt.on{border-color:var(--a);box-shadow:inset 0 0 0 1px var(--a)}
+.qck{flex:none;width:24px;height:24px;display:grid;place-items:center;border:2px solid var(--m);border-radius:50%;font-size:14px;font-weight:800;color:var(--on)}
+.qck.qsq{border-radius:7px}
+.qopt.on .qck{background:var(--a);border-color:var(--a)}
+.qlab{margin-top:12px;font-size:14px}
+.qinp{font-size:22px;padding:14px 12px;margin-top:6px}
+.qnum{display:flex;align-items:center;gap:10px}.qnum b{font-size:18px;color:var(--m)}
+.qerr{color:var(--warn);font-weight:700;margin:10px 0 0;min-height:1px}
+.qwarn{border:2px solid var(--warn);border-radius:16px;padding:12px 14px;margin:10px 0;background:var(--c)}
+.qwarn p{margin:4px 0}
+.qnav{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:16px}
+.qnav .sm{min-height:52px}.qnav .go{margin:0}
+.qyn{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--l)}
+.qyn:first-of-type{border-top:0}
+.qynb{display:flex;gap:6px;flex:none}
+.qynb button{min-width:62px;min-height:46px;border:2px solid var(--l);border-radius:12px;background:var(--bg);color:var(--t);font:inherit;font-weight:700}
+.qynb button.on{background:var(--a);border-color:var(--a);color:var(--on)}
+.qchips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.qchip{min-height:44px;padding:8px 12px;border:2px solid var(--l);border-radius:999px;background:var(--bg);color:var(--t);font:inherit;font-size:14px;text-align:left}
+.qchip.on{background:var(--a);border-color:var(--a);color:var(--on)}
+.qrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--l)}
+.qrow:first-of-type{border-top:0}
+.qrow>div{min-width:0}.qrow p{margin:2px 0;overflow-wrap:anywhere}
+.qrow .sm{flex:none;min-height:44px}
+.qex{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-top:1px solid var(--l)}
+.qex:first-of-type{border-top:0}.qex span{color:var(--m);font-size:14px}
+.qul{margin:8px 0;padding-left:20px}.qul li{margin:6px 0}
+.qmiss{border-left:4px solid var(--warn);padding:6px 10px;margin:10px 0;background:var(--c);border-radius:6px}
+.qbig{font-size:18px}
+.qtog{min-height:48px}
+.go:disabled,.sm:disabled{opacity:.55}
+/* ---- progression (lot 2B) : cartes de proposition sous le bouton de séance, ligne de jour de repos ---- */
+.hero .rest{margin:12px 0 0;font-size:15px;font-weight:600}
+[data-style="b"] .hero .rest{color:rgba(255,255,255,.95)}
+.offer{border-left:5px solid var(--a)}
+details.det{margin:6px 0}details.det>summary{min-height:44px;padding:12px 0;box-sizing:border-box;color:var(--m);font-size:14px}
+details.card.det>summary{color:var(--t);font-size:17px;font-weight:700}
+.qnames{margin:4px 0;padding-left:20px}.qnames li{margin:3px 0}
+.offer h2{margin-bottom:6px}
+.offb{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:12px}
+.offb .go{margin:0}.offb .sm{min-height:48px}
+.li .mv{min-width:44px;min-height:44px;padding:0;font-size:18px;flex:none}
 </style>
 </head>
 <body>
@@ -316,7 +370,7 @@ let EX = {}, WO = [], SESS = [], BW = [];
 let view = 'accueil', curW = null, F = null;          // F = formulaire de séance en cours
 let catQ = '', catArch = false, editEx = null;       // catalogue
 let progW = null, progDraft = null;                  // éditeur de programmes
-const VIEWS = [['accueil','Accueil'],['seance','Séance'],['zones','Zones'],['progres','Progrès'],['historique','Historique'],['exercices','Exercices'],['programmes','Programmes'],['jeu','Esprits'],['donnees','Données']];
+const VIEWS = [['accueil','Accueil'],['seance','Séance'],['zones','Zones'],['progres','Progrès'],['historique','Historique'],['exercices','Exercices'],['programmes','Programmes'],['jeu','Esprits'],['profil','Mon profil'],['donnees','Données']];
 const KIND_LABEL = {weight:'Charge × reps', reps:'Reps (lest facultatif)', time:'Durée en secondes', cardio:'Cardio (minutes)'};
 const GROUP_ORDER = ['Jambes','Pectoraux','Dos','Épaules','Bras','Abdos et gainage','Cardio'];
 
@@ -362,29 +416,28 @@ function target(e) {
   if (e.kind === 'cardio') return `${r} min`;
   return `${e.sets} × ${r}${e.kind === 'time' ? ' s' : ''}${e.per_side ? ' / côté' : ''}`;
 }
+const targetLine = e => target(e) + (e.rest && e.kind !== 'cardio' ? ` · repos ${e.rest} s` : '');   // « 3 × 10-12 · repos 90 s »
+const ITEM_KEYS = ['sets', 'target_min', 'target_max', 'rest'];
+function exIn(e, w) {   // l'exercice avec les réglages propres au programme w (séries, cible, repos), s'il en a ; own = réglage du programme
+  const s = e && w && w.settings && w.settings[e.id]; if (!s) return e;
+  const o = Object.assign({}, e, {own: true}); ITEM_KEYS.forEach(k => { if (s[k] != null) o[k] = s[k]; }); return o;
+}
+function exF(id) { return exIn(EX[id], F && F.wid ? WO.find(w => w.id === F.wid) : null); }   // exercice tel que réglé pour la séance en cours
+const ownTag = e => e.own ? '<span class="tag">propre à ce programme</span>' : '';
 function inputLabels(e) {
   return {weight: [e.assisted ? 'assist. kg' : 'kg', 'reps'], reps: ['lest kg', 'reps'], time: ['lest kg', 'secondes'], cardio: ['niveau', 'minutes']}[e.kind];
 }
 function setsOf(s, exId) { const x = s.entries.find(e => e.exercise_id === exId); return x ? x.sets : null; }
-function lastSets(exId, exceptSid) {
-  for (let i = SESS.length - 1; i >= 0; i--) {
-    if (SESS[i].id === exceptSid) continue;
-    const x = setsOf(SESS[i], exId); if (x) return x;
-  }
-  return null;
+function refSessions(exId, wid, exceptSid) {   // séances qui contiennent l'exercice, de la plus récente à la plus ancienne : celles du même programme s'il y en a
+  const all = SESS.filter(s => s.id !== exceptSid && setsOf(s, exId)).reverse(), same = wid ? all.filter(s => s.workout_id === wid) : [];
+  return same.length ? same : all;
 }
+function lastSets(exId, exceptSid, wid) { const s = refSessions(exId, wid, exceptSid)[0]; return s ? setsOf(s, exId) : null; }
 const EFF = ['Très facile', 'Facile', 'Juste bien', 'Dur', 'À fond'];
-function lastEffort(exId, exceptSid) {   // ressenti noté lors de la dernière séance (la même que celle de lastSets)
-  for (let i = SESS.length - 1; i >= 0; i--) {
-    if (SESS[i].id === exceptSid) continue;
-    const x = SESS[i].entries.find(e => e.exercise_id === exId); if (x) return x.effort || 0;
-  }
-  return 0;
-}
 function effBox(e) {
   if (e.kind === 'cardio') return '';
   const v = (F.eff && F.eff[e.id]) || 0;
-  return `<div class="eff"><span class="m">Difficulté ressentie${v ? ' : <b>' + EFF[v - 1] + '</b>' : ' (note-la après tes séries)'}</span><div class="effb">${[1, 2, 3, 4, 5].map(n => `<button class="${n <= v ? 'on' : ''}" onclick="setEff(${e.id},${n})" aria-label="${EFF[n - 1]}">${n}</button>`).join('')}</div><div class="effh"><span>très facile</span><span>à fond</span></div></div>`;
+  return `<div class="eff"><span class="m">Difficulté ressentie${v ? ' : <b>' + EFF[v - 1] + '</b>' : ''}</span><div class="effb">${[1, 2, 3, 4, 5].map(n => `<button class="${n <= v ? 'on' : ''}" onclick="setEff(${e.id},${n})" aria-label="${EFF[n - 1]}">${n}</button>`).join('')}</div><div class="effh"><span>très facile</span><span>à fond</span></div></div>`;
 }
 function setEff(id, n) { syncForm(); F.eff = F.eff || {}; F.eff[id] = F.eff[id] === n ? 0 : n; F.dirty = true; syncForm(); R(); }
 function sessionVolume(s) {
@@ -471,40 +524,88 @@ function diagram(e, anim) {
 
 new MutationObserver(() => FIG.scan()).observe(document.documentElement, {childList: true, subtree: true});
 
-function advice(e, exceptSid) {
-  const l = lastSets(e.id, exceptSid);
-  const mx = e.target_max || e.target_min || 0;
-  if (!l) {
-    return e.kind === 'cardio' ? '<p class="sug">Première fois : allure confortable, tu dois pouvoir parler.</p>'
-      : e.kind === 'weight' ? '<p class="sug">Première fois : charge légère, finis chaque série à 2-3 reps de l\'échec.</p>'
-      : '<p class="sug">Première fois : vise une exécution propre, sans forcer.</p>';
+/* conseil de charge combiné : un seul conseil, dans cet ordre de priorité :
+   1. reprise en douceur (80 %), 2. semaine allégée (−20 %), 3. deux séances de suite sous la fourchette (−5 à 10 %),
+   4. ressenti 5 (garder), 5. montée (double progression, ou ressenti 1-2 avec toutes les séries au moins au minimum).
+   Les séances de semaine allégée et de reprise ne comptent pas comme séances sous la fourchette. */
+const r05 = v => Math.round(v * 2) / 2;
+/* renvoie [conseil d'une ligne, explication pour « Détails »] */
+function loadTip(e, ref, cs, ef) {
+  const inLight = d => (cs.periods || []).some(p => p.start <= d && d <= p.end);
+  const l = setsOf(ref[0], e.id), mn = e.target_min || e.target_max || 0, mx = e.target_max || mn;
+  const top = (s, k) => { const v = setsOf(s, e.id).map(a => a[k]).filter(x => x != null && x > 0); return v.length ? Math.max(...v) : null; };
+  const L = top(ref[0], 0), V = top(ref[0], 1);
+  const w = e.kind === 'weight' && !e.assisted, as = e.kind === 'weight' && e.assisted;
+  if (cs.light) {   // 1 et 2 : base = dernière séance hors semaine légère et reprise
+    const b = ref.find(s => !inLight(s.day)) || ref[0], bL = top(b, 0), bV = top(b, 1);
+    const tag = cs.light.kind === 'reprise' ? ' (reprise)' : ' (semaine légère)', pre = cs.light.kind === 'reprise' ? 'Reprise en douceur' : 'Semaine légère';
+    const why = cs.light.kind === 'reprise' ? '80 % de' : 'environ 20 % de moins que';
+    if (w && bL) return [`${fmt(r05(bL * .8))} kg${bV ? ' × ' + bV : ''}${tag}`, `${pre} : ${why} ${fmt(bL)} kg, mêmes séries.`];
+    if (as && bL) return [`${fmt(r05(bL * 1.2))} kg d’assistance${tag}`, `${pre} : environ 20 % d’assistance en plus.`];
+    if (e.kind === 'time' && bV) return [`${Math.round(bV * .8)} s par série${tag}`, `${pre} : environ 20 % de moins.`];
+    if (e.kind === 'reps' && bV) return [`${Math.max(1, Math.round(bV * .8))} reps par série${tag}`, `${pre} : environ 20 % de moins.`];
+    if (e.kind === 'cardio') { const m = setsOf(b, e.id).reduce((t, a) => t + (a[1] || 0), 0); return [`${m ? Math.round(m * .8) + ' min, ' : ''}allure douce${tag}`, `${pre} : durée et allure plus douces.`]; }
+    return [`20 % plus léger${tag}`, `${pre}.`];
   }
-  const ef = e.kind === 'cardio' ? 0 : lastEffort(e.id, exceptSid);
-  let h = `<p class="m">Dernière fois : ${l.map(a => setText(e, a)).join(' · ')}${ef ? ' · ressenti : ' + EFF[ef - 1] + ' (' + ef + '/5)' : ''}</p>`;
-  const ok = e.kind !== 'cardio' && l.length >= e.sets && l.every(a => (a[1] || 0) >= mx);
-  const upTxt = e.assisted ? 'Réduis l\'assistance de 5 kg la prochaine fois.' : 'Monte de 1 à 2 kg (ou d\'un cran) la prochaine fois.';
-  const done = e.kind !== 'cardio' && l.length >= e.sets && l.every(a => (a[1] || 0) >= (e.target_min || 0));
-  const wsug = ef >= 5 ? 'Ressenti « à fond » : garde la même charge (ou baisse un peu) la prochaine fois.'
-    : (ef && ef <= 2 && done) ? 'Ressenti ' + EFF[ef - 1].toLowerCase() + ' : ' + upTxt
-    : ok ? upTxt : `Garde la charge et vise ${mx} reps sur chaque série.`;
-  const sug = {
-    weight: wsug,
-    reps: ok ? 'Ajoute 2 reps par série, ou ralentis le mouvement.' : `Vise ${mx} reps contrôlées partout.`,
-    time: ok ? 'Objectif : +10 s sur chaque série.' : `Objectif : tenir ${mx} s partout.`,
-    cardio: 'Garde la durée, ou ajoute 2-3 min si c\'était confortable.'
-  }[e.kind];
-  h += `<p class="sug">${sug}</p>`;
+  if (e.kind === 'cardio') return ['même durée, ou +2-3 min', 'Ajoute 2 à 3 minutes si c’était confortable.'];
+  const counted = ref.filter(s => !inLight(s.day));
+  const under = s => { const v = setsOf(s, e.id).filter(a => a[1] != null); return v.length > 0 && v.filter(a => a[1] < mn).length * 2 >= v.length; };
+  if (counted.length >= 2 && under(counted[0]) && under(counted[1])) {   // 3
+    const cL = top(counted[0], 0), why = 'Deux séances de suite sous ta fourchette : on baisse un peu, 5 à 10 %.';
+    if (w && cL) return [`${fmt(r05(cL * .9))}-${fmt(r05(cL * .95))} kg × ${mn}`, why];
+    if (as) return [`+5 kg d’assistance × ${mn}`, why];
+    if (e.kind === 'time') return [`${mn} s par série, sans forcer`, why];
+    if (e.kind === 'reps') return [`${mn} reps propres, sans forcer`, why];
+    return [`−5 à 10 % de charge × ${mn}`, why];
+  }
+  if (ef >= 5) return [w && L ? `garde ${fmt(L)} kg` : 'même objectif', 'Ressenti « à fond » la dernière fois : on garde.'];   // 4
+  const full = l.length >= e.sets, atTop = full && l.every(a => (a[1] || 0) >= mx), atMin = full && l.every(a => (a[1] || 0) >= mn);
+  if (atTop || (ef && ef <= 2 && atMin)) {   // 5
+    const why = (atTop ? 'Toutes les séries au haut de la fourchette' : `Ressenti ${EFF[ef - 1].toLowerCase()}`) + ' : on monte.';
+    if (w && L) return [`${fmt(L + r05(Math.min(2.5, Math.max(1, L * .025))))} kg × ${mn}`, why + ' Ou le cran suivant de la machine.'];
+    if (w) return [`+1 à 2 kg × ${mn}`, why];
+    if (as) return ['−5 kg d’assistance', why];
+    if (e.kind === 'time') return ['+5 à 10 s par série', why + ' Ou une série de plus.'];
+    return ['+1 à 2 reps par série', why + ' Ou une série de plus.'];
+  }
+  if (e.kind === 'time') return [`${mx} s par série`, ''];
+  if (e.kind === 'reps') return [`${mx} reps par série`, ''];
+  return [w && L ? `${fmt(L)} kg × ${mx}` : `même charge × ${mx}`, ''];
+}
+// « Dernière : 3 × 10 à 50 kg » si toutes les séries sont identiques, sinon la liste des séries
+function lastTxt(e, l) {
+  const same = l.every(a => a[0] === l[0][0] && a[1] === l[0][1]), [w, v] = l[0];
+  if (e.kind === 'cardio') return l.map(a => setText(e, a)).join(' · ');
+  if (same && l.length > 1) return `${l.length} × ${fmt(v)}${e.kind === 'time' ? ' s' : ''}${w != null ? ' à ' + fmt(w) + ' kg' : ''}`;
+  return l.map(a => setText(e, a)).join(' · ');
+}
+function advice(e, exceptSid, wid) {   // wid : programme de la séance en cours (« dernière fois » = même programme s'il a déjà été fait)
+  const ref = refSessions(e.id, wid, exceptSid), l = ref.length ? setsOf(ref[0], e.id) : null;
+  const cs = window.PROFIL && PROFIL.coach ? PROFIL.coach() : {};
+  const ph1 = cs.phase === 1 && e.kind !== 'cardio' ? '<p class="m">Phase 1 : garde 2 à 3 répétitions en réserve, jamais jusqu’à l’échec.</p>' : '';
+  if (!l) {
+    return (e.kind === 'cardio' ? '<p class="sug">Conseil : allure confortable, tu dois pouvoir parler</p>'
+      : e.kind === 'weight' ? '<p class="sug">Conseil : charge légère, 2-3 reps en réserve</p>'
+      : '<p class="sug">Conseil : exécution propre, sans forcer</p>') + (ph1 || e.tip ? `<details class="det"><summary>Détails</summary>${ph1}${e.tip ? `<p class="m">${esc(e.tip)}</p>` : ''}</details>` : '');
+  }
+  const en = ref[0].entries.find(x => x.exercise_id === e.id), ef = e.kind === 'cardio' ? 0 : (en && en.effort) || 0;
+  const other = wid && ref[0].workout_id !== wid && ref[0].workout_name ? ` (${esc(ref[0].workout_name)})` : '';
+  const [tip, why] = loadTip(e, ref, cs, ef);
+  let h = `<p class="m">Dernière${other} : ${esc(lastTxt(e, l))}</p><p class="sug">Conseil : ${esc(tip)}</p>`;
+  let d = (why ? `<p class="m">${esc(why)}</p>` : '') + ph1 + (e.tip ? `<p class="m">${esc(e.tip)}</p>` : '');
+  if (ef) d += `<p class="m">Dernière fois : ${l.map(a => setText(e, a)).join(' · ')} · ressenti : ${EFF[ef - 1]} (${ef}/5)</p>`;
+  if (e.own) d += '<p class="m">Réglage propre à ce programme.</p>';
   if (e.kind === 'weight' && !e.assisted) {
     let b = 0;
     SESS.forEach(s => (setsOf(s, e.id) || []).forEach(a => b = Math.max(b, (a[0] || 0) * (1 + (a[1] || 0) / 30))));
-    if (b) h += `<p class="m">1RM estimé : ${Math.round(b)} kg</p>`;
+    if (b) d += `<p class="m">1RM estimé : ${Math.round(b)} kg</p>`;
   }
   const pts = SESS.map(s => setsOf(s, e.id)).filter(Boolean).slice(-12).map(x =>
     e.kind === 'weight' ? (e.assisted ? Math.min(...x.map(a => a[0] || 0)) : Math.max(...x.map(a => a[0] || 0)))
     : e.kind === 'cardio' ? x.reduce((t, a) => t + (a[1] || 0), 0)
     : Math.max(...x.map(a => a[1] || 0)));
   const lab = e.kind === 'weight' ? (e.assisted ? 'Assistance (plus bas = mieux)' : 'Charge max') : e.kind === 'cardio' ? 'Minutes' : 'Meilleure série';
-  return h + spark(pts, `${lab}, ${pts.length} séances`);
+  return h + `<details class="det"><summary>Détails</summary>${d}${spark(pts, `${lab}, ${pts.length} séances`)}</details>`;
 }
 
 /* ------------------------------------------------------------------ navigation */
@@ -525,7 +626,8 @@ const IC_CLOSE = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg
 let STYLE = 'b';
 document.documentElement.dataset.style = STYLE;
 function nav() {
-  $('ttl').textContent = view === 'accueil' ? 'Fonte' : VL[view];
+  $('ttl').textContent = view === 'accueil' ? 'Fonte' : view === 'profil' && window.PROFIL ? PROFIL.title() : VL[view];
+  document.body.classList.toggle('onb', !!(window.PROFIL && PROFIL.imposed()));
   $('tabs').innerHTML = tabsNow().map(k => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}')" ${k === view ? 'aria-current="page"' : ''}><span class="ic">${IC[k]}</span>${VL[k]}</button>`).join('');
   $('dnav').innerHTML = VIEWS.filter(([k]) => k !== 'jeu' || jeuOn()).map(([k, t]) => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}');closeMenu()">${t}</button>`).join('');
   document.body.dataset.view = view;
@@ -550,10 +652,11 @@ function closeMenu() {
 }
 function setStyle(s) { STYLE = s; store('muscu-style', s); document.documentElement.dataset.style = s; stylePick(); R(); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
-function go(v) { viewEx = null; view = v; store('muscu-view', v); R(); window.scrollTo(0, 0); }
+function go(v) { viewEx = null; view = v; store('muscu-view', v); if (v === 'profil' && window.PROFIL) PROFIL.enter(); R(); window.scrollTo(0, 0); }
 function R() {
+  if (window.PROFIL && PROFIL.imposed() && view !== 'profil' && view !== 'donnees') view = 'profil';   // questionnaire imposé tant que le profil n'existe pas
   nav();
-  $('app').innerHTML = {accueil: vAccueil, seance: vSeance, zones: vZones, progres: vProgres, historique: vHisto, exercices: vCat, programmes: vProg, jeu: () => window.JEU ? JEU.view() : '', donnees: vData}[view]();
+  $('app').innerHTML = {accueil: vAccueil, seance: vSeance, zones: vZones, progres: vProgres, historique: vHisto, exercices: vCat, programmes: vProg, jeu: () => window.JEU ? JEU.view() : '', profil: () => window.PROFIL ? PROFIL.view() : '', donnees: vData}[view]();
 }
 
 /* ------------------------------------------------------------------ accueil */
@@ -569,24 +672,34 @@ function todayZones() {   // les 3 zones travaillées le moins récemment (jamai
     .sort((a, b) => ((b.d ?? 999) - (a.d ?? 999)) || (a.i - b.i)).slice(0, 3);
 }
 function startFromHome(wid) { pickWorkout(wid); go('seance'); }
+function dayWord(iso) {   // « demain », sinon le jour de la semaine
+  const d = Math.round((dayDate(iso) - dayDate(today())) / 864e5);
+  return d === 1 ? 'demain' : d < 7 ? dayDate(iso).toLocaleDateString('fr-FR', {weekday: 'long'}) : 'le ' + dayDate(iso).toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long'});
+}
 function acceptZones() { ZSEL = new Set(todayZones().map(x => x.k)); store('muscu-zones', [...ZSEL]); genZones(); }
 function vAccueil() {
   const ws = weekStart(), wk = SESS.filter(s => dayDate(s.day) >= ws), n = wk.length;
   const vol = wk.reduce((a, s) => a + sessionVolume(s), 0), {streak} = streakInfo();
-  const pending = XS.length > 0 || !!(F && F.mode === 'new' && F.dirty), nw = nextWorkout();
+  const pending = XS.length > 0 || !!(F && F.mode === 'new' && F.dirty);
+  const sch = window.PROFIL && PROFIL.schedule ? PROFIL.schedule(today()) : null, slot = sch && (sch.today || sch.next);
+  const nw = (slot && WO.find(w => w.id === slot.wid)) || nextWorkout();   // avec le placement : la séance prévue ; sinon celle qui suit la dernière faite
   const ls = SESS.length ? SESS[SESS.length - 1] : null;
   const ago = ls ? Math.round((dayDate(today()) - dayDate(ls.day)) / 864e5) : null;
   const nEx = nw ? nw.items.filter(i => EX[i] && !EX[i].archived).length : 0;
   const efs = ls ? ls.entries.map(e => e.effort).filter(Boolean) : [];
   const feel = efs.length ? EFF[Math.max(1, Math.round(efs.reduce((a, b) => a + b, 0) / efs.length)) - 1] : '—';
   const dt0 = new Date().toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long'}), dt = dt0.charAt(0).toUpperCase() + dt0.slice(1);
-  const sub = (pending ? 'Tu as une séance commencée.' : nw ? `${nEx} exercice${nEx > 1 ? 's' : ''} au programme.` : 'Compose ta séance depuis l’onglet Séance.')
-    + (ls ? ` Dernière séance ${ago === 0 ? 'aujourd’hui' : ago === 1 ? 'hier' : 'il y a ' + ago + ' jours'}.` : ' Aucune séance enregistrée pour l’instant.');
+  // « 6 exercices · prévue aujourd'hui », puis « Dernière : il y a 2 j »
+  const when = !sch || !slot ? '' : sch.today ? ' · prévue aujourd’hui' : ` · prévue ${dayWord(slot.day)}`;
+  const sub = pending ? 'Tu as une séance commencée.' : nw ? `${nEx} exercice${nEx > 1 ? 's' : ''}${when}` : 'Compose ta séance depuis l’onglet Séance.';
+  const sub2 = ls ? `Dernière : ${ago === 0 ? 'aujourd’hui' : ago === 1 ? 'hier' : 'il y a ' + ago + ' j'}` : 'Aucune séance pour l’instant';
   const pct = Math.min(n / WGOAL, 1), C = 251.3;
   const ring = `<svg class="ring" viewBox="0 0 100 100" role="img" aria-label="${n} séance${n > 1 ? 's' : ''} sur ${WGOAL} cette semaine"><circle class="tr" cx="50" cy="50" r="40"/><circle class="pg" cx="50" cy="50" r="40" style="stroke-dasharray:${(pct * C).toFixed(1)} ${C}"/><text x="50" y="58" font-size="26">${n}/${WGOAL}</text></svg>`;
-  let h = `<section class="hero"><p class="dt">${esc(dt)}</p>${ring}<h2>${pending ? 'Séance en cours' : nw ? esc(nw.name) : 'Séance libre'}</h2><p class="sub">${esc(sub)}</p>`
+  let h = `<section class="hero"><p class="dt">${esc(dt)}</p>${ring}<h2>${pending ? 'Séance en cours' : nw ? esc(nw.name) : 'Séance libre'}</h2><p class="sub">${esc(sub)}</p><p class="sub">${esc(sub2)}</p>`
     + (pending ? `<button class="go" onclick="go('seance')">Reprendre la séance</button>`
-      : nw ? `<button class="go" onclick="startFromHome(${nw.id})">Démarrer la séance</button>` : `<button class="go" onclick="go('seance')">Ouvrir la séance</button>`) + '</section>';
+      : nw ? `<button class="go" onclick="startFromHome(${nw.id})">Démarrer la séance</button>` : `<button class="go" onclick="go('seance')">Ouvrir la séance</button>`)
+    + (sch && !sch.planned ? '<p class="rest">Jour de repos : la récupération compte aussi.</p>' : '') + '</section>';
+  if (window.PROFIL && PROFIL.homeCards) h += PROFIL.homeCards();   // proposition (phase, semaine allégée, reprise) : toujours sous le bouton
   h += `<section class="card wk"><h2>Cette semaine</h2><div class="wkm"><div class="wkbig"><b>${n}</b><span>sur ${WGOAL} séances</span></div><div class="dots">${Array.from({length: WGOAL}, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</div></div>
     <div class="tiles"><div><b>${streak}</b><span>semaine${streak > 1 ? 's' : ''} d’affilée</span></div><div><b>${Math.round(vol)}</b><span>kg soulevés</span></div><div><b>${esc(feel)}</b><span>dernier ressenti</span></div></div></section>`;
   if (jeuOn()) h += JEU.homeCard();
@@ -597,11 +710,10 @@ function vAccueil() {
   return h;
 }
 
+// sans questionnaire rempli, pas de phase : un conseil général
+const phaseNow = () => (window.PROFIL && PROFIL.phaseLine()) || 'Technique avant charge ; ajoute charge ou reps dès que toutes les séries sont réussies.';
 function seanceIntro() {   // l'essentiel du résumé est maintenant sur l'accueil et dans Progrès
-  const n = SESS.length;
-  const ph = n < 12 ? 'Phase 1 : réadaptation. Reste à 2-3 reps de l\'échec, technique avant charge.'
-    : n < 36 ? 'Phase 2 : progression. Ajoute charge ou reps dès que toutes les séries sont réussies.'
-    : 'Phase 3 : allège les charges d\'environ 20 % une semaine sur six.';
+  const ph = phaseNow();
   return `<p class="m">${ph}</p><details><summary>Échauffement (8-10 min)</summary><p class="m">5 min de cardio léger, 10 rotations d'épaules et de hanches, 10 squats au poids du corps, puis 1-2 séries légères du premier exercice.</p></details>`;
 }
 
@@ -902,14 +1014,14 @@ let FOC = null;
 function startFocus() {
   ensureForm(); syncForm();
   const ids = F.ids.filter(i => EX[i]); if (!ids.length) return toast('Ajoute au moins un exercice');
-  const i = ids.findIndex(id => { const r = rowsFor(EX[id]), d = (F.dn && F.dn[id]) || []; return !r.every((_, k) => d[k]); });
+  const i = ids.findIndex(id => { const r = rowsFor(exF(id)), d = (F.dn && F.dn[id]) || []; return !r.every((_, k) => d[k]); });
   FOC = i < 0 ? 0 : i; R(); window.scrollTo(0, 0);
 }
 function exitFocus() { syncForm(); FOC = null; R(); }
 function focMove(d) { syncForm(); FOC = Math.max(0, Math.min(F.ids.filter(i => EX[i]).length - 1, FOC + d)); R(); window.scrollTo(0, 0); }
 function togDone(id, i) {
   syncForm(); F.dn = F.dn || {}; const a = F.dn[id] = F.dn[id] || []; a[i] = !a[i]; F.dirty = true; syncForm();
-  const e = EX[id]; if (a[i] && e.rest && e.kind !== 'cardio') TM(e.rest);
+  const e = exF(id); if (a[i] && e.rest && e.kind !== 'cardio') TM(e.rest);
   R();
 }
 function vFocus() {
@@ -917,13 +1029,12 @@ function vFocus() {
   const ids = F.ids.filter(i => EX[i]);
   if (!ids.length) { FOC = null; return vSeance(); }
   FOC = Math.min(FOC, ids.length - 1);
-  const e = EX[ids[FOC]], rows = rowsFor(e); F.vals[e.id] = rows;
+  const e = exF(ids[FOC]), rows = rowsFor(e); F.vals[e.id] = rows;
   const dn = (F.dn && F.dn[e.id]) || [], [l1, l2] = inputLabels(e);
-  const nDone = ids.filter(id => { const r = F.vals[id] || rowsFor(EX[id]), d = (F.dn && F.dn[id]) || []; return r.length && r.every((_, k) => d[k]); }).length;
+  const nDone = ids.filter(id => { const r = F.vals[id] || rowsFor(exF(id)), d = (F.dn && F.dn[id]) || []; return r.length && r.every((_, k) => d[k]); }).length;
   let h = `<div class="focus"><div class="fhead"><b>Exercice ${FOC + 1}/${ids.length}</b><button class="sm" onclick="exitFocus()">Quitter le focus</button></div><div class="pbar"><i style="width:${nDone / ids.length * 100}%"></i></div>`;
-  h += `<div class="fdia">${diagram(e, true)}</div><h2 class="ft">${esc(e.name)}</h2><p class="fta">${esc(target(e))}</p>`;
-  if (e.tip) h += `<p class="m">${esc(e.tip)}</p>`;
-  h += advice(e, F.sid);
+  h += `<div class="fdia">${diagram(e, true)}</div><h2 class="ft">${esc(e.name)}</h2><p class="fta">${esc(targetLine(e))}</p>`;
+  h += advice(e, F.sid, F.wid);
   rows.forEach((a, i) => {
     h += `<div class="frow ${dn[i] ? 'ok' : ''}"><span>${e.kind === 'cardio' ? '' : 'S' + (i + 1)}</span>
       <input id="v${e.id}_${i}l" type="number" inputmode="decimal" step="0.5" placeholder="${l1}" value="${esc(a[0])}" oninput="touched()">
@@ -987,7 +1098,7 @@ function hasValues() { return !!F.dirty; }
 function touched() { F.dirty = true; syncForm(); }
 function rowsFor(e) {
   if (F.vals[e.id]) return F.vals[e.id];
-  const src = F.mode === 'new' ? lastSets(e.id) : null;
+  const src = F.mode === 'new' ? lastSets(e.id, null, F.wid) : null;
   const n = e.kind === 'cardio' ? 1 : Math.max(e.sets, src ? src.length : 0);
   const rows = [];
   for (let i = 0; i < n; i++) rows.push(src && src[i] ? [src[i][0] ?? '', src[i][1] ?? ''] : ['', '']);
@@ -997,7 +1108,7 @@ function syncForm() {
   // relit le DOM vers F, puis sauvegarde le brouillon
   F.ids.forEach(id => {
     if (!$(`v${id}_0l`)) return;   // exercice non affiché (mode focus) : on garde ses valeurs
-    const e = EX[id]; const rows = rowsFor(e);
+    const e = exF(id); const rows = rowsFor(e);
     F.vals[id] = rows.map((_, i) => [($(`v${id}_${i}l`) || {}).value ?? '', ($(`v${id}_${i}v`) || {}).value ?? '']);
   });
   if ($('f-day')) F.day = $('f-day').value;
@@ -1016,9 +1127,7 @@ function statsHeader() {
   const ws = weekStart();
   const w = SESS.filter(s => dayDate(s.day) >= ws), n = SESS.length;
   const v = w.reduce((a, s) => a + sessionVolume(s), 0);
-  const ph = n < 12 ? 'Phase 1 : réadaptation. Reste à 2-3 reps de l\'échec, technique avant charge.'
-    : n < 36 ? 'Phase 2 : progression. Ajoute charge ou reps dès que toutes les séries sont réussies.'
-    : 'Phase 3 : allège les charges d\'environ 20 % une semaine sur six.';
+  const ph = phaseNow();
   return `<div class="st"><div><b>${w.length}/3</b><span>séances cette semaine</span></div><div><b>${Math.round(v)}</b><span>kg soulevés (semaine)</span></div><div><b>${n}</b><span>séances au total</span></div></div>
   ${streakBar()}<p class="m">${ph}</p><details><summary>Échauffement (8-10 min)</summary><p class="m">5 min de cardio léger, 10 rotations d'épaules et de hanches, 10 squats au poids du corps, puis 1-2 séries légères du premier exercice.</p></details>`;
 }
@@ -1026,10 +1135,8 @@ function statsHeader() {
 function exCard(e) {
   const rows = rowsFor(e); F.vals[e.id] = rows;
   const [l1, l2] = inputLabels(e);
-  let h = `<div class="card"><div class="top${window.FIGDATA && e.slug && window.FIGDATA[e.slug] ? ' topf' : ''}">${diagram(e, true)}<div style="flex:1;min-width:0"><h2>${esc(e.name)}</h2><b>${esc(target(e))}</b>`;
-  if (e.rest) h += `<p class="m">Repos entre séries : ${e.rest} s</p>`;
-  if (e.tip) h += `<p class="m">${esc(e.tip)}</p>`;
-  h += `</div></div>${advice(e, F.sid)}`;
+  let h = `<div class="card"><div class="top${window.FIGDATA && e.slug && window.FIGDATA[e.slug] ? ' topf' : ''}">${diagram(e, true)}<div style="flex:1;min-width:0"><h2>${esc(e.name)}</h2><b>${esc(targetLine(e))}</b>`;
+  h += `</div></div>${advice(e, F.sid, F.wid)}`;
   rows.forEach((a, i) => {
     h += `<div class="row"><span>${e.kind === 'cardio' ? '' : 'S' + (i + 1)}</span>
       <input id="v${e.id}_${i}l" type="number" inputmode="decimal" step="0.5" placeholder="${l1}" value="${esc(a[0])}" oninput="touched()">
@@ -1067,7 +1174,7 @@ function vSeance() {
   const ids = F.ids.filter(i => EX[i]);
   if (!ids.length) h += '<p class="empty">Aucun exercice. Ajoute-en ci-dessous, ou compose un programme dans l\'onglet Programmes.</p>';
   if (F.mode === 'new' && ids.length) h += '<button class="go" onclick="startFocus()">Mode focus · un exercice à la fois</button>';
-  ids.forEach(id => h += exCard(EX[id]));
+  ids.forEach(id => h += exCard(exF(id)));
   h += `<div class="card"><h2>Ajouter un exercice à cette séance</h2><p class="m">Pour aujourd'hui seulement. Pour l'ajouter à chaque fois, passe par Programmes.</p>
     <div class="row" style="grid-template-columns:1fr auto"><select id="f-add"><option value="">Choisir…</option>${exOptions(ids)}</select><button class="sm" onclick="addToForm()">Ajouter</button></div></div>`;
   h += `<div class="card"><h2>Notes</h2><textarea id="f-notes" placeholder="Forme, sensations, douleurs…" oninput="touched()">${esc(F.notes)}</textarea></div>`;
@@ -1243,8 +1350,8 @@ function vExDetail() {
     h += chart([{pts: sr.pts}, {pts: sr.rm}], lab) + `<p class="m">${lab}${sr.rm.length ? ' (orange) · 1RM estimé (gris pointillé)' : ''}</p>`;
   }
   h += '</div>';
-  const progs = WO.filter(w => w.items.includes(e.id)).map(w => w.name);
-  h += `<div class="card"><h2>Dans mes programmes</h2><p>${progs.length ? progs.map(esc).join(', ') : '<span class="m">Dans aucun programme pour l\'instant.</span>'}</p></div>`;
+  const progs = WO.filter(w => w.items.includes(e.id)).map(w => { const x = exIn(e, w); return esc(w.name) + (x.own ? ` <span class="m">(${esc(target(x))}${x.rest && x.kind !== 'cardio' ? ', repos ' + x.rest + ' s' : ''})</span>` : ''); });
+  h += `<div class="card"><h2>Dans mes programmes</h2><p>${progs.length ? progs.join(', ') : '<span class="m">Dans aucun programme pour l\'instant.</span>'}</p></div>`;
   h += `<button class="go" onclick="addExToSession(${e.id})">Ajouter à ma séance en cours</button>` + exNav(e.id) + '</div>';
   return h;
 }
@@ -1277,7 +1384,7 @@ function catList() {
 function exForm() {
   const e = editEx, isNew = !e.id;
   const d = Object.assign({name: '', grp: GROUP_ORDER[0], kind: 'weight', sets: 3, target_min: 10, target_max: 12, rest: 90, focus: '', tip: '', green: 0, per_side: 0, assisted: 0}, e);
-  const inPrograms = isNew ? [] : WO.filter(w => w.items.includes(e.id)).map(w => w.name);
+  const inPrograms = isNew ? [] : WO.filter(w => w.items.includes(e.id)).map(w => w.name), ownIn = isNew ? [] : WO.filter(w => exIn(e, w).own).map(w => w.name);
   let h = `<div class="card"><h2>${isNew ? 'Nouvel exercice' : 'Modifier l\'exercice'}</h2>
     <label>Nom<input id="e-name" value="${esc(d.name)}" maxlength="120"></label>
     <div class="g2"><label>Groupe<input id="e-grp" list="grps" value="${esc(d.grp)}" maxlength="60"></label>
@@ -1295,7 +1402,7 @@ function exForm() {
     <button class="go" onclick="saveEx()">${isNew ? 'Créer l\'exercice' : 'Enregistrer'}</button>
     <button class="sm w" onclick="editEx=null;R()">Retour au catalogue</button>`;
   if (!isNew) {
-    h += `<p class="m" style="margin-top:12px">${inPrograms.length ? 'Présent dans : ' + inPrograms.map(esc).join(', ') + '.' : 'Dans aucun programme.'} Modifier cet exercice n'efface aucun historique.</p><div class="acts">`;
+    h += `<p class="m" style="margin-top:12px">${inPrograms.length ? 'Présent dans : ' + inPrograms.map(esc).join(', ') + '.' : 'Dans aucun programme.'} Modifier cet exercice n'efface aucun historique.</p>${ownIn.length ? `<p class="m">Réglage propre gardé dans : ${ownIn.map(esc).join(', ')}. Ces programmes ne prennent pas les séries, la cible ni le repos d'ici.</p>` : ''}<div class="acts">`;
     h += e.archived ? `<button class="sm" onclick="archEx(${e.id},false)">Restaurer</button>`
       : `<button class="sm" onclick="archEx(${e.id},true)">Archiver</button>`;
     if (!e.used) h += `<button class="sm danger" onclick="delEx(${e.id})">Supprimer</button>`;
@@ -1336,32 +1443,60 @@ function vProg() {
     + `<button onclick="newProg()">+ Nouveau</button></div>`;
   if (progW === null) return h + '<p class="empty">Aucun programme. Crée-en un.</p>';
   const w = WO.find(x => x.id === progW);
-  if (!progDraft || progDraft.id !== w.id) progDraft = {id: w.id, name: w.name, items: [...w.items]};
+  if (!progDraft || progDraft.id !== w.id) progDraft = {id: w.id, name: w.name, items: [...w.items], settings: JSON.parse(JSON.stringify(w.settings || {})), open: null};
   const D = progDraft;
   h += `<div class="card"><label>Nom du programme<input id="p-name" value="${esc(D.name)}" oninput="progDraft.name=this.value"></label>`;
   if (!D.items.length) h += '<p class="empty">Programme vide.</p>';
+  else h += '<p class="m" style="margin-top:8px">« Régler » change les séries, la cible et le repos d’un exercice pour ce programme seulement.</p>';
   D.items.forEach((id, i) => {
-    const e = EX[id]; if (!e) return;
-    h += `<div class="li"><div class="n"><b>${i + 1}. ${esc(e.name)}</b><p class="m">${esc(target(e))}</p></div>
-      <button class="sm" ${i ? '' : 'disabled'} onclick="mvProg(${i},-1)" aria-label="Monter">↑</button>
-      <button class="sm" ${i < D.items.length - 1 ? '' : 'disabled'} onclick="mvProg(${i},1)" aria-label="Descendre">↓</button>
-      <button class="sm danger" onclick="rmProg(${i})" aria-label="Retirer">✕</button></div>`;
+    const e0 = EX[id]; if (!e0) return;
+    const e = exIn(e0, D), op = D.open === id;
+    h += `<div class="li"><div class="n"><b>${i + 1}. ${esc(e.name)}</b><p class="m">${esc(target(e))}${e.rest && e.kind !== 'cardio' ? ' · repos ' + e.rest + ' s' : ''}${ownTag(e)}</p>
+      <button class="sm" onclick="cfgProg(${id})" aria-expanded="${op}" aria-label="Régler ${esc(e.name)} dans ce programme">Régler</button></div>
+      <button class="sm mv" ${i ? '' : 'disabled'} onclick="mvProg(${i},-1)" aria-label="Monter">↑</button>
+      <button class="sm mv" ${i < D.items.length - 1 ? '' : 'disabled'} onclick="mvProg(${i},1)" aria-label="Descendre">↓</button>
+      <button class="sm danger mv" onclick="rmProg(${i})" aria-label="Retirer">✕</button></div>`;
+    if (op) h += cfgBox(e0, D.settings[id] || {});
   });
   h += `<div class="row" style="grid-template-columns:1fr auto;margin-top:10px"><select id="p-add"><option value="">Ajouter un exercice…</option>${exOptions(D.items)}</select><button class="sm" onclick="addProg()">Ajouter</button></div>
-    <button class="go" onclick="saveProg()">Enregistrer le programme</button>
+    ${progChanged() ? '<p class="sug">Modifications non enregistrées.</p>' : ''}<button class="go" onclick="saveProg()">Enregistrer le programme</button>
     <div class="acts"><button class="sm" onclick="progDraft=null;R()">Annuler les changements</button>
     <button class="sm" onclick="mvWorkout(-1)">◀ Déplacer</button><button class="sm" onclick="mvWorkout(1)">Déplacer ▶</button>
     <button class="sm danger" onclick="delProg()">Supprimer le programme</button></div>
     <p class="m" style="margin-top:8px">Supprimer un programme ne supprime ni les exercices ni l'historique des séances.</p></div>`;
   return h;
 }
+function cfgBox(e, s) {   // réglage d'un exercice dans le programme : vide = valeur de l'exercice
+  const u = {time: 's', cardio: 'min'}[e.kind] || 'reps', card = e.kind === 'cardio', v = k => s[k] == null ? '' : s[k];
+  const f = (id, lab, k, min, max, step) => `<label>${lab}<input id="${id}" type="number" inputmode="numeric" min="${min}" max="${max}" step="${step}" value="${v(k)}" placeholder="${e[k] ?? ''}"></label>`;
+  return `<div class="cfg"><p class="m">Pour ce programme seulement. Une case vide garde la valeur de l’exercice.</p><p class="m">Valeurs de l’exercice : <b>${esc(target(e))}${e.rest && !card ? ', repos ' + e.rest + ' s' : ''}</b></p>
+    ${card ? '' : `<div class="g2">${f('c-sets', 'Séries', 'sets', 1, 10, 1)}${f('c-rest', 'Repos (s)', 'rest', 0, 600, 15)}</div>`}
+    <div class="g2">${f('c-min', `Cible min (${u})`, 'target_min', 1, 1000, 1)}${f('c-max', `Cible max (${u})`, 'target_max', 1, 1000, 1)}</div>
+    <div class="acts"><button class="sm" onclick="cfgOk(${e.id})">Valider</button><button class="sm" onclick="cfgReset(${e.id})">Revenir aux valeurs de l’exercice</button><button class="sm" onclick="progDraft.open=null;R()">Fermer</button></div></div>`;
+}
+function cfgProg(id) { progDraft.open = progDraft.open === id ? null : id; R(); }
+function cfgOk(id) {
+  const rd = (k, lo, hi) => { const el = $(k); if (!el || el.value.trim() === '') return null; const n = Math.trunc(num(el.value)); return isFinite(n) ? Math.max(lo, Math.min(hi, n)) : null; };
+  let mn = rd('c-min', 1, 1000), mx = rd('c-max', 1, 1000);
+  if (mn == null) mn = mx; if (mx == null) mx = mn; if (mn && mx && mx < mn) [mn, mx] = [mx, mn];   // mêmes règles que le serveur
+  const s = {sets: rd('c-sets', 1, 10), target_min: mn, target_max: mx, rest: rd('c-rest', 0, 600)};
+  if (ITEM_KEYS.some(k => s[k] != null)) progDraft.settings[id] = s; else delete progDraft.settings[id];
+  progDraft.open = null; R();
+}
+function cfgReset(id) { delete progDraft.settings[id]; progDraft.open = null; R(); }
+function progSettings(D) { const o = {}; D.items.forEach(id => { if (D.settings[id]) o[id] = D.settings[id]; }); return o; }
+function progChanged() {
+  const D = progDraft, w = D && WO.find(x => x.id === D.id); if (!w) return false;
+  return D.name !== w.name || JSON.stringify(D.items) !== JSON.stringify(w.items) || JSON.stringify(progSettings(D)) !== JSON.stringify(progSettings({items: w.items, settings: w.settings || {}}));
+}
 function selProg(id) { progW = id; progDraft = null; R(); }
 function mvProg(i, d) { const a = progDraft.items; [a[i], a[i + d]] = [a[i + d], a[i]]; R(); }
-function rmProg(i) { progDraft.items.splice(i, 1); R(); }
+function rmProg(i) { const [id] = progDraft.items.splice(i, 1); delete progDraft.settings[id]; if (progDraft.open === id) progDraft.open = null; R(); }
 function addProg() { const id = +$('p-add').value; if (id) { progDraft.items.push(id); R(); } }
 function saveProg() {
+  if (progDraft.open != null && $('c-min')) cfgOk(progDraft.open);   // réglage ouvert mais pas validé : on le garde
   const D = progDraft;
-  act(async () => { await api('PUT', `/api/workouts/${D.id}`, {name: D.name, items: D.items}); progDraft = null; if (F && F.mode === 'new' && F.wid === D.id && !hasValues()) F = null; }, 'Programme enregistré');
+  act(async () => { await api('PUT', `/api/workouts/${D.id}`, {name: D.name, items: D.items, settings: progSettings(D)}); progDraft = null; if (F && F.mode === 'new' && F.wid === D.id && !hasValues()) F = null; }, 'Programme enregistré');
 }
 function newProg() {
   const name = prompt('Nom du nouveau programme', `Séance ${String.fromCharCode(65 + WO.length)}`);
@@ -1383,11 +1518,12 @@ function mvWorkout(d) {
 /* ------------------------------------------------------------------ vue Données */
 function vData() {
   const last = BW.length ? BW[BW.length - 1].kg : '';
-  let h = `<div class="card"><h2>Poids de corps</h2><div class="row" style="grid-template-columns:1fr auto"><input id="pw" type="number" inputmode="decimal" step="0.1" placeholder="kg" value="${last}"><button class="sm" onclick="addBW()">Ajouter</button></div>
+  let h = window.PROFIL && PROFIL.imposed() ? `<button class="sm w" onclick="go('profil')">‹ Retour au questionnaire</button>` : '';
+  h += `<div class="card"><h2>Poids de corps</h2><div class="row" style="grid-template-columns:1fr auto"><input id="pw" type="number" inputmode="decimal" step="0.1" placeholder="kg" value="${last}"><button class="sm" onclick="addBW()">Ajouter</button></div>
     ${spark(BW.slice(-12).map(a => a.kg), 'Poids, ' + Math.min(BW.length, 12) + ' pesées')}`;
   if (BW.length) h += '<table>' + BW.slice(-6).reverse().map(b => `<tr><td>${frDate(b.day)}</td><td>${fmt(b.kg)} kg</td><td style="text-align:right"><button class="sm danger" onclick="delBW(${b.id})" aria-label="Supprimer">✕</button></td></tr>`).join('') + '</table>';
   h += `</div><div class="card"><h2>Sauvegarde</h2>
-    <p class="m">${window.FONTE_LOCAL ? 'Tes données sont stockées sur ce téléphone, dans l’appli : si tu la désinstalles ou effaces ses données, elles disparaissent. Exporte-les régulièrement ; séances et photos sont dans deux fichiers séparés.' : 'La base est sur le serveur. L’export sert de copie manuelle.'}</p>
+    <p class="m">${window.FONTE_LOCAL ? 'Tes données sont stockées sur ce téléphone, dans l’appli : si tu la désinstalles ou effaces ses données, elles disparaissent. Exporte-les régulièrement ; séances et photos sont dans deux fichiers séparés. L’export contient aussi ton profil, y compris tes réponses au questionnaire de santé : garde ce fichier pour toi.' : 'La base est sur le serveur. L’export sert de copie manuelle. Ton profil (questionnaire de départ) reste dans ce navigateur et n’est pas dans cet export.'}</p>
     <a class="sm" style="display:inline-block;text-decoration:none;margin-top:6px" href="/api/export" onclick="return exportClick('data')">Télécharger l'export (JSON)</a>${window.FONTE_LOCAL ? ' <a class="sm" style="display:inline-block;text-decoration:none;margin-top:6px" href="#" onclick="return exportClick(\'photos\')">Télécharger les photos (JSON)</a>' : ''}
     <h3>Importer</h3>
     <p class="m">• Export de l'ancienne appli (bouton « Exporter » puis copier) : les séances sont <b>ajoutées</b>, les doublons ignorés.<br>• Export de ce service : <b>remplace toute la base</b>.${window.FONTE_LOCAL ? '<br>• Export des photos : les photos sont <b>ajoutées</b>.' : ''}</p>
@@ -1402,9 +1538,12 @@ function readFile(inp) { const f = inp.files[0]; if (!f) return; f.text().then(t
 function doImport() {
   let o; try { o = JSON.parse($('bk').value); } catch (e) { return toast('JSON invalide'); }
   if (o && o.format === 'suivi-muscu' && !confirm('Cet export va REMPLACER toute la base actuelle (exercices, programmes, séances, pesées). Continuer ?')) return;
+  const imposed = !!(window.PROFIL && PROFIL.imposed());
   act(async () => {
     const r = await api('POST', '/api/import', o);
     F = null; progDraft = null; store(draftKey());
+    if (window.PROFIL) PROFIL.afterImport(o);   // import réussi : le questionnaire saute (un import annulé ou refusé n'arrive jamais ici)
+    if (imposed) { view = 'accueil'; store('muscu-view', view); }
     alert('Import terminé : ' + Object.entries(r).map(([k, v]) => `${k} : ${v}`).join(', '));
   });
 }
@@ -1485,13 +1624,24 @@ function vPhotos() {
 }
 
 /* passerelle lue par jeu.js (les let/const ci-dessus ne sont pas sur window) */
-window.APPX = {SESS: () => SESS, EX: () => EX, zonesOf, mondayOf, today, get WGOAL() { return WGOAL; }, computePRs, figSvg, toast, R, go, nav};
+/* après le remplacement des programmes par le questionnaire : les séances en cours non enregistrées sont gardées,
+   rattachées à « séance libre » ; un formulaire vide et intact est simplement oublié */
+function forgetWorkouts(ids) {
+  const gone = f => f && f.wid != null && ids.includes(f.wid);
+  if (gone(F)) { if (F.dirty || F.xid || F.mode === 'edit') { F.wid = null; if (!F.xid && F.mode === 'new') store(draftKey(), F); } else { F = null; store(draftKey()); } }
+  XS.forEach(x => { if (gone(x)) x.wid = null; }); saveXS();
+  const d = recall(draftKey());
+  if (gone(d)) { if (d.dirty) { d.wid = null; store(draftKey(), d); } else store(draftKey()); }
+  curW = null; progW = null; progDraft = null; FOC = null;
+}
+function pendingDraft() { const d = recall(draftKey()); return XS.length > 0 || !!(d && d.dirty) || !!(F && F.mode === 'new' && F.dirty); }
+window.APPX = {SESS: () => SESS, EX: () => EX, WO: () => WO, zonesOf, mondayOf, today, get WGOAL() { return WGOAL; }, computePRs, figSvg, toast, R, go, nav, api, load, forgetWorkouts, pendingDraft};
 
 /* ------------------------------------------------------------------ démarrage */
 if (!window.FONTE_LOCAL && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 (async () => {
   /* l'appli s'ouvre sur l'accueil */
-  try { await load(); if (window.JEU) { JEU.init(); JEU.applyWardrobe(); } R(); }
+  try { await load(); if (window.JEU) { JEU.init(); JEU.applyWardrobe(); } if (window.PROFIL && PROFIL.init()) view = 'profil'; R(); }
   catch (e) { $('app').innerHTML = `<p class="empty">${window.FONTE_LOCAL ? 'Impossible de lire les données de l’appli' : 'Impossible de joindre le serveur'} : ${esc(e.message)}</p>`; }
 })();
 </script>

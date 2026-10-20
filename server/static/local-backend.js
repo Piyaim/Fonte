@@ -50,6 +50,7 @@
   class Http extends Error { constructor(status, msg) { super(msg); this.status = status; } }
   const KINDS = ['weight', 'reps', 'time', 'cardio'];
   const EX_FIELDS = ['name', 'grp', 'kind', 'sets', 'target_min', 'target_max', 'rest', 'focus', 'tip', 'green', 'per_side', 'assisted'];
+  const ITEM_FIELDS = ['sets', 'target_min', 'target_max', 'rest'];   // réglages propres à un exercice dans un programme (lot 2A) : null = valeur de l'exercice
   const NUMRE = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
   const nowMs = () => Date.now();
   const truthy = v => Array.isArray(v) ? v.length > 0 : (v && typeof v === 'object') ? Object.keys(v).length > 0 : !!v;
@@ -121,12 +122,41 @@
       diagram: d.diagram ? JSON.stringify(d.diagram) : null, archived: +(d.archived || 0), updated_at: nowMs()
     });
   }
+  function cleanItem(d) {   // réglages d'un exercice dans un programme ; null ou {} = valeurs de l'exercice
+    if (d === null || d === undefined) d = {};
+    if (typeof d !== 'object' || Array.isArray(d)) throw new Bad('Réglage invalide : objet attendu');
+    let tmin = cleanInt(d.target_min, 1, 1000), tmax = cleanInt(d.target_max, 1, 1000, tmin);
+    if (tmin === null) tmin = tmax;
+    if (tmin && tmax && tmax < tmin) [tmin, tmax] = [tmax, tmin];
+    return {sets: cleanInt(d.sets, 1, 10), target_min: tmin, target_max: tmax, rest: cleanInt(d.rest, 0, 600)};
+  }
+  function cleanSettings(v) {   // {"id d'exercice": réglages} -> Map(id -> réglages nettoyés)
+    const out = new Map();
+    if (v === null || v === undefined) return out;
+    if (typeof v !== 'object' || Array.isArray(v)) throw new Bad('settings doit être un objet');
+    for (const [k, d] of Object.entries(v)) out.set(cleanInt(k, 1, 1e9), cleanItem(d));
+    return out;
+  }
+  function writeItems(w, wid, items, settings) {
+    w.workout_item = w.workout_item.filter(i => i.workout_id !== wid);
+    items.forEach((i, p) => {
+      const s = settings.get(i) || {}, row = {workout_id: wid, exercise_id: i, position: p};
+      for (const f of ITEM_FIELDS) row[f] = s[f] === undefined ? null : s[f];
+      w.workout_item.push(row);
+    });
+  }
+  function migrate(w) {   // données créées avant le lot 2A : ajoute les réglages vides ; vrai si quelque chose a changé
+    let changed = false;
+    for (const i of w.workout_item) for (const f of ITEM_FIELDS) if (!(f in i)) { i[f] = null; changed = true; }
+    return changed;
+  }
   const exRow = (w, r) => Object.assign({}, r, {diagram: r.diagram ? JSON.parse(r.diagram) : null, used: w.entry.some(e => e.exercise_id === r.id)});
   function workoutsList(w) {
-    return [...w.workout].sort((a, b) => a.position - b.position || a.id - b.id).map(x => ({
-      id: x.id, name: x.name, position: x.position,
-      items: w.workout_item.filter(i => i.workout_id === x.id).sort((a, b) => a.position - b.position).map(i => i.exercise_id)
-    }));
+    return [...w.workout].sort((a, b) => a.position - b.position || a.id - b.id).map(x => {
+      const rows = w.workout_item.filter(i => i.workout_id === x.id).sort((a, b) => a.position - b.position), settings = {};
+      for (const r of rows) if (ITEM_FIELDS.some(f => r[f] !== null && r[f] !== undefined)) settings[r.exercise_id] = Object.fromEntries(ITEM_FIELDS.map(f => [f, r[f] === undefined ? null : r[f]]));
+      return {id: x.id, name: x.name, position: x.position, items: rows.map(i => i.exercise_id), settings};
+    });
   }
   function sessionsList(w) {
     const rows = [...w.session].sort((a, b) => lt(a.day, b.day) || a.ts - b.ts || a.id - b.id);
@@ -203,7 +233,7 @@
     for (const e of s.exercises) ids[e.slug] = insertExercise(w, e, e.slug);
     s.workouts.forEach(([name, slugs], pos) => {
       const wid = ins(w, 'workout', {name, position: pos});
-      slugs.forEach((sl, i) => w.workout_item.push({workout_id: wid, exercise_id: ids[sl], position: i}));
+      writeItems(w, wid, slugs.map(sl => ids[sl]), new Map());
     });
     return w;
   }
@@ -221,6 +251,7 @@
     const seed = await r.json(); LEGACY_CARDIO = seed.legacy_cardio;
     db = await kvGet('db');
     if (!db) { db = seedDb(seed); await kvPut('db', db); }
+    else if (migrate(db)) await kvPut('db', db);
     await loadPhotoUrls();
   })();
 
@@ -245,6 +276,8 @@
       bodyweight: [...db.bodyweight].sort((a, b) => a.id - b.id)
     };
     if (jeu) out.jeu = jeu;   // état du mini-jeu : absent tant qu'on n'a pas ouvert l'onglet Esprits
+    const profil = window.PROFIL ? window.PROFIL.exportState() : null;
+    if (profil) out.profil = profil;   // questionnaire de départ (réponses de santé comprises) : absent tant qu'il n'est pas validé
     return out;
   }
   const toDataUrl = b => new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(f.result); f.onerror = () => rej(f.error); f.readAsDataURL(b); });
@@ -299,10 +332,12 @@
       if (!active.has(i)) throw new Bad('Exercice inconnu ou archivé : ' + i);
       if (!seen.includes(i)) seen.push(i);
     }
+    let settings;
+    if ('settings' in d) settings = cleanSettings(d.settings);   // réglages envoyés : ils remplacent les anciens
+    else settings = new Map(w.workout_item.filter(i => i.workout_id === +id).map(i => [i.exercise_id, i]));   // pas envoyés : on garde ceux des exercices restés
     const x = w.workout.find(o => o.id === +id); if (!x) return ok({error: 'Programme introuvable'}, 404);
     x.name = name;
-    w.workout_item = w.workout_item.filter(i => i.workout_id !== +id);
-    seen.forEach((i, p) => w.workout_item.push({workout_id: +id, exercise_id: i, position: p}));
+    writeItems(w, +id, seen, settings);
     return ok({ok: true});
   }));
   route('POST', '/api/workouts/order', async (b) => mutate(w => {
@@ -407,7 +442,7 @@
     for (const x of o.workouts || []) {
       need(x, ['id', 'name']);
       w.workout.push({id: x.id, name: x.name, position: x.position === undefined ? 0 : x.position});
-      (x.items || []).forEach((i, p) => w.workout_item.push({workout_id: x.id, exercise_id: i, position: p}));
+      writeItems(w, x.id, x.items || [], cleanSettings(x.settings));   // export d'avant le lot 2A : pas de « settings »
     }
     for (const s of o.sessions || []) {
       need(s, ['id', 'day', 'ts']);
@@ -416,6 +451,7 @@
     }
     for (const x of o.bodyweight || []) { need(x, ['id', 'day', 'ts', 'kg']); w.bodyweight.push({id: x.id, day: x.day, ts: x.ts, kg: x.kg}); }
     if (o.jeu && window.JEU) window.JEU.importState(o.jeu);
+    if (o.profil && window.PROFIL) window.PROFIL.importState(o.profil);   // export sans profil (anciennes versions) : profil actuel inchangé
     return {mode: 'sauvegarde complète (remplacement)', exercices: (o.exercises || []).length, sessions: (o.sessions || []).length};
   }
   async function importPhotos(o) {
