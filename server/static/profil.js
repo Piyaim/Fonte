@@ -310,13 +310,9 @@
       if (c) w.items.push({slug: c, role: 'cardio'}); else w.missing.push('Cardio');
       return w;
     });
-    const prm = {}, changes = [];
-    workouts.forEach(w => w.items.forEach(p => {
-      if (prm[p.slug]) return;
-      const e = x.ex[p.slug], n = prm[p.slug] = params(p.slug, x);
-      if (e.sets !== n.sets || e.target_min !== n.min || e.target_max !== n.max || e.rest !== n.rest) changes.push({slug: p.slug, id: e.id});
-    }));
-    return {x, workouts, prm, changes};
+    const prm = {};
+    workouts.forEach(w => w.items.forEach(p => { if (!prm[p.slug]) prm[p.slug] = params(p.slug, x); }));
+    return {x, workouts, prm};
   }
 
   /* ------------------------------------------------------------------ textes */
@@ -326,7 +322,6 @@
     if (e.kind === 'cardio') return `${rg} min`;
     return `${p.sets} × ${rg}${e.kind === 'time' ? ' s' : ''}${e.per_side ? ' par côté' : ''} · repos ${restTxt(p.rest)}`;
   }
-  const curTxt = e => prmTxt(e, {sets: e.sets, min: e.target_min ?? e.target_max, max: e.target_max ?? e.target_min, rest: e.rest});
   function phaseTxt(a) {
     return {
       jamais: 'Phase 1 : réadaptation, 4 semaines. Technique et tendons : charges légères, 2 à 3 répétitions en réserve, jamais jusqu’à l’échec, tempo 2-0-1 (descente en 2 s, montée en 1 s).',
@@ -490,18 +485,15 @@
   /* ---------- application du programme : rien ne change avant ce clic */
   async function apply() {
     if (P.busy) return;
-    const pl = P.plan, x = pl.x, api = A().api, EX = A().EX(), old = A().WO().map(w => w.id);
+    const pl = P.plan, x = pl.x, api = A().api, old = A().WO().map(w => w.id);
     P.busy = true; A().R();
     try {
-      for (const c of pl.changes) {   // 1. séries, répétitions et repos : champs de l'exercice
-        const e = EX[c.id], n = pl.prm[c.slug];
-        await api('PUT', `/api/exercises/${e.id}`, {name: e.name, grp: e.grp, kind: e.kind, sets: n.sets, target_min: n.min, target_max: n.max, rest: n.rest,
-          focus: e.focus, tip: e.tip, green: e.green, per_side: e.per_side, assisted: e.assisted});
-      }
       const ids = [];
-      for (const w of pl.workouts) {   // 2. nouveaux programmes (avant toute suppression : une coupure ne laisse jamais sans programme)
-        const r = await api('POST', '/api/workouts', {name: w.name});
-        await api('PUT', `/api/workouts/${r.id}`, {name: w.name, items: w.items.map(p => x.ex[p.slug].id)});
+      for (const w of pl.workouts) {   // 1. nouveaux programmes (avant toute suppression : une coupure ne laisse jamais sans programme)
+        const r = await api('POST', '/api/workouts', {name: w.name}), settings = {};
+        w.items.forEach(p => { const n = pl.prm[p.slug]; settings[x.ex[p.slug].id] = {sets: n.sets, target_min: n.min, target_max: n.max, rest: n.rest}; });
+        // séries, répétitions et repos : réglages propres à la séance ; les exercices du catalogue ne sont pas modifiés
+        await api('PUT', `/api/workouts/${r.id}`, {name: w.name, items: w.items.map(p => x.ex[p.slug].id), settings});
         ids.push(r.id);
       }
       A().forgetWorkouts(old);          // les séances en cours non enregistrées sont gardées
@@ -600,8 +592,8 @@
     const pl = P.plan, WO = A().WO(), EX = A().EX(), dr = A().pendingDraft();
     let h = `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">Avant de remplacer tes programmes</h2><p>Rien ne change tant que tu ne confirmes pas.</p>${A().SESS().length ? '<p class="m">Ton historique de séances reste intact : chaque séance passée garde son nom.</p>' : ''}${dr ? '<p class="m">Ta séance en cours non enregistrée est conservée.</p>' : ''}</div>`;
     h += `<div class="card"><h2>Programmes supprimés</h2>${WO.length ? WO.map(w => `<div class="qex"><b>${esc(w.name)}</b><span>${w.items.filter(i => EX[i]).length} exercices</span></div>`).join('') : '<p class="m">Aucun programme à supprimer.</p>'}</div>`;
-    h += `<div class="card"><h2>Nouveaux programmes</h2>${pl.workouts.map(w => `<div class="qex"><b>${esc(w.name)}</b><span>${w.items.map(p => esc(pl.x.ex[p.slug].name)).join(', ')}</span></div>`).join('')}</div>`;
-    h += `<div class="card"><h2>Exercices modifiés</h2>${pl.changes.length ? '<p class="m">Séries, répétitions ou repos (avant → après). Ces réglages valent partout où l’exercice est utilisé.</p>' + pl.changes.map(c => { const e = EX[c.id]; return `<div class="qex"><b>${esc(e.name)}</b><span>${esc(curTxt(e))} → <b>${esc(prmTxt(e, pl.prm[c.slug]))}</b></span></div>`; }).join('') : '<p class="m">Aucun changement de séries, de répétitions ni de repos.</p>'}</div>`;
+    h += `<div class="card"><h2>Nouveaux programmes</h2><p class="m">Séries, répétitions et repos de chaque séance. Ils valent dans ce programme seulement : tes exercices ne sont pas modifiés.</p></div>`;
+    h += pl.workouts.map(w => `<div class="card"><h2>${esc(w.name)}</h2>${w.items.map(p => { const e = pl.x.ex[p.slug]; return `<div class="qex"><b>${esc(e.name)}</b><span>${esc(prmTxt(e, pl.prm[p.slug]))}</span></div>`; }).join('')}</div>`).join('');
     const miss = missingTxt(pl);
     if (miss.length) h += `<p class="qmiss"><b>Manquants :</b> ${esc(miss.join(' ; '))}.</p>`;
     h += `<button class="go" onclick="PROFIL.apply()" ${P.busy ? 'disabled' : ''}>${P.busy ? 'Remplacement en cours…' : 'Remplacer mes programmes'}</button><button class="sm w" onclick="PROFIL.keep()" ${P.busy ? 'disabled' : ''}>Garder mes programmes</button><p class="m">« Garder mes programmes » enregistre ton profil sans toucher à tes programmes ni à tes exercices. Tu pourras générer le programme plus tard depuis « Mon profil ».</p><button class="sm w" onclick="PROFIL.cancel()" ${P.busy ? 'disabled' : ''}>Annuler</button>`;

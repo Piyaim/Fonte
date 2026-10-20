@@ -81,8 +81,10 @@ Valeurs actuelles (v0.3.1) :
 ## 5. Tests
 
 Fichiers dans `tests/`, à lancer avec `python3 tests/nom.py` (Playwright et Flask requis). Chacun doit finir **sans « ÉCHEC »**.
-- `figures.py` : moteur d'animation. `ui_local.py` : interface en mode local. `jeu.py` : règles du jeu (environ 40 contrôles). `simulation_android.py` : simulation de la coque. `differentiel.py` : le mode serveur et le mode local doivent répondre à l'identique (69 comparaisons ; la clé `jeu` est dans `DROP`). `icone_app.py` : icônes.
-- `profil.py` : questionnaire de départ et programme généré (IMC, exemple du cahier des charges, blessures, santé, IMC caché, « Garder mes programmes », export/import).
+- `figures.py` : moteur d'animation. `ui_local.py` : interface en mode local. `jeu.py` : règles du jeu (environ 40 contrôles). `simulation_android.py` : simulation de la coque. `differentiel.py` : le mode serveur et le mode local doivent répondre à l'identique (99 comparaisons, réglages par séance compris ; les clés `jeu` et `profil` sont dans `DROP`). `icone_app.py` : icônes.
+- `profil.py` : questionnaire de départ et programme généré (IMC, exemple du cahier des charges, blessures, santé, IMC caché, « Garder mes programmes », catalogue inchangé par le générateur, export/import).
+- `migration.py` : sort le code du commit 805eba3 de Git, lui fait créer de vraies données (SQLite, IndexedDB, photos, profil, jeu), puis vérifie que le code actuel les rouvre sans perte. À garder tant que l'historique Git contient ce commit.
+- `reglages_seance.py` : même exercice réglé différemment dans deux programmes (écrans Programmes et Séance, conseil de charge, minuteur, retour aux valeurs de l'exercice), modes local et serveur.
 - **Polices sur Bazzite** : le Chromium de Playwright ne lit pas la configuration de polices du système (aucun texte rendu, `inner_text` vide, tests en échec). Toujours lancer les tests ainsi, depuis `/home/PM/Fonte` :
   `FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/profil.py` (même chose pour chaque fichier de test ; chemin complet obligatoire, un chemin relatif ne marche pas).
 - **Tout lancer avant chaque commit qui touche au code** ; si un test est ajouté ou modifié, vérifier qu'il **échoue** quand l'hypothèse est fausse.
@@ -163,12 +165,15 @@ Version actuelle : voir `android/gradle.properties` (0.3.1, VERSION_CODE 6, au m
 - Programmes remplacés seulement après confirmation (création des nouveaux programmes, puis suppression des anciens ; historique intact, chaque séance passée garde son nom ; séance en cours non enregistrée rattachée à « séance libre »). « Garder mes programmes » enregistre le profil sans rien toucher ; « Mon profil » permet de générer plus tard.
 - La table des 50 exercices (`LIB` dans `profil.js`) est **à relire par un professionnel** : contre-indications, impacts, types et une partie des niveaux et remplaçants sont des propositions de Claude. Elle n'est pas validée médicalement.
 
-### Lot 2A : réglages propres à chaque séance (décidé le 20/10/2026)
+### Lot 2A : réglages propres à chaque séance (20/10/2026, fait, en attente de validation sur téléphone)
 - Un même exercice peut avoir des séries, une cible (min, max) et un repos **différents selon le programme** (par exemple 4 × 5 en séance force, 3 × 12 en séance volume). Prépare la phase 3 (lot 2B).
 - Réglages **facultatifs** sur `workout_item` (séries, cible min, cible max, repos) : vide = valeurs de l'exercice, comme avant. Mêmes règles dans `app.py` et `local-backend.js`, comparées par `tests/differentiel.py`.
 - Migration sans perte d'une base SQLite et de données IndexedDB créées par le code de 805eba3 ; un ancien export s'importe toujours, un nouvel export restitue les réglages.
 - L'écran Séance affiche les réglages de la séance et le conseil de charge les utilise ; l'écran Programmes permet de les voir, de les modifier et de revenir aux valeurs de l'exercice.
 - Le générateur écrit ses séries, répétitions et repos **dans les réglages de séance** et **ne modifie plus le catalogue d'exercices**. La confirmation montre les réglages de chaque nouvelle séance (plus de section « Exercices modifiés »). « Garder mes programmes » et « Annuler » ne changent rien.
+- Format (choix de Claude) : chaque programme de `/api/state` et de l'export porte `settings` = `{"id d'exercice": {sets, target_min, target_max, rest}}`, seulement pour les exercices réglés ; un champ vide (`null`) prend la valeur de l'exercice. `PUT /api/workouts/<id>` : avec `settings`, les réglages sont remplacés (`null` = tout effacer) ; sans `settings` (ancienne interface), ceux des exercices restés sont gardés. Mêmes bornes que l'exercice (séries 1-10, cible 1-1000, repos 0-600), cible min et max inversées si besoin, une seule cible = les deux. Archiver ou supprimer un exercice retire aussi son réglage.
+- Migration : SQLite, colonnes ajoutées par `ALTER TABLE` au démarrage (`migrate` dans `app.py`) ; IndexedDB, champs `null` ajoutés au chargement puis enregistrés (`migrate` dans `local-backend.js`).
+- **Version de l'export inchangée (`version: 1`)** : le changement est un ajout facultatif ; aucun des deux importeurs ne lit ce numéro ; un ancien export s'importe sans changement ; un nouvel export importé dans une ancienne version de l'appli perd seulement les réglages, ce qu'un nouveau numéro n'empêcherait pas (l'ancien code ne le lit pas). Même pratique que pour les clés `jeu` et `profil`.
 
 ### Lot 2B (à venir, rien de commencé)
 - Phases 1, 2 et 3 (changement de phase **proposé puis confirmé** par l'utilisateur, jamais imposé), séances ondulatoires de phase 3 (force, volume et endurance, puissance et cardio) grâce aux réglages par séance ; semaine allégée ; reprise en douceur à 80 % après plus de 3 semaines sans séance ; placement des séances sur les jours choisis ; conseil de charge combiné (double progression, régression, ressenti, semaine allégée, reprise) ; repos plus longs si IMC de 30 ou plus.

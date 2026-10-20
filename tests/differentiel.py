@@ -72,8 +72,33 @@ with sync_playwright() as p:
     both("wo maj items pas liste", "PUT", f"/api/workouts/{wo}", dict(name="x", items="a"))
     both("wo maj 404", "PUT", "/api/workouts/9999", dict(name="x", items=[]))
     both("wo ordre", "POST", "/api/workouts/order", dict(ids=[wo, 1, 2]))
+    # réglages propres à chaque séance (lot 2A) : séries, cible, repos d'un exercice dans un programme
+    def check(label, cond):
+        global fails, total
+        total += 1
+        if not cond: fails += 1; print("ÉCHEC", label)
+    def reg(wid): return next(w for w in both(f"état (réglages {wid})", "GET", "/api/state")["body"]["workouts"] if w["id"] == wid)["settings"]
+    both("wo réglages", "PUT", f"/api/workouts/{wo}", dict(name="Prog 2", items=[e1, e2, e3], settings={str(e1): dict(sets=4, target_min=5, target_max=5, rest=180), str(e2): dict(target_max="12", rest="45"), str(e3): dict(sets=None)}))
+    r = reg(wo)
+    check("réglages enregistrés", r == {str(e1): dict(sets=4, target_min=5, target_max=5, rest=180), str(e2): dict(sets=None, target_min=12, target_max=12, rest=45)})
+    both("wo réglages bornes et inversion", "PUT", f"/api/workouts/{wo}", dict(name="Prog 2", items=[e1, e2, e3], settings={str(e1): dict(sets=99, target_min=15, target_max="8", rest=9999), str(e3): dict(target_min="0", sets=True), "99999": dict(sets=2)}))
+    r = reg(wo)
+    check("bornes, inversion, réglage hors programme ignoré", r == {str(e1): dict(sets=10, target_min=8, target_max=15, rest=600), str(e3): dict(sets=1, target_min=1, target_max=1, rest=None)})
+    both("wo réglages pas objet", "PUT", f"/api/workouts/{wo}", dict(name="x", items=[e1], settings=[1]))
+    both("wo réglage pas objet", "PUT", f"/api/workouts/{wo}", dict(name="x", items=[e1], settings={str(e1): 5}))
+    both("wo réglage nombre invalide", "PUT", f"/api/workouts/{wo}", dict(name="x", items=[e1], settings={str(e1): dict(sets="abc")}))
+    both("wo réglage clé invalide", "PUT", f"/api/workouts/{wo}", dict(name="x", items=[e1], settings={"abc": {}}))
+    check("refus : programme et réglages inchangés", reg(wo) == r)
+    both("wo sans settings (ancienne interface)", "PUT", f"/api/workouts/{wo}", dict(name="Prog 3", items=[e3, e1]))
+    check("sans settings : réglages gardés pour les exercices restés", reg(wo) == {str(e1): r[str(e1)], str(e3): r[str(e3)]})
+    both("wo settings null", "PUT", f"/api/workouts/{wo}", dict(name="Prog 3", items=[e3, e1], settings=None))
+    check("settings null : retour aux valeurs des exercices", reg(wo) == {})
+    both("wo réglages (suite)", "PUT", f"/api/workouts/{wo}", dict(name="Prog 2", items=[e1, e2, e3], settings={str(e1): dict(sets=4, target_min=5, rest=180), str(e2): dict(rest=30)}))
+    w1 = st["workouts"][0]
+    both("wo 1 réglages (pour l'export)", "PUT", f"/api/workouts/{w1['id']}", dict(name=w1["name"], items=w1["items"], settings={str(w1["items"][0]): dict(sets=5, target_min=3, target_max=5, rest=240)}))
     both("ex archive", "POST", f"/api/exercises/{e2}/archive", dict(archived=True))
     both("état après archive", "GET", "/api/state")
+    check("archive : l'exercice et son réglage quittent le programme", str(e2) not in reg(wo) and str(e1) in reg(wo))
     both("wo maj archivé", "PUT", f"/api/workouts/{wo}", dict(name="x", items=[e2]))
     both("ex désarchive", "POST", f"/api/exercises/{e2}/archive", dict(archived=False))
     # séances
@@ -115,8 +140,14 @@ with sync_playwright() as p:
     both("état final 1", "GET", "/api/state")
     # export / import
     ex = both("export", "GET", "/api/export")["body"]
+    attendu = {str(w1["items"][0]): dict(sets=5, target_min=3, target_max=5, rest=240)}
+    check("l'export contient les réglages par séance", next(w for w in ex["workouts"] if w["id"] == w1["id"])["settings"] == attendu)
+    vieux = json.loads(json.dumps(ex)); [w.pop("settings") for w in vieux["workouts"]]
+    both("import ancien export (sans réglages)", "POST", "/api/import", vieux)
+    check("ancien export importé : programmes là, sans réglages", all(w["settings"] == {} for w in both("état après ancien export", "GET", "/api/state")["body"]["workouts"]) and reg(w1["id"]) == {})
     both("import complet (aller-retour)", "POST", "/api/import", ex)
     both("état après import", "GET", "/api/state")
+    check("nouvel export ré-importé : réglages restitués", reg(w1["id"]) == attendu)
     both("import complet incomplet", "POST", "/api/import", dict(format="suivi-muscu", exercises=[dict(id=1)]), loose=True)
     both("état après import refusé", "GET", "/api/state")
     both("import format inconnu", "POST", "/api/import", dict(zzz=1))

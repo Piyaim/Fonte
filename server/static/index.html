@@ -91,6 +91,9 @@ details{margin:8px 0}summary{font-weight:700;cursor:pointer}
 .li .th{width:64px;flex:none}
 .li .th svg{width:64px;display:block;background:var(--bg);border-radius:6px}
 .li .n b{font-weight:700}
+.li .n .sm{margin-top:4px;min-height:44px}
+.cfg{border:1px solid var(--l);border-radius:10px;padding:10px;margin:2px 0 8px;background:var(--bg)}
+.cfg .m b{color:var(--t)}
 .arch{opacity:.55}
 .tag{display:inline-block;font-size:11px;padding:1px 6px;border-radius:6px;border:1px solid var(--l);color:var(--m);margin-left:4px;vertical-align:middle}
 .toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--t);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:9;max-width:90vw;text-align:center}
@@ -401,6 +404,13 @@ function target(e) {
   if (e.kind === 'cardio') return `${r} min`;
   return `${e.sets} × ${r}${e.kind === 'time' ? ' s' : ''}${e.per_side ? ' / côté' : ''}`;
 }
+const ITEM_KEYS = ['sets', 'target_min', 'target_max', 'rest'];
+function exIn(e, w) {   // l'exercice avec les réglages propres au programme w (séries, cible, repos), s'il en a ; own = réglage du programme
+  const s = e && w && w.settings && w.settings[e.id]; if (!s) return e;
+  const o = Object.assign({}, e, {own: true}); ITEM_KEYS.forEach(k => { if (s[k] != null) o[k] = s[k]; }); return o;
+}
+function exF(id) { return exIn(EX[id], F && F.wid ? WO.find(w => w.id === F.wid) : null); }   // exercice tel que réglé pour la séance en cours
+const ownTag = e => e.own ? '<span class="tag">propre à ce programme</span>' : '';
 function inputLabels(e) {
   return {weight: [e.assisted ? 'assist. kg' : 'kg', 'reps'], reps: ['lest kg', 'reps'], time: ['lest kg', 'secondes'], cardio: ['niveau', 'minutes']}[e.kind];
 }
@@ -943,14 +953,14 @@ let FOC = null;
 function startFocus() {
   ensureForm(); syncForm();
   const ids = F.ids.filter(i => EX[i]); if (!ids.length) return toast('Ajoute au moins un exercice');
-  const i = ids.findIndex(id => { const r = rowsFor(EX[id]), d = (F.dn && F.dn[id]) || []; return !r.every((_, k) => d[k]); });
+  const i = ids.findIndex(id => { const r = rowsFor(exF(id)), d = (F.dn && F.dn[id]) || []; return !r.every((_, k) => d[k]); });
   FOC = i < 0 ? 0 : i; R(); window.scrollTo(0, 0);
 }
 function exitFocus() { syncForm(); FOC = null; R(); }
 function focMove(d) { syncForm(); FOC = Math.max(0, Math.min(F.ids.filter(i => EX[i]).length - 1, FOC + d)); R(); window.scrollTo(0, 0); }
 function togDone(id, i) {
   syncForm(); F.dn = F.dn || {}; const a = F.dn[id] = F.dn[id] || []; a[i] = !a[i]; F.dirty = true; syncForm();
-  const e = EX[id]; if (a[i] && e.rest && e.kind !== 'cardio') TM(e.rest);
+  const e = exF(id); if (a[i] && e.rest && e.kind !== 'cardio') TM(e.rest);
   R();
 }
 function vFocus() {
@@ -958,11 +968,11 @@ function vFocus() {
   const ids = F.ids.filter(i => EX[i]);
   if (!ids.length) { FOC = null; return vSeance(); }
   FOC = Math.min(FOC, ids.length - 1);
-  const e = EX[ids[FOC]], rows = rowsFor(e); F.vals[e.id] = rows;
+  const e = exF(ids[FOC]), rows = rowsFor(e); F.vals[e.id] = rows;
   const dn = (F.dn && F.dn[e.id]) || [], [l1, l2] = inputLabels(e);
-  const nDone = ids.filter(id => { const r = F.vals[id] || rowsFor(EX[id]), d = (F.dn && F.dn[id]) || []; return r.length && r.every((_, k) => d[k]); }).length;
+  const nDone = ids.filter(id => { const r = F.vals[id] || rowsFor(exF(id)), d = (F.dn && F.dn[id]) || []; return r.length && r.every((_, k) => d[k]); }).length;
   let h = `<div class="focus"><div class="fhead"><b>Exercice ${FOC + 1}/${ids.length}</b><button class="sm" onclick="exitFocus()">Quitter le focus</button></div><div class="pbar"><i style="width:${nDone / ids.length * 100}%"></i></div>`;
-  h += `<div class="fdia">${diagram(e, true)}</div><h2 class="ft">${esc(e.name)}</h2><p class="fta">${esc(target(e))}</p>`;
+  h += `<div class="fdia">${diagram(e, true)}</div><h2 class="ft">${esc(e.name)}</h2><p class="fta">${esc(target(e))}${ownTag(e)}</p>`;
   if (e.tip) h += `<p class="m">${esc(e.tip)}</p>`;
   h += advice(e, F.sid);
   rows.forEach((a, i) => {
@@ -1038,7 +1048,7 @@ function syncForm() {
   // relit le DOM vers F, puis sauvegarde le brouillon
   F.ids.forEach(id => {
     if (!$(`v${id}_0l`)) return;   // exercice non affiché (mode focus) : on garde ses valeurs
-    const e = EX[id]; const rows = rowsFor(e);
+    const e = exF(id); const rows = rowsFor(e);
     F.vals[id] = rows.map((_, i) => [($(`v${id}_${i}l`) || {}).value ?? '', ($(`v${id}_${i}v`) || {}).value ?? '']);
   });
   if ($('f-day')) F.day = $('f-day').value;
@@ -1067,7 +1077,7 @@ function statsHeader() {
 function exCard(e) {
   const rows = rowsFor(e); F.vals[e.id] = rows;
   const [l1, l2] = inputLabels(e);
-  let h = `<div class="card"><div class="top${window.FIGDATA && e.slug && window.FIGDATA[e.slug] ? ' topf' : ''}">${diagram(e, true)}<div style="flex:1;min-width:0"><h2>${esc(e.name)}</h2><b>${esc(target(e))}</b>`;
+  let h = `<div class="card"><div class="top${window.FIGDATA && e.slug && window.FIGDATA[e.slug] ? ' topf' : ''}">${diagram(e, true)}<div style="flex:1;min-width:0"><h2>${esc(e.name)}</h2><b>${esc(target(e))}</b>${ownTag(e)}`;
   if (e.rest) h += `<p class="m">Repos entre séries : ${e.rest} s</p>`;
   if (e.tip) h += `<p class="m">${esc(e.tip)}</p>`;
   h += `</div></div>${advice(e, F.sid)}`;
@@ -1108,7 +1118,7 @@ function vSeance() {
   const ids = F.ids.filter(i => EX[i]);
   if (!ids.length) h += '<p class="empty">Aucun exercice. Ajoute-en ci-dessous, ou compose un programme dans l\'onglet Programmes.</p>';
   if (F.mode === 'new' && ids.length) h += '<button class="go" onclick="startFocus()">Mode focus · un exercice à la fois</button>';
-  ids.forEach(id => h += exCard(EX[id]));
+  ids.forEach(id => h += exCard(exF(id)));
   h += `<div class="card"><h2>Ajouter un exercice à cette séance</h2><p class="m">Pour aujourd'hui seulement. Pour l'ajouter à chaque fois, passe par Programmes.</p>
     <div class="row" style="grid-template-columns:1fr auto"><select id="f-add"><option value="">Choisir…</option>${exOptions(ids)}</select><button class="sm" onclick="addToForm()">Ajouter</button></div></div>`;
   h += `<div class="card"><h2>Notes</h2><textarea id="f-notes" placeholder="Forme, sensations, douleurs…" oninput="touched()">${esc(F.notes)}</textarea></div>`;
@@ -1284,8 +1294,8 @@ function vExDetail() {
     h += chart([{pts: sr.pts}, {pts: sr.rm}], lab) + `<p class="m">${lab}${sr.rm.length ? ' (orange) · 1RM estimé (gris pointillé)' : ''}</p>`;
   }
   h += '</div>';
-  const progs = WO.filter(w => w.items.includes(e.id)).map(w => w.name);
-  h += `<div class="card"><h2>Dans mes programmes</h2><p>${progs.length ? progs.map(esc).join(', ') : '<span class="m">Dans aucun programme pour l\'instant.</span>'}</p></div>`;
+  const progs = WO.filter(w => w.items.includes(e.id)).map(w => { const x = exIn(e, w); return esc(w.name) + (x.own ? ` <span class="m">(${esc(target(x))}${x.rest && x.kind !== 'cardio' ? ', repos ' + x.rest + ' s' : ''})</span>` : ''); });
+  h += `<div class="card"><h2>Dans mes programmes</h2><p>${progs.length ? progs.join(', ') : '<span class="m">Dans aucun programme pour l\'instant.</span>'}</p></div>`;
   h += `<button class="go" onclick="addExToSession(${e.id})">Ajouter à ma séance en cours</button>` + exNav(e.id) + '</div>';
   return h;
 }
@@ -1318,7 +1328,7 @@ function catList() {
 function exForm() {
   const e = editEx, isNew = !e.id;
   const d = Object.assign({name: '', grp: GROUP_ORDER[0], kind: 'weight', sets: 3, target_min: 10, target_max: 12, rest: 90, focus: '', tip: '', green: 0, per_side: 0, assisted: 0}, e);
-  const inPrograms = isNew ? [] : WO.filter(w => w.items.includes(e.id)).map(w => w.name);
+  const inPrograms = isNew ? [] : WO.filter(w => w.items.includes(e.id)).map(w => w.name), ownIn = isNew ? [] : WO.filter(w => exIn(e, w).own).map(w => w.name);
   let h = `<div class="card"><h2>${isNew ? 'Nouvel exercice' : 'Modifier l\'exercice'}</h2>
     <label>Nom<input id="e-name" value="${esc(d.name)}" maxlength="120"></label>
     <div class="g2"><label>Groupe<input id="e-grp" list="grps" value="${esc(d.grp)}" maxlength="60"></label>
@@ -1336,7 +1346,7 @@ function exForm() {
     <button class="go" onclick="saveEx()">${isNew ? 'Créer l\'exercice' : 'Enregistrer'}</button>
     <button class="sm w" onclick="editEx=null;R()">Retour au catalogue</button>`;
   if (!isNew) {
-    h += `<p class="m" style="margin-top:12px">${inPrograms.length ? 'Présent dans : ' + inPrograms.map(esc).join(', ') + '.' : 'Dans aucun programme.'} Modifier cet exercice n'efface aucun historique.</p><div class="acts">`;
+    h += `<p class="m" style="margin-top:12px">${inPrograms.length ? 'Présent dans : ' + inPrograms.map(esc).join(', ') + '.' : 'Dans aucun programme.'} Modifier cet exercice n'efface aucun historique.</p>${ownIn.length ? `<p class="m">Réglage propre gardé dans : ${ownIn.map(esc).join(', ')}. Ces programmes ne prennent pas les séries, la cible ni le repos d'ici.</p>` : ''}<div class="acts">`;
     h += e.archived ? `<button class="sm" onclick="archEx(${e.id},false)">Restaurer</button>`
       : `<button class="sm" onclick="archEx(${e.id},true)">Archiver</button>`;
     if (!e.used) h += `<button class="sm danger" onclick="delEx(${e.id})">Supprimer</button>`;
@@ -1377,32 +1387,60 @@ function vProg() {
     + `<button onclick="newProg()">+ Nouveau</button></div>`;
   if (progW === null) return h + '<p class="empty">Aucun programme. Crée-en un.</p>';
   const w = WO.find(x => x.id === progW);
-  if (!progDraft || progDraft.id !== w.id) progDraft = {id: w.id, name: w.name, items: [...w.items]};
+  if (!progDraft || progDraft.id !== w.id) progDraft = {id: w.id, name: w.name, items: [...w.items], settings: JSON.parse(JSON.stringify(w.settings || {})), open: null};
   const D = progDraft;
   h += `<div class="card"><label>Nom du programme<input id="p-name" value="${esc(D.name)}" oninput="progDraft.name=this.value"></label>`;
   if (!D.items.length) h += '<p class="empty">Programme vide.</p>';
+  else h += '<p class="m" style="margin-top:8px">« Régler » change les séries, la cible et le repos d’un exercice pour ce programme seulement.</p>';
   D.items.forEach((id, i) => {
-    const e = EX[id]; if (!e) return;
-    h += `<div class="li"><div class="n"><b>${i + 1}. ${esc(e.name)}</b><p class="m">${esc(target(e))}</p></div>
+    const e0 = EX[id]; if (!e0) return;
+    const e = exIn(e0, D), op = D.open === id;
+    h += `<div class="li"><div class="n"><b>${i + 1}. ${esc(e.name)}</b><p class="m">${esc(target(e))}${e.rest && e.kind !== 'cardio' ? ' · repos ' + e.rest + ' s' : ''}${ownTag(e)}</p>
+      <button class="sm" onclick="cfgProg(${id})" aria-expanded="${op}" aria-label="Régler ${esc(e.name)} dans ce programme">Régler</button></div>
       <button class="sm" ${i ? '' : 'disabled'} onclick="mvProg(${i},-1)" aria-label="Monter">↑</button>
       <button class="sm" ${i < D.items.length - 1 ? '' : 'disabled'} onclick="mvProg(${i},1)" aria-label="Descendre">↓</button>
       <button class="sm danger" onclick="rmProg(${i})" aria-label="Retirer">✕</button></div>`;
+    if (op) h += cfgBox(e0, D.settings[id] || {});
   });
   h += `<div class="row" style="grid-template-columns:1fr auto;margin-top:10px"><select id="p-add"><option value="">Ajouter un exercice…</option>${exOptions(D.items)}</select><button class="sm" onclick="addProg()">Ajouter</button></div>
-    <button class="go" onclick="saveProg()">Enregistrer le programme</button>
+    ${progChanged() ? '<p class="sug">Modifications non enregistrées.</p>' : ''}<button class="go" onclick="saveProg()">Enregistrer le programme</button>
     <div class="acts"><button class="sm" onclick="progDraft=null;R()">Annuler les changements</button>
     <button class="sm" onclick="mvWorkout(-1)">◀ Déplacer</button><button class="sm" onclick="mvWorkout(1)">Déplacer ▶</button>
     <button class="sm danger" onclick="delProg()">Supprimer le programme</button></div>
     <p class="m" style="margin-top:8px">Supprimer un programme ne supprime ni les exercices ni l'historique des séances.</p></div>`;
   return h;
 }
+function cfgBox(e, s) {   // réglage d'un exercice dans le programme : vide = valeur de l'exercice
+  const u = {time: 's', cardio: 'min'}[e.kind] || 'reps', card = e.kind === 'cardio', v = k => s[k] == null ? '' : s[k];
+  const f = (id, lab, k, min, max, step) => `<label>${lab}<input id="${id}" type="number" inputmode="numeric" min="${min}" max="${max}" step="${step}" value="${v(k)}" placeholder="${e[k] ?? ''}"></label>`;
+  return `<div class="cfg"><p class="m">Pour ce programme seulement. Une case vide garde la valeur de l’exercice.</p><p class="m">Valeurs de l’exercice : <b>${esc(target(e))}${e.rest && !card ? ', repos ' + e.rest + ' s' : ''}</b></p>
+    ${card ? '' : `<div class="g2">${f('c-sets', 'Séries', 'sets', 1, 10, 1)}${f('c-rest', 'Repos (s)', 'rest', 0, 600, 15)}</div>`}
+    <div class="g2">${f('c-min', `Cible min (${u})`, 'target_min', 1, 1000, 1)}${f('c-max', `Cible max (${u})`, 'target_max', 1, 1000, 1)}</div>
+    <div class="acts"><button class="sm" onclick="cfgOk(${e.id})">Valider</button><button class="sm" onclick="cfgReset(${e.id})">Revenir aux valeurs de l’exercice</button><button class="sm" onclick="progDraft.open=null;R()">Fermer</button></div></div>`;
+}
+function cfgProg(id) { progDraft.open = progDraft.open === id ? null : id; R(); }
+function cfgOk(id) {
+  const rd = (k, lo, hi) => { const el = $(k); if (!el || el.value.trim() === '') return null; const n = Math.trunc(num(el.value)); return isFinite(n) ? Math.max(lo, Math.min(hi, n)) : null; };
+  let mn = rd('c-min', 1, 1000), mx = rd('c-max', 1, 1000);
+  if (mn == null) mn = mx; if (mx == null) mx = mn; if (mn && mx && mx < mn) [mn, mx] = [mx, mn];   // mêmes règles que le serveur
+  const s = {sets: rd('c-sets', 1, 10), target_min: mn, target_max: mx, rest: rd('c-rest', 0, 600)};
+  if (ITEM_KEYS.some(k => s[k] != null)) progDraft.settings[id] = s; else delete progDraft.settings[id];
+  progDraft.open = null; R();
+}
+function cfgReset(id) { delete progDraft.settings[id]; progDraft.open = null; R(); }
+function progSettings(D) { const o = {}; D.items.forEach(id => { if (D.settings[id]) o[id] = D.settings[id]; }); return o; }
+function progChanged() {
+  const D = progDraft, w = D && WO.find(x => x.id === D.id); if (!w) return false;
+  return D.name !== w.name || JSON.stringify(D.items) !== JSON.stringify(w.items) || JSON.stringify(progSettings(D)) !== JSON.stringify(progSettings({items: w.items, settings: w.settings || {}}));
+}
 function selProg(id) { progW = id; progDraft = null; R(); }
 function mvProg(i, d) { const a = progDraft.items; [a[i], a[i + d]] = [a[i + d], a[i]]; R(); }
-function rmProg(i) { progDraft.items.splice(i, 1); R(); }
+function rmProg(i) { const [id] = progDraft.items.splice(i, 1); delete progDraft.settings[id]; if (progDraft.open === id) progDraft.open = null; R(); }
 function addProg() { const id = +$('p-add').value; if (id) { progDraft.items.push(id); R(); } }
 function saveProg() {
+  if (progDraft.open != null && $('c-min')) cfgOk(progDraft.open);   // réglage ouvert mais pas validé : on le garde
   const D = progDraft;
-  act(async () => { await api('PUT', `/api/workouts/${D.id}`, {name: D.name, items: D.items}); progDraft = null; if (F && F.mode === 'new' && F.wid === D.id && !hasValues()) F = null; }, 'Programme enregistré');
+  act(async () => { await api('PUT', `/api/workouts/${D.id}`, {name: D.name, items: D.items, settings: progSettings(D)}); progDraft = null; if (F && F.mode === 'new' && F.wid === D.id && !hasValues()) F = null; }, 'Programme enregistré');
 }
 function newProg() {
   const name = prompt('Nom du nouveau programme', `Séance ${String.fromCharCode(65 + WO.length)}`);

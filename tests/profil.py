@@ -34,7 +34,10 @@ EPAULES = {"developpe-couche", "di", "ecartes", "dips-assistes", "tractions-assi
 POUSSEE = {"developpe-couche", "di", "chest-press", "pompes", "dips-assistes", "de", "developpe-militaire"}
 CACHE = ["IMC", "kcal", "Obésité", "Surpoids", "Corpulence", "Insuffisance pondérale"]   # rien de tout cela si le détail santé est masqué
 CARDIO = {"tapis-incline", "velo", "rameur", "elliptique", "stairmaster", "course", "intervalles"}
-PLAN = "a => { const p = PROFIL._.plan(a); return {w: p.workouts.map(w => ({name: w.name, items: w.items.map(i => i.slug), missing: w.missing, notes: w.notes})), prm: p.prm, changes: p.changes.map(c => c.slug)}; }"
+PLAN = "a => { const p = PROFIL._.plan(a); return {w: p.workouts.map(w => ({name: w.name, items: w.items.map(i => i.slug), missing: w.missing, notes: w.notes})), prm: p.prm}; }"
+# exercices du catalogue, sans les champs qui bougent seuls (« used » change dès qu'une séance est enregistrée)
+CATA = "fetch('/api/state').then(r => r.json()).then(s => s.exercises.map(e => { const o = Object.assign({}, e); delete o.used; return o; }))"
+REG = "s => Object.fromEntries(s.workouts.map(w => [w.name, w.settings]))"
 
 try:
     with sync_playwright() as p:
@@ -182,9 +185,10 @@ try:
         ok("ne remplace pas un avis médical" in tx and "douleur vive" in tx, "avertissements du cahier des charges affichés")
         pg.click("button:has-text(\"Masquer le détail santé\")"); time.sleep(.2)
         # confirmation : Annuler ne change rien
-        avant = ev("fetch('/api/state').then(r => r.json())")
+        avant = ev("fetch('/api/state').then(r => r.json())"); cata0 = ev(CATA)
         pg.click("button:has-text(\"Générer mon programme\")"); time.sleep(.3); tx = pg.inner_text("#app")
-        ok("Programmes supprimés" in tx and "Séance A" in tx and "Haut du corps" in tx and "→" in tx, "confirmation : programmes supprimés, nouveaux programmes, réglages avant → après")
+        ok("Programmes supprimés" in tx and "Séance A" in tx and "Haut du corps" in tx and "Développé incliné haltères\n4 × 4 à 6 · repos 2 min 30" in tx, "confirmation : programmes supprimés, nouveaux programmes et réglages de chaque séance")
+        ok("Exercices modifiés" not in tx and "valent partout" not in tx and "→" not in tx, "confirmation : plus de section « Exercices modifiés » ni d'avertissement « ces réglages valent partout »")
         ok("séance en cours non enregistrée est conservée" in tx, "confirmation : le brouillon de séance est annoncé conservé")
         pg.click("button:has-text('Annuler')"); time.sleep(.3)
         apres = ev("fetch('/api/state').then(r => r.json())")
@@ -195,8 +199,12 @@ try:
         ok([w["name"] for w in s["workouts"]] == ["Haut du corps", "Bas du corps"] and not {w["id"] for w in s["workouts"]} & {1, 2}, "programmes remplacés par Haut / Bas du corps")
         h = s["sessions"]
         ok(len(h) == len(hist0) == 1 and h[0]["workout_id"] is None and h[0]["workout_name"] == "Séance A" and h[0]["entries"] == hist0[0]["entries"], "mode local : historique intact, workout_id à NULL, nom de séance gardé")
-        di = s["exercises"]; pc = next(e for e in di if e["slug"] == "di")
-        ok([pc["sets"], pc["target_min"], pc["target_max"], pc["rest"]] == [4, 4, 6, 150], f"réglages appliqués à l'exercice (développé incliné : {pc['sets']} × {pc['target_min']}-{pc['target_max']}, {pc['rest']} s)")
+        cata1 = ev(CATA); diff = [a["slug"] for a, b in zip(cata0, cata1) if a != b]
+        ok(len(cata0) == len(cata1) == 50 and not diff, f"générateur : catalogue d'exercices identique avant et après ({diff[:4]})")
+        ok(any(e["slug"] == "di" and [e["sets"], e["target_min"], e["target_max"], e["rest"]] != [4, 4, 6, 150] for e in cata0), "(témoin : le développé incliné du catalogue n'a pas déjà les réglages générés)")
+        di = next(e for e in s["exercises"] if e["slug"] == "di"); hc = next(w for w in s["workouts"] if w["name"] == "Haut du corps")
+        ok(hc["settings"].get(str(di["id"])) == {"sets": 4, "target_min": 4, "target_max": 6, "rest": 150}, f"réglages enregistrés dans la séance Haut du corps (développé incliné : {hc['settings'].get(str(di['id']))})")
+        ok(all(set(w["settings"]) == {str(i) for i in w["items"]} for w in s["workouts"]), "chaque exercice des séances générées a son réglage de séance")
         dr = ev("JSON.parse(localStorage.getItem('muscu-draft'))")
         ok(dr and dr["notes"] == "brouillon témoin" and dr["vals"]["1"] == [["55", "8"]] and dr["wid"] is None, "brouillon de séance conservé (rattaché à « séance libre »)")
         pr = ev("JSON.parse(localStorage.getItem('muscu-profil'))")
@@ -206,6 +214,10 @@ try:
         ok("Bienvenue" not in pg.inner_text("#app") and pg.locator(".tabbar").is_visible(), "au lancement suivant : plus de questionnaire")
         pg.evaluate("go('seance')"); time.sleep(.3)
         ok(pg.input_value("#f-notes") == "brouillon témoin", "onglet Séance : le brouillon s'affiche avec ses valeurs")
+        pg.evaluate("go('seance')"); pg.evaluate(f"pickWorkout({hc['id']})"); time.sleep(.3)
+        crd = pg.locator(".card", has_text="Développé incliné haltères").first.inner_text()
+        ok("4 × 4-6" in crd and "propre à ce programme" in crd and "150 s" in crd, f"écran Séance : le développé incliné affiche le réglage de la séance ({crd[:60]!r})")
+        pg.evaluate("go('accueil')"); time.sleep(.2)
         # Mon profil, Refaire le questionnaire, Quitter
         pg.click("#menu-btn"); time.sleep(.3); ok("Mon profil" in pg.inner_text("#dnav"), "menu : entrée « Mon profil »")
         pg.click("#dnav >> text=Mon profil"); time.sleep(.3); tx = pg.inner_text("#app")
@@ -266,7 +278,7 @@ try:
         avant = pg4.evaluate("fetch('/api/state').then(r => r.json())")
         pg4.evaluate("a => localStorage.setItem('muscu-profil-brouillon', JSON.stringify({version: 1, answers: a, mode: 'resume', i: 16, redo: false}))", prof(objectif="force", niveau="intermediaire"))
         pg4.reload(); pg4.wait_for_selector("button:has-text('Générer mon programme')"); pg4.click("button:has-text('Générer mon programme')"); time.sleep(.3)
-        ok("→" in pg4.inner_text("#app"), "(la confirmation annonce des changements)")
+        ok("4 × 4 à 6" in pg4.inner_text("#app"), "(la confirmation annonce des réglages différents du catalogue)")
         pg4.click("button:has-text('Garder mes programmes')"); time.sleep(.5)
         apres = pg4.evaluate("fetch('/api/state').then(r => r.json())")
         pr = pg4.evaluate("JSON.parse(localStorage.getItem('muscu-profil'))")
