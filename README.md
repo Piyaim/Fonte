@@ -21,7 +21,7 @@ Il y a deux façons de l'utiliser, avec la même interface :
 - Records (1RM estimé), courbes de progression, poids de corps, photos de progression, import et export.
 - Des animations de personnage (homme ou femme, au choix dans le menu ☰) montrent chaque mouvement, avec les muscles travaillés qui s'allument. Les 50 exercices du catalogue de départ ont leur animation (musculation, gainage, cardio).
 - Un mini-jeu facultatif, les « Esprits de fonte » : les séances rapportent des jetons selon l'effort réel (plafonnés par jour), pour tirer des créatures qui évoluent avec les séries faites sur leur zone du corps, et des objets qui changent l'apparence du personnage. Sans argent, sans série à perdre, taux affichés. Code : `server/static/jeu.js` (règles) et `creatures.js` (dessin), tests dans `tests/jeu.py`. L'état est stocké localement ; en mode serveur il reste sur l'appareil.
-- Cinq couleurs au choix, qui changent aussi l'icône de l'écran d'accueil dans l'appli Android (selon ton lanceur, ça peut prendre quelques secondes). L'interface est **en français uniquement** pour l'instant.
+- Six couleurs au choix (dont noir et blanc), qui changent aussi l'icône de l'écran d'accueil dans l'appli Android (selon ton lanceur, ça peut prendre quelques secondes). L'interface est **en français uniquement** pour l'instant.
 
 ## ⚠️ À lire avant d'utiliser
 

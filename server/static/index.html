@@ -14,8 +14,8 @@
 <script src="/static/jeu.js"></script>
 <script src="/static/profil.js"></script>
 <script>
-var ACC = [['orange','Orange','#ff7a1a'],['blue','Bleu','#4dabf7'],['green','Vert','#51cf66'],['violet','Violet','#9775fa'],['red','Rouge','#ff6b6b']];
-var ACC_TC = {orange:'#e8590c', blue:'#1971c2', green:'#2b8a3e', violet:'#7048e8', red:'#e03131'};
+var ACC = [['orange','Orange','#ff7a1a'],['blue','Bleu','#4dabf7'],['green','Vert','#51cf66'],['violet','Violet','#9775fa'],['red','Rouge','#ff6b6b'],['mono','Noir et blanc','linear-gradient(135deg,#111 50%,#fff 50%)']];
+var ACC_TC = {orange:'#e8590c', blue:'#1971c2', green:'#2b8a3e', violet:'#7048e8', red:'#e03131', mono:'#111111'};
 var ACCENT = 'orange';
 try { var _a = JSON.parse(localStorage.getItem('muscu-accent') || 'null'); if (ACC_TC[_a]) ACCENT = _a; } catch (e) {}
 function icoUrl(n) { if (window.FONTE_LOCAL) return window.FONTE_ICON(ACCENT, n); return ACCENT === 'orange' ? '/static/icons/icon-192.png' : '/icon/' + n + '.png?c=' + ACCENT; }
@@ -289,6 +289,12 @@ svg.fig{width:100%;display:block}
 :root[data-accent="red"]{--a:#e03131;--on:#fff;--g1:#ff6b6b;--g2:#e03131;--g3:#9c1c1c;--gs:224,49,49}
 @media(prefers-color-scheme:dark){:root[data-accent="red"]:not([data-theme="light"]){--a:#ff6b6b;--on:#240808}}
 :root[data-accent="red"][data-theme="dark"]{--a:#ff6b6b;--on:#240808}
+/* noir et blanc : noir sur fond clair, blanc sur fond sombre ; logo noir sur fond blanc */
+:root[data-accent="mono"]{--a:#111;--on:#fff;--g1:#4b5157;--g2:#262b30;--g3:#0a0c0e;--gs:0,0,0}
+@media(prefers-color-scheme:dark){:root[data-accent="mono"]:not([data-theme="light"]){--a:#f1f3f5;--on:#111}}
+:root[data-accent="mono"][data-theme="dark"]{--a:#f1f3f5;--on:#111}
+[data-accent="mono"] .lg{box-shadow:0 0 0 1px var(--l)}
+[data-accent="mono"][data-style="b"] .hero .go{background:#fff;color:#10151a}
 
 /* ---- questionnaire de départ et profil (profil.js) ---- */
 body.onb .tabbar,body.onb #menu-btn{display:none}

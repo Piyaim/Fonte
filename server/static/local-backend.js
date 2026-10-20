@@ -13,7 +13,7 @@
   window.photoUrl = (id, kind) => LOCAL ? (PHURL[id + ':' + kind] || '') : '/photos/' + id + '/' + kind;
 
   /* ------------------------------------------------------------------ icône (dessinée, pour le logo dans l'appli) */
-  const ICON_BG = {orange: '#ff7a1a', blue: '#4dabf7', green: '#51cf66', violet: '#9775fa', red: '#ff6b6b'};
+  const ICON_BG = {orange: '#ff7a1a', blue: '#4dabf7', green: '#51cf66', violet: '#9775fa', red: '#ff6b6b', mono: '#ffffff'};
   window.FONTE_ICON = (key, size) => {
     const c = document.createElement('canvas'); c.width = c.height = size;
     const g = c.getContext('2d'), u = size * 0.9 / 100, m = size / 2;

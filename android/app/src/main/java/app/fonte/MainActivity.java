@@ -135,7 +135,7 @@ public class MainActivity extends Activity {
         return "application/octet-stream";
     }
 
-    private static final String[] ICONS = {"orange", "blue", "green", "violet", "red"};
+    private static final String[] ICONS = {"orange", "blue", "green", "violet", "red", "mono"};
 
     /** Appelé par la page (local-backend.js) pour enregistrer une sauvegarde : le système demande où la ranger. */
     private class Bridge {

@@ -135,7 +135,7 @@ Fichiers dans `tests/`, à lancer avec `python3 tests/nom.py` (Playwright et Fla
 ### APK de test (identifiant `app.fonte.suivi.test`, construit sur le PC)
 - Conteneur podman `eclipse-temurin:17-jdk`, SDK `/home/PM/Android/Sdk`, cache Gradle `/home/PM/.cache/fonte-gradle`, `sh ./gradlew --no-daemon --offline -q -PAPP_ID=app.fonte.suivi.test assembleRelease` (commande complète dans JOURNAL.md).
 - **Toujours monter la clé de test fixe** : `-v /home/PM/fonte-travail/cle-test:/root/.android` (créée le 20/10/2026, hors dépôt, mot de passe public « android »). Sans elle, chaque construction crée une clé jetable : les APK de test du lot 1 et du lot 2A ont deux clés différentes, et aucun APK ne peut s'installer par-dessus eux.
-Version actuelle : voir `android/gradle.properties` (0.4.0, VERSION_CODE 7, préparée le 20/10/2026 ; publiée seulement si la release v0.4.0 existe sur GitHub). Dernière version publiée avant elle : 0.3.1 (APK de 195 728 octets).
+Version actuelle : voir `android/gradle.properties` (0.4.1, VERSION_CODE 8, préversion du 20/10/2026 : couleur « Noir et blanc », icône fond blanc et haltère noir). Version stable précédente : 0.4.0. Une couleur ajoutée doit exister partout (index.html `ACC`, `MainActivity.ICONS`, alias du manifeste, `ic_bg_*`, icônes adaptative et PNG, `local-backend.js`, `app.py`) : `tests/icone_app.py` le vérifie.
 
 ---
 
