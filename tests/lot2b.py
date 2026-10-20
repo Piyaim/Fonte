@@ -120,11 +120,13 @@ try:
         s3 = pg.evaluate(ETAT); a3 = next(w for w in s3["workouts"] if w["id"] == wa)["settings"]; b3 = next(w for w in s3["workouts"] if w["id"] == wb)["settings"]
         ok(a3[str(di)] == {"sets": 4, "target_min": 4, "target_max": 6, "rest": 150} and b3[str(de)] == {"sets": 3, "target_min": 10, "target_max": 12, "rest": 75},
            f"phase 3 : Séance A en force (4 × 4-6, 150 s), Séance B en volume (3 × 10-12, 75 s) {a3[str(di)]} {b3[str(de)]}")
-        ok(s3["ex"] == avant["ex"] and [w["items"] for w in s3["workouts"]] == [w["items"] for w in avant["workouts"]], "phase 3 : catalogue et exercices des programmes inchangés")
+        # lot 2C (décision de Georgio) : avec 2 programmes, la phase 3 ajoute une séance C ; A et B gardent leurs exercices
+        ok(s3["ex"] == avant["ex"] and [w["items"] for w in s3["workouts"]][:2] == [w["items"] for w in avant["workouts"]] and [w["name"] for w in s3["workouts"]][2:] == ["Séance C"],
+           "phase 3 : catalogue et exercices de A et B inchangés, séance C ajoutée (lot 2C)")
         # export puis import ailleurs : l'état du programme suit
         pg.evaluate("go('donnees')"); time.sleep(.2)
         exp = pg.evaluate("fetch('/api/export').then(r => r.json())")
-        ok(exp["profil"]["program"]["phase"] == 3 and exp["profil"]["program"]["ids"] == [wa, wb] and "cycle" in exp["profil"], "l'export contient la phase, les programmes suivis et le cycle")
+        ok(exp["profil"]["program"]["phase"] == 3 and exp["profil"]["program"]["ids"][:2] == [wa, wb] and len(exp["profil"]["program"]["ids"]) == 3 and "cycle" in exp["profil"], "l'export contient la phase, les programmes suivis et le cycle")
         ok(not errs, f"aucune erreur JavaScript (phases) {errs[:2]}"); ctx.close()
         ctx, pg, errs = page(J(92))
         pg.click("button:has-text('J’ai une sauvegarde')"); time.sleep(.3); pg.fill("#bk", json.dumps(exp)); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(1500)

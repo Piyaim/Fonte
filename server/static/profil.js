@@ -123,8 +123,15 @@
     4: [['Haut du corps', HAUT], ['Bas du corps', BAS]],
     5: [['Poussée', PUSH], ['Tirage', PULL], ['Jambes', LEGS], ['Haut du corps', HAUT2], ['Bas du corps', BAS2]]
   };
-  const STRUCT_TXT = {2: 'Corps entier : séances A et B en alternance.', 3: 'Corps entier : A, B, A une semaine, puis B, A, B la suivante.',
-    4: 'Haut du corps et bas du corps, deux fois chacun dans la semaine.', 5: 'Poussée, tirage, jambes, puis haut et bas du corps.'};
+  /* phase 3 avec 2 programmes (A/B ou Haut/Bas) : une 3e séance « puissance et cardio » (lot 2C). Corps entier, exercices
+     polyarticulaires seulement (ni isolation ni tronc), cardio de durée haute à la fin ; mêmes règles que le générateur. */
+  const C_NAME = 'Séance C';
+  const FB_C = [S(SQ, 'main', ['squat-smith', 'pc', 'gs', 'fentes']), S('Poussée horizontale', 'main', ['developpe-couche', 'di', 'chest-press', 'pompes']),
+    S('Tirage vertical', 'main', ['tractions-assistees', 'tv', 'rowing-haltere']), S(CH, 'main', ['hip-thrust', 'rdl']),
+    S('Poussée verticale', 'main', ['developpe-militaire', 'de', 'pompes']), S('Tirage horizontal', 'main', ['rowing-machine', 'rowing-haltere', 'rs']),
+    S(FE, 'main', ['fentes', 'split-squat-bulgare', 'gs'])];
+  // séances générées : celles de la structure, plus la séance C en phase 3 quand la structure n'a que 2 programmes
+  const structOf = (seances, phase) => [...STRUCT[seances], ...(phase === 3 && STRUCT[seances].length === 2 ? [[C_NAME, FB_C, true]] : [])];
   const NB_EX = {30: 4, 45: 5, 60: 6, 75: 7};
   const CARDIO_MIN = {30: [5, 10], 45: [10, 15], 60: [15, 20], 75: [20, 20]};
   const EASY_CARDIO = ['velo', 'tapis-incline', 'elliptique', 'rameur', 'stairmaster', 'course'];
@@ -280,15 +287,15 @@
   const ZP = {epaules: 'aux épaules', dos: 'au dos', genoux: 'aux genoux', hanches: 'aux hanches', poignets: 'aux poignets ou aux coudes'};
   const zonePhrase = z => z.map(k => ZP[k]).join(' et ');
   const exName = (slug, x) => x.ex[slug] ? x.ex[slug].name : slug;
-  function buildWorkout(name, slots, x, usedAll) {
-    const w = {name, items: [], missing: [], notes: [], removed: []}, picked = [];
+  function buildWorkout(name, slots, x, usedAll, poly) {   // poly : exercices polyarticulaires seulement (séance C)
+    const w = {name, items: [], missing: [], notes: [], removed: []}, picked = [], ok = sl => usable(sl, x) && (!poly || LIB[sl][1] === 'poly');
     for (const s of slots.filter(s => x.phase > 1 || s.role !== 'iso').slice(0, NB_EX[x.a.duree])) {
-      const free = s.c.filter(sl => usable(sl, x) && !picked.some(p => p.slug === sl));
+      const free = s.c.filter(sl => ok(sl) && !picked.some(p => p.slug === sl));
       let slug = free.find(sl => !usedAll.has(sl)) || free[0];
       if (!slug) { w.missing.push(s.label); continue; }
       const z = hurts(slug, x);
       if (z.length) {   // blessure : le remplaçant, sinon un autre exercice du même type, sinon rien (jamais un exercice déconseillé)
-        const fit = sl => usable(sl, x) && !hurts(sl, x).length && !picked.some(p => p.slug === sl);
+        const fit = sl => ok(sl) && !hurts(sl, x).length && !picked.some(p => p.slug === sl);
         const r = LIB[slug][6], zt = z.map(k => ZL[k]).join(', ');
         const pool = [...new Set([...s.c, ...Object.keys(LIB).filter(k => family(k) === family(slug))])].filter(fit);
         const alt = r && fit(r) ? r : pool.find(sl => !usedAll.has(sl)) || pool[0];
@@ -333,17 +340,19 @@
     if (x.bmi >= 30 && r[3] > 0) r[3] = Math.min(180, r[3] + 30);                    // IMC de 30 ou plus : repos +30 s, 3 min au plus
     return {sets: r[0], min: r[1], max: r[2], rest: r[3]};
   }
+  function makeWorkout(name, slots, x, usedAll, i, n, poly) {   // séance n° i sur n : exercices, cardio, rôle de phase 3, réglages
+    const w = buildWorkout(name, slots, x, usedAll, poly);
+    w.items.forEach(p => usedAll.add(p.slug));
+    const c = cardioFor(i, x, n);
+    if (c) w.items.push({slug: c, role: 'cardio'}); else w.missing.push('Cardio');
+    w.type = x.phase === 3 ? TYPES[i % 3] : null; w.prm = {};
+    w.items.forEach(p => { w.prm[p.slug] = params(p.slug, x, w.type); });
+    return w;
+  }
   function plan(a0, phase) {
     const x = context(a0, phase); x.cardio = cardioMinutes(x);
-    const usedAll = new Set(), workouts = STRUCT[x.a.seances].map(([name, slots], i) => {
-      const w = buildWorkout(name, slots, x, usedAll);
-      w.items.forEach(p => usedAll.add(p.slug));
-      const c = cardioFor(i, x, STRUCT[x.a.seances].length);
-      if (c) w.items.push({slug: c, role: 'cardio'}); else w.missing.push('Cardio');
-      w.type = x.phase === 3 ? TYPES[i % 3] : null; w.prm = {};
-      w.items.forEach(p => { w.prm[p.slug] = params(p.slug, x, w.type); });
-      return w;
-    });
+    const st = structOf(x.a.seances, x.phase), usedAll = new Set();
+    const workouts = st.map(([name, slots, poly], i) => makeWorkout(name, slots, x, usedAll, i, st.length, poly));
     const prm = {};   // réglages par exercice (le premier programme qui le contient) : identiques partout hors phase 3
     workouts.forEach(w => w.items.forEach(p => { if (!prm[p.slug]) prm[p.slug] = w.prm[p.slug]; }));
     return {x, workouts, prm};
@@ -444,7 +453,10 @@
     if (o && o.program && !Array.isArray(o.program.ids)) { upgrade(); o = profile(); }   // profil d'avant le lot 2B arrivé par un import
     const p = o && o.program;
     if (!filled(o) || !p || !Array.isArray(p.ids) || !p.ids.length || !p.start) return null;
-    const WO = A().WO(); return p.ids.every(id => WO.some(w => w.id === id)) ? p : null;
+    const WO = A().WO(), has = id => WO.some(w => w.id === id);
+    // séance C supprimée par l'utilisateur : la rotation revient à A, B (rien d'autre ne change)
+    const ids = p.extra != null && !has(p.extra) ? p.ids.filter(id => id !== p.extra) : p.ids;
+    return ids.length && ids.every(has) ? (ids === p.ids ? p : Object.assign({}, p, {ids})) : null;
   }
   const cycleOf = o => Object.assign({light: [], later: {}}, o.cycle || {});
   function lastDay(t) { const d = A().SESS().map(s => s.day).filter(x => x <= t).sort(); return d[d.length - 1] || null; }
@@ -484,17 +496,35 @@
       return {w, type, settings};
     });
   }
+  // séance C proposée au passage en phase 3 : seulement pour un programme généré de 2 programmes (A/B ou Haut/Bas)
+  function planC(o, to) {
+    const p = managed(o); if (!p || to !== 3 || p.ids.length !== 2) return null;
+    const x = context(o.answers, 3), EX = A().EX(); x.cardio = cardioMinutes(x);
+    const used = new Set(p.ids.flatMap(id => ((A().WO().find(w => w.id === id) || {}).items || []).map(i => EX[i] && EX[i].slug).filter(Boolean)));
+    const w = makeWorkout(C_NAME, FB_C, x, used, 2, 3, true);
+    return w.items.some(q => q.role !== 'cardio') ? {w, x} : null;   // aucun exercice possible (lieu, blessures) : pas de séance C
+  }
   let BUSY = false;
   async function accept(k) {
     const o = profile(), t = todayIso(); if (!o || BUSY) return;
     const c = cycleOf(o);
     if (k === 'phase') {
       const ph = phaseOffer(o, t); if (!ph) return;
+      const p = managed(o), pc = planC(o, ph.to); let cid = null;
       BUSY = true;
       try {
+        if (pc) {   // 1. séance C créée d'abord ; 2. réglages de A (force) et B (volume) ; rien n'est supprimé
+          const settings = {}; pc.w.items.forEach(q => { const n = pc.w.prm[q.slug]; settings[pc.x.ex[q.slug].id] = {sets: n.sets, target_min: n.min, target_max: n.max, rest: n.rest}; });
+          cid = (await A().api('POST', '/api/workouts', {name: C_NAME})).id;
+          await A().api('PUT', `/api/workouts/${cid}`, {name: C_NAME, items: pc.w.items.map(q => pc.x.ex[q.slug].id), settings});
+        }
         for (const {w, settings} of phaseSettings(o, ph.to)) await A().api('PUT', `/api/workouts/${w.id}`, {name: w.name, items: w.items, settings});
-        o.program = Object.assign({}, o.program, {phase: ph.to, phase_start: t, history: [...(o.program.history || []), {phase: ph.to, start: t}]});
-      } catch (e) { BUSY = false; await A().load(); A().toast('Changement de phase interrompu : ' + e.message); A().R(); return; }
+        o.program = Object.assign({}, o.program, {phase: ph.to, phase_start: t, history: [...(o.program.history || []), {phase: ph.to, start: t}]},
+          cid ? {ids: [...p.ids, cid], workouts: [...(o.program.workouts || []), C_NAME], extra: cid, rot: monday(t)} : {});
+      } catch (e) {
+        if (cid) try { await A().api('DELETE', `/api/workouts/${cid}`); } catch (e2) {}
+        BUSY = false; await A().load(); A().toast('Changement de phase interrompu : ' + e.message); A().R(); return;
+      }
       BUSY = false; await A().load();
     } else c.light = [...c.light, {kind: k, start: t, end: addD(t, 6)}];
     delete c.later[k]; o.cycle = c; o.updated = nowIso(); put(KEY, o);
@@ -514,13 +544,14 @@
     (w ? w.items : []).forEach(id => { const e = EX[id]; if (e && !e.archived && e.kind !== 'cardio') A().zonesOf(e).p.forEach(k => { if (k !== 'abdos' && k !== 'lombaires') z.add(k); }); });
     return z;
   }
-  function seqFor(n, k, wk) { return Array.from({length: n}, (_, i) => k === 2 && n % 2 ? (i + wk) % 2 : i % k); }
+  // rotation continue d'une semaine à l'autre (A, B, C, A…) ; pour 2 programmes, c'est la même chose qu'avant le lot 2C
+  function seqFor(n, k, wk) { return Array.from({length: n}, (_, i) => (((wk * n + i) % k) + k) % k); }
   function combos(a, n) { if (!n) return [[]]; if (a.length < n) return []; const [h, ...r] = a; return [...combos(r, n - 1).map(c => [h, ...c]), ...combos(r, n)]; }
   function weekPlan(o, p, mon) {
     const days = [...new Set((o.answers.jours || []).map(j => DOW[j]).filter(d => d !== undefined))].sort((a, b) => a - b);
     const n = Math.min(o.answers.seances || p.ids.length, days.length), k = p.ids.length;
     if (!n) return [];
-    const wk = Math.round((dn(mon) - dn(monday(p.start))) / 7), seq = seqFor(n, k, wk), nxt = seqFor(n, k, wk + 1), G = p.ids.map(groupsOf);
+    const wk = Math.round((dn(mon) - dn(monday(p.rot || p.start))) / 7), seq = seqFor(n, k, wk), nxt = seqFor(n, k, wk + 1), G = p.ids.map(groupsOf);
     const share = (i, j) => i === j || [...G[i]].some(z => G[j].has(z));
     let best = null, bs = Infinity;
     for (const c of combos(days, n)) {
@@ -563,12 +594,15 @@
     } else {
       const lst = phaseSettings(o, f.to), EX = A().EX();
       const ex = lst.map(({w, settings}) => { const id = w.items.find(i => EX[i] && LIB[EX[i].slug] && LIB[EX[i].slug][0] !== 'cardio' && LIB[EX[i].slug][0] !== 'tronc'); return id && {id, s: settings[id]}; });
+      const pc = planC(o, f.to);
       title = `Phase ${f.to} prête`;
-      line = f.to === 2 ? (ex[0] ? `Charges un peu plus lourdes : ${rangeTxt(ex[0].s)}.` : 'Charges un peu plus lourdes.') : 'Chaque séance prend un rôle : force, volume ou puissance.';
-      more = `<p>${f.to === 2 ? `Tes ${P1_DAYS(o.answers.niveau) / 7} semaines de réadaptation sont faites : bravo !` : 'Tes semaines de progression sont faites : bravo !'} ${esc(phaseTxt(f.to, o.answers.niveau))}</p>`
+      line = f.to === 2 ? (ex[0] ? `Charges un peu plus lourdes : ${rangeTxt(ex[0].s)}.` : 'Charges un peu plus lourdes.')
+        : pc ? 'Une 3e séance s’ajoute : puissance et cardio.' : 'Chaque séance prend un rôle : force, volume ou puissance.';
+      more = (pc ? `<p><b>${C_NAME} : puissance et cardio</b></p><ul class="qnames">${pc.w.items.map(q => `<li>${esc(pc.x.ex[q.slug].name)} · ${esc(prmTxt(pc.x.ex[q.slug], pc.w.prm[q.slug]))}</li>`).join('')}</ul>`
+        + pc.w.notes.map(n => `<p class="qmiss">${esc(n.startsWith('à la place') ? 'Blessure ou douleur : ' + n : n)}</p>`).join('') : '') + `<p>${f.to === 2 ? `Tes ${P1_DAYS(o.answers.niveau) / 7} semaines de réadaptation sont faites : bravo !` : 'Tes semaines de progression sont faites : bravo !'} ${esc(phaseTxt(f.to, o.answers.niveau))}</p>`
         + lst.map(({w, type}, i) => { const e = ex[i], s = e && e.s;
           return `<div class="qex"><b>${esc(w.name)}${type ? ' : ' + TYPE_TXT[type] : ''}</b>${s ? `<span>par exemple ${esc(EX[e.id].name)} : ${esc(prmTxt(EX[e.id], {sets: s.sets, min: s.target_min, max: s.target_max, rest: s.rest}))}</span>` : ''}</div>`; }).join('')
-        + '<p class="m">Seuls les réglages de tes séances changent (séries, répétitions, repos) : tes exercices et ton historique restent les mêmes.</p>';
+        + `<p class="m">${pc ? 'Tes séances actuelles gardent leurs exercices : seuls leurs réglages changent. Ton historique reste le même.' : 'Seuls les réglages de tes séances changent (séries, répétitions, repos) : tes exercices et ton historique restent les mêmes.'}</p>`;
     }
     return `<section class="card offer" data-offer="${f.k}"><h2>${esc(title)}</h2><p>${esc(line)}</p>${det(more)}<div class="offb"><button class="go" onclick="PROFIL.accept('${f.k}')">Accepter</button><button class="sm" onclick="PROFIL.later('${f.k}')">Plus tard</button></div></section>`;
   }
@@ -732,8 +766,10 @@
       for (const id of old) await api('DELETE', `/api/workouts/${id}`);   // l'historique garde son nom de séance (workout_id passe à NULL)
       await api('POST', '/api/workouts/order', {ids});
       const prev = profile() && profile().program, t = todayIso(), same = prev && prev.phase === x.phase && prev.start;
+      const extra = pl.workouts.length > STRUCT[x.a.seances].length ? ids[ids.length - 1] : undefined;   // séance C
       saveProfile({generated: nowIso(), phase: x.phase, level: clean(D.answers).niveau, structure: x.a.seances, workouts: pl.workouts.map(w => w.name), ids,
-        start: prev && prev.start || t, phase_start: same ? prev.phase_start : t, history: same ? prev.history : [...(prev && prev.history || []), {phase: x.phase, start: t}]});
+        start: prev && prev.start || t, phase_start: same ? prev.phase_start : t, history: same ? prev.history : [...(prev && prev.history || []), {phase: x.phase, start: t}],
+        extra, rot: monday(t)});
       await A().load();
       P.busy = false; to('done');
     } catch (e) {
@@ -900,6 +936,6 @@
     exportState: () => profile(),
     importState: o => { if (valid(o)) put(KEY, o); },
     // pour les tests
-    _: {adaptations, LIB, FROM_PDF, LIEUX, STRUCT, PRM, PRM3, CORE, NB_EX, CARDIO_MIN, QS, SANTE, PLIO, bmiOf, bmiBand, energy, plan, params, check, clean, context, usable, weekPlan, phaseSettings, groupsOf}
+    _: {adaptations, planC, structOf, seqFor, LIB, FROM_PDF, LIEUX, STRUCT, PRM, PRM3, CORE, NB_EX, CARDIO_MIN, QS, SANTE, PLIO, bmiOf, bmiBand, energy, plan, params, check, clean, context, usable, weekPlan, phaseSettings, groupsOf}
   };
 })();
