@@ -1483,9 +1483,12 @@ function readFile(inp) { const f = inp.files[0]; if (!f) return; f.text().then(t
 function doImport() {
   let o; try { o = JSON.parse($('bk').value); } catch (e) { return toast('JSON invalide'); }
   if (o && o.format === 'suivi-muscu' && !confirm('Cet export va REMPLACER toute la base actuelle (exercices, programmes, séances, pesées). Continuer ?')) return;
+  const imposed = !!(window.PROFIL && PROFIL.imposed());
   act(async () => {
     const r = await api('POST', '/api/import', o);
     F = null; progDraft = null; store(draftKey());
+    if (window.PROFIL) PROFIL.afterImport(o);   // import réussi : le questionnaire saute (un import annulé ou refusé n'arrive jamais ici)
+    if (imposed) { view = 'accueil'; store('muscu-view', view); }
     alert('Import terminé : ' + Object.entries(r).map(([k, v]) => `${k} : ${v}`).join(', '));
   });
 }

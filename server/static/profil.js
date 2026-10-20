@@ -381,6 +381,8 @@
   /* ------------------------------------------------------------------ état de l'écran */
   const valid = o => !!(o && o.version === 1 && o.answers && typeof o.answers === 'object');
   const profile = () => { const o = get(KEY); return valid(o) ? o : null; };
+  // profil créé par un import sans profil : questionnaire non rempli (jamais imposé, toujours proposé dans « Mon profil »)
+  const filled = o => !!(o && !o.imported && !QS.some(q => check(q, o.answers)));
   let D = null;                       // brouillon : {version, answers, mode, i, redo}
   let P = {mode: 'home', ret: false, err: '', plan: null, busy: false};
   const fresh = () => ({version: 1, answers: {detail: 'non', sante: {}}, mode: 'intro', i: 0, redo: false});
@@ -461,7 +463,7 @@
   }
   function redo() {
     const o = profile();
-    if (!draft() || !D.redo) { D = fresh(); if (o) D.answers = JSON.parse(JSON.stringify(o.answers)); D.redo = true; D.i = 0; }
+    if (!draft() || !D.redo) { D = fresh(); if (o && !o.imported) D.answers = JSON.parse(JSON.stringify(o.answers)); D.redo = true; D.i = 0; }
     D.mode = D.mode === 'intro' ? 'q' : D.mode; saveD(); to(D.mode, D.i);
   }
   function quit() { P.ret = false; to('home'); }        // le brouillon reste : « Reprendre le questionnaire »
@@ -471,6 +473,13 @@
     const prev = profile(), a = clean(D.answers);
     put(KEY, {version: 1, created: prev ? prev.created : nowIso(), updated: nowIso(), answers: a, bmi: bmiOf(a.poids, a.taille), program});
     D = null; put(DKEY, null);
+  }
+  /* Un import réussi fait sauter le questionnaire : profil de l'export s'il y en a un, sinon profil gardé s'il existe,
+     sinon profil « importé, questionnaire non rempli ». Les programmes importés ne sont pas touchés. */
+  function afterImport(o) {
+    if (o && valid(o.profil)) put(KEY, o.profil);
+    else if (!profile()) put(KEY, {version: 1, imported: true, created: nowIso(), updated: nowIso(), answers: {}, program: null});
+    D = null; put(DKEY, null); P.mode = 'home'; P.plan = null; P.ret = false;
   }
   function keep() {   // « Garder mes programmes » : ni programme ni exercice modifié
     if (P.busy) return;
@@ -610,7 +619,14 @@
     const o = profile();
     if (!o) return vIntro();
     const a = o.answers, pl = currentPlan(), d = draft();
-    let h = `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">${a.prenom ? esc(a.prenom) : 'Mon profil'}</h2><p class="m">Profil créé le ${new Date(o.created).toLocaleDateString('fr-FR')}${o.program ? ', programme généré le ' + new Date(o.program.generated).toLocaleDateString('fr-FR') : ''}.</p>`;
+    if (o.imported) {   // sauvegarde importée sans profil : le questionnaire est proposé, jamais imposé
+      let h = `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">Mon profil</h2><p>Tes données viennent d’une sauvegarde importée le ${new Date(o.created).toLocaleDateString('fr-FR')}. Tes programmes sont gardés tels quels.</p>
+        <p class="m">Le questionnaire de départ n’a pas été rempli. Il te propose un programme adapté à tes réponses. Tes programmes ne changent qu’après ta confirmation.</p>`;
+      h += d && d.redo ? `<button class="go" onclick="PROFIL.redo()">Reprendre le questionnaire</button><button class="sm w" onclick="PROFIL.dropDraft()">Abandonner les réponses en cours</button>`
+        : `<button class="go" onclick="PROFIL.redo()">Remplir le questionnaire</button>`;
+      return h + '</div>' + WARN;
+    }
+    let h =`<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">${a.prenom ? esc(a.prenom) : 'Mon profil'}</h2><p class="m">Profil créé le ${new Date(o.created).toLocaleDateString('fr-FR')}${o.program ? ', programme généré le ' + new Date(o.program.generated).toLocaleDateString('fr-FR') : ''}.</p>`;
     h += d && d.redo ? `<button class="go" onclick="PROFIL.redo()">Reprendre le questionnaire</button><button class="sm w" onclick="PROFIL.dropDraft()">Abandonner les réponses en cours</button>`
       : `<button class="go" onclick="PROFIL.redo()">Refaire le questionnaire</button><button class="sm w" onclick="PROFIL.regen()">Générer un programme à partir de ce profil</button><p class="m">Un nouveau programme ne remplace les tiens qu’après ta confirmation.</p>`;
     if (!o.program) h += '<p class="m">Tu as gardé tes propres programmes : aucun programme n’a été généré.</p>';
@@ -633,7 +649,7 @@
   }
 
   window.PROFIL = {
-    init, enter, title, view, phaseLine, imposed: () => !profile(),
+    init, enter, title, view, phaseLine, imposed: () => !profile(), filled: () => filled(profile()), afterImport,
     start, typed, typedOther, pick, tog, yn, togEv, next, back, edit, setDetail, generate, apply, keep, regen, redo, quit, dropDraft,
     cancel: () => { P.plan = null; to('resume'); }, home: () => { P.mode = 'home'; },
     exportState: () => profile(),
