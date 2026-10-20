@@ -10,8 +10,9 @@ from PIL import Image
 im = Image.effect_noise((900, 600), 50).convert("RGB"); im.save("/tmp/ui_photo.jpg", "JPEG", quality=85)
 from playwright.sync_api import sync_playwright
 ok = lambda c, m: print(("OK    " if c else "ÉCHEC "), m)
+PROFIL_FAIT = "localStorage.getItem('muscu-profil') || localStorage.setItem('muscu-profil', JSON.stringify({version: 1, created: '2026-10-20T00:00:00Z', answers: {detail: 'non'}}))"   # profil déjà rempli : le questionnaire de départ ne s'impose pas
 with sync_playwright() as p:
-    b = p.chromium.launch(); ctx = b.new_context(viewport={"width": 390, "height": 844}, color_scheme="dark", accept_downloads=True)
+    b = p.chromium.launch(); ctx = b.new_context(viewport={"width": 390, "height": 844}, color_scheme="dark", accept_downloads=True); ctx.add_init_script(PROFIL_FAIT)
     pg = ctx.new_page(); errs = []; reqs = []
     pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("request", lambda r: reqs.append(r.url))
     pg.on("dialog", lambda d: d.accept())
@@ -38,7 +39,7 @@ with sync_playwright() as p:
     ph = json.load(open(d2.value.path())); ok(ph["format"] == "fonte-photos" and len(ph["photos"]) == 1 and ph["photos"][0]["full"].startswith("data:image/jpeg"), "export photos : 1 photo en JPEG")
     # tout supprimer puis réimporter séances + photos
     pg.evaluate("indexedDB.deleteDatabase('fonte')"); 
-    ctx2 = b.new_context(viewport={"width": 390, "height": 844}, accept_downloads=True); pg2 = ctx2.new_page(); pg2.on("dialog", lambda d: d.accept())
+    ctx2 = b.new_context(viewport={"width": 390, "height": 844}, accept_downloads=True); ctx2.add_init_script(PROFIL_FAIT); pg2 = ctx2.new_page(); pg2.on("dialog", lambda d: d.accept())
     pg2.goto(f"http://127.0.0.1:{PORT}/?local=1"); pg2.wait_for_selector(".tabbar button"); pg2.evaluate("go('donnees')"); time.sleep(.3)
     pg2.fill("#bk", json.dumps(data)); pg2.click("text=Importer le JSON") if pg2.locator("text=Importer le JSON").count() else pg2.evaluate("doImport()"); time.sleep(.8)
     pg2.fill("#bk", json.dumps(ph)); pg2.evaluate("doImport()"); time.sleep(1)

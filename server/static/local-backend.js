@@ -245,6 +245,8 @@
       bodyweight: [...db.bodyweight].sort((a, b) => a.id - b.id)
     };
     if (jeu) out.jeu = jeu;   // état du mini-jeu : absent tant qu'on n'a pas ouvert l'onglet Esprits
+    const profil = window.PROFIL ? window.PROFIL.exportState() : null;
+    if (profil) out.profil = profil;   // questionnaire de départ (réponses de santé comprises) : absent tant qu'il n'est pas validé
     return out;
   }
   const toDataUrl = b => new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(f.result); f.onerror = () => rej(f.error); f.readAsDataURL(b); });
@@ -416,6 +418,7 @@
     }
     for (const x of o.bodyweight || []) { need(x, ['id', 'day', 'ts', 'kg']); w.bodyweight.push({id: x.id, day: x.day, ts: x.ts, kg: x.kg}); }
     if (o.jeu && window.JEU) window.JEU.importState(o.jeu);
+    if (o.profil && window.PROFIL) window.PROFIL.importState(o.profil);   // export sans profil (anciennes versions) : profil actuel inchangé
     return {mode: 'sauvegarde complète (remplacement)', exercices: (o.exercises || []).length, sessions: (o.sessions || []).length};
   }
   async function importPhotos(o) {

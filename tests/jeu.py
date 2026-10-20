@@ -8,12 +8,13 @@ for f in ("/tmp/jeu.db", "/tmp/jeu.db-wal", "/tmp/jeu.db-shm"):
 srv = subprocess.Popen([sys.executable, "-c", f"import app;app.init_db();app.app.run(port={PORT})"], cwd=APP, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT); time.sleep(3)
 from playwright.sync_api import sync_playwright
 fails = []
+PROFIL_FAIT = "localStorage.getItem('muscu-profil') || localStorage.setItem('muscu-profil', JSON.stringify({version: 1, created: '2026-10-20T00:00:00Z', answers: {detail: 'non'}}))"   # profil déjà rempli : le questionnaire de départ ne s'impose pas
 def ok(c, m):
     print(("OK    " if c else "ÉCHEC "), m)
     if not c: fails.append(m)
 try:
     with sync_playwright() as p:
-        b = p.chromium.launch(); ctx = b.new_context(viewport={"width": 390, "height": 844}, color_scheme="dark", accept_downloads=True)
+        b = p.chromium.launch(); ctx = b.new_context(viewport={"width": 390, "height": 844}, color_scheme="dark", accept_downloads=True); ctx.add_init_script(PROFIL_FAIT)
         pg = ctx.new_page(); errs = []
         pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("dialog", lambda d: d.accept())
         pg.goto(f"http://127.0.0.1:{PORT}/?local=1"); pg.wait_for_selector(".tabbar button"); time.sleep(.5)

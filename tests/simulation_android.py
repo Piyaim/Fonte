@@ -5,6 +5,7 @@ import mimetypes, os, sys, time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); STATIC = os.path.join(ROOT, "server", "static")
 from playwright.sync_api import sync_playwright
 ok = lambda c, m: print(("OK    " if c else "ÉCHEC "), m)
+PROFIL_FAIT = "localStorage.getItem('muscu-profil') || localStorage.setItem('muscu-profil', JSON.stringify({version: 1, created: '2026-10-20T00:00:00Z', answers: {detail: 'non'}}))"   # profil déjà rempli : le questionnaire de départ ne s'impose pas
 HOST = "appassets.androidplatform.net"; blocked = []; served = []
 def handler(route):
     u = route.request.url; path = u.split(HOST, 1)[1].split("?")[0] if HOST in u else None
@@ -16,7 +17,7 @@ def handler(route):
     if ".." in p or not os.path.isfile(os.path.join(STATIC, p)): served.append((p, 404)); return route.fulfill(status=404, body="")
     served.append((p, 200)); route.fulfill(status=200, body=open(os.path.join(STATIC, p), "rb").read(), headers={"Content-Type": {".js": "text/javascript", ".html": "text/html", ".json": "application/json", ".webmanifest": "application/manifest+json", ".png": "image/png"}.get(os.path.splitext(p)[1], "application/octet-stream"), "Cache-Control": "no-cache"})
 with sync_playwright() as p:
-    b = p.chromium.launch(); ctx = b.new_context(viewport={"width": 390, "height": 844}); errs = []
+    b = p.chromium.launch(); ctx = b.new_context(viewport={"width": 390, "height": 844}); errs = []; ctx.add_init_script(PROFIL_FAIT)
     ctx.route("**/*", lambda r: handler(r) if r.request.url.startswith("http") else r.continue_())
     pg = ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.goto(f"https://{HOST}/"); pg.wait_for_selector(".tabbar button", timeout=8000); time.sleep(.5)

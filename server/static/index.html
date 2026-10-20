@@ -12,6 +12,7 @@
 <script src="/static/figure-data.js"></script>
 <script src="/static/creatures.js"></script>
 <script src="/static/jeu.js"></script>
+<script src="/static/profil.js"></script>
 <script>
 var ACC = [['orange','Orange','#ff7a1a'],['blue','Bleu','#4dabf7'],['green','Vert','#51cf66'],['violet','Violet','#9775fa'],['red','Rouge','#ff6b6b']];
 var ACC_TC = {orange:'#e8590c', blue:'#1971c2', green:'#2b8a3e', violet:'#7048e8', red:'#e03131'};
@@ -284,6 +285,44 @@ svg.fig{width:100%;display:block}
 :root[data-accent="red"]{--a:#e03131;--on:#fff;--g1:#ff6b6b;--g2:#e03131;--g3:#9c1c1c;--gs:224,49,49}
 @media(prefers-color-scheme:dark){:root[data-accent="red"]:not([data-theme="light"]){--a:#ff6b6b;--on:#240808}}
 :root[data-accent="red"][data-theme="dark"]{--a:#ff6b6b;--on:#240808}
+
+/* ---- questionnaire de départ et profil (profil.js) ---- */
+body.onb .tabbar,body.onb #menu-btn{display:none}
+body.onb main{padding-bottom:40px}
+.qt{font-size:22px;line-height:1.25;margin:2px 0 6px;outline:none}
+.qprog{margin:4px 2px 8px}
+.qopt{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;text-align:left;margin-top:8px;padding:12px 14px;border:2px solid var(--l);border-radius:14px;background:var(--bg);color:var(--t);font:inherit;font-size:16px}
+.qopt.on{border-color:var(--a);box-shadow:inset 0 0 0 1px var(--a)}
+.qck{flex:none;width:24px;height:24px;display:grid;place-items:center;border:2px solid var(--m);border-radius:50%;font-size:14px;font-weight:800;color:var(--on)}
+.qck.qsq{border-radius:7px}
+.qopt.on .qck{background:var(--a);border-color:var(--a)}
+.qlab{margin-top:12px;font-size:14px}
+.qinp{font-size:22px;padding:14px 12px;margin-top:6px}
+.qnum{display:flex;align-items:center;gap:10px}.qnum b{font-size:18px;color:var(--m)}
+.qerr{color:var(--warn);font-weight:700;margin:10px 0 0;min-height:1px}
+.qwarn{border:2px solid var(--warn);border-radius:16px;padding:12px 14px;margin:10px 0;background:var(--c)}
+.qwarn p{margin:4px 0}
+.qnav{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:16px}
+.qnav .sm{min-height:52px}.qnav .go{margin:0}
+.qyn{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--l)}
+.qyn:first-of-type{border-top:0}
+.qynb{display:flex;gap:6px;flex:none}
+.qynb button{min-width:62px;min-height:46px;border:2px solid var(--l);border-radius:12px;background:var(--bg);color:var(--t);font:inherit;font-weight:700}
+.qynb button.on{background:var(--a);border-color:var(--a);color:var(--on)}
+.qchips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.qchip{min-height:44px;padding:8px 12px;border:2px solid var(--l);border-radius:999px;background:var(--bg);color:var(--t);font:inherit;font-size:14px;text-align:left}
+.qchip.on{background:var(--a);border-color:var(--a);color:var(--on)}
+.qrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--l)}
+.qrow:first-of-type{border-top:0}
+.qrow>div{min-width:0}.qrow p{margin:2px 0;overflow-wrap:anywhere}
+.qrow .sm{flex:none;min-height:44px}
+.qex{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-top:1px solid var(--l)}
+.qex:first-of-type{border-top:0}.qex span{color:var(--m);font-size:14px}
+.qul{margin:8px 0;padding-left:20px}.qul li{margin:6px 0}
+.qmiss{border-left:4px solid var(--warn);padding:6px 10px;margin:10px 0;background:var(--c);border-radius:6px}
+.qbig{font-size:18px}
+.qtog{min-height:48px}
+.go:disabled,.sm:disabled{opacity:.55}
 </style>
 </head>
 <body>
@@ -316,7 +355,7 @@ let EX = {}, WO = [], SESS = [], BW = [];
 let view = 'accueil', curW = null, F = null;          // F = formulaire de séance en cours
 let catQ = '', catArch = false, editEx = null;       // catalogue
 let progW = null, progDraft = null;                  // éditeur de programmes
-const VIEWS = [['accueil','Accueil'],['seance','Séance'],['zones','Zones'],['progres','Progrès'],['historique','Historique'],['exercices','Exercices'],['programmes','Programmes'],['jeu','Esprits'],['donnees','Données']];
+const VIEWS = [['accueil','Accueil'],['seance','Séance'],['zones','Zones'],['progres','Progrès'],['historique','Historique'],['exercices','Exercices'],['programmes','Programmes'],['jeu','Esprits'],['profil','Mon profil'],['donnees','Données']];
 const KIND_LABEL = {weight:'Charge × reps', reps:'Reps (lest facultatif)', time:'Durée en secondes', cardio:'Cardio (minutes)'};
 const GROUP_ORDER = ['Jambes','Pectoraux','Dos','Épaules','Bras','Abdos et gainage','Cardio'];
 
@@ -525,7 +564,8 @@ const IC_CLOSE = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg
 let STYLE = 'b';
 document.documentElement.dataset.style = STYLE;
 function nav() {
-  $('ttl').textContent = view === 'accueil' ? 'Fonte' : VL[view];
+  $('ttl').textContent = view === 'accueil' ? 'Fonte' : view === 'profil' && window.PROFIL ? PROFIL.title() : VL[view];
+  document.body.classList.toggle('onb', !!(window.PROFIL && PROFIL.imposed()));
   $('tabs').innerHTML = tabsNow().map(k => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}')" ${k === view ? 'aria-current="page"' : ''}><span class="ic">${IC[k]}</span>${VL[k]}</button>`).join('');
   $('dnav').innerHTML = VIEWS.filter(([k]) => k !== 'jeu' || jeuOn()).map(([k, t]) => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}');closeMenu()">${t}</button>`).join('');
   document.body.dataset.view = view;
@@ -550,10 +590,11 @@ function closeMenu() {
 }
 function setStyle(s) { STYLE = s; store('muscu-style', s); document.documentElement.dataset.style = s; stylePick(); R(); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
-function go(v) { viewEx = null; view = v; store('muscu-view', v); R(); window.scrollTo(0, 0); }
+function go(v) { viewEx = null; view = v; store('muscu-view', v); if (v === 'profil' && window.PROFIL) PROFIL.enter(); R(); window.scrollTo(0, 0); }
 function R() {
+  if (window.PROFIL && PROFIL.imposed() && view !== 'profil' && view !== 'donnees') view = 'profil';   // questionnaire imposé tant que le profil n'existe pas
   nav();
-  $('app').innerHTML = {accueil: vAccueil, seance: vSeance, zones: vZones, progres: vProgres, historique: vHisto, exercices: vCat, programmes: vProg, jeu: () => window.JEU ? JEU.view() : '', donnees: vData}[view]();
+  $('app').innerHTML = {accueil: vAccueil, seance: vSeance, zones: vZones, progres: vProgres, historique: vHisto, exercices: vCat, programmes: vProg, jeu: () => window.JEU ? JEU.view() : '', profil: () => window.PROFIL ? PROFIL.view() : '', donnees: vData}[view]();
 }
 
 /* ------------------------------------------------------------------ accueil */
@@ -599,9 +640,9 @@ function vAccueil() {
 
 function seanceIntro() {   // l'essentiel du résumé est maintenant sur l'accueil et dans Progrès
   const n = SESS.length;
-  const ph = n < 12 ? 'Phase 1 : réadaptation. Reste à 2-3 reps de l\'échec, technique avant charge.'
+  const ph = (window.PROFIL && PROFIL.phaseLine()) || (n < 12 ? 'Phase 1 : réadaptation. Reste à 2-3 reps de l\'échec, technique avant charge.'
     : n < 36 ? 'Phase 2 : progression. Ajoute charge ou reps dès que toutes les séries sont réussies.'
-    : 'Phase 3 : allège les charges d\'environ 20 % une semaine sur six.';
+    : 'Phase 3 : allège les charges d\'environ 20 % une semaine sur six.');
   return `<p class="m">${ph}</p><details><summary>Échauffement (8-10 min)</summary><p class="m">5 min de cardio léger, 10 rotations d'épaules et de hanches, 10 squats au poids du corps, puis 1-2 séries légères du premier exercice.</p></details>`;
 }
 
@@ -1016,9 +1057,9 @@ function statsHeader() {
   const ws = weekStart();
   const w = SESS.filter(s => dayDate(s.day) >= ws), n = SESS.length;
   const v = w.reduce((a, s) => a + sessionVolume(s), 0);
-  const ph = n < 12 ? 'Phase 1 : réadaptation. Reste à 2-3 reps de l\'échec, technique avant charge.'
+  const ph = (window.PROFIL && PROFIL.phaseLine()) || (n < 12 ? 'Phase 1 : réadaptation. Reste à 2-3 reps de l\'échec, technique avant charge.'
     : n < 36 ? 'Phase 2 : progression. Ajoute charge ou reps dès que toutes les séries sont réussies.'
-    : 'Phase 3 : allège les charges d\'environ 20 % une semaine sur six.';
+    : 'Phase 3 : allège les charges d\'environ 20 % une semaine sur six.');
   return `<div class="st"><div><b>${w.length}/3</b><span>séances cette semaine</span></div><div><b>${Math.round(v)}</b><span>kg soulevés (semaine)</span></div><div><b>${n}</b><span>séances au total</span></div></div>
   ${streakBar()}<p class="m">${ph}</p><details><summary>Échauffement (8-10 min)</summary><p class="m">5 min de cardio léger, 10 rotations d'épaules et de hanches, 10 squats au poids du corps, puis 1-2 séries légères du premier exercice.</p></details>`;
 }
@@ -1383,11 +1424,12 @@ function mvWorkout(d) {
 /* ------------------------------------------------------------------ vue Données */
 function vData() {
   const last = BW.length ? BW[BW.length - 1].kg : '';
-  let h = `<div class="card"><h2>Poids de corps</h2><div class="row" style="grid-template-columns:1fr auto"><input id="pw" type="number" inputmode="decimal" step="0.1" placeholder="kg" value="${last}"><button class="sm" onclick="addBW()">Ajouter</button></div>
+  let h = window.PROFIL && PROFIL.imposed() ? `<button class="sm w" onclick="go('profil')">‹ Retour au questionnaire</button>` : '';
+  h += `<div class="card"><h2>Poids de corps</h2><div class="row" style="grid-template-columns:1fr auto"><input id="pw" type="number" inputmode="decimal" step="0.1" placeholder="kg" value="${last}"><button class="sm" onclick="addBW()">Ajouter</button></div>
     ${spark(BW.slice(-12).map(a => a.kg), 'Poids, ' + Math.min(BW.length, 12) + ' pesées')}`;
   if (BW.length) h += '<table>' + BW.slice(-6).reverse().map(b => `<tr><td>${frDate(b.day)}</td><td>${fmt(b.kg)} kg</td><td style="text-align:right"><button class="sm danger" onclick="delBW(${b.id})" aria-label="Supprimer">✕</button></td></tr>`).join('') + '</table>';
   h += `</div><div class="card"><h2>Sauvegarde</h2>
-    <p class="m">${window.FONTE_LOCAL ? 'Tes données sont stockées sur ce téléphone, dans l’appli : si tu la désinstalles ou effaces ses données, elles disparaissent. Exporte-les régulièrement ; séances et photos sont dans deux fichiers séparés.' : 'La base est sur le serveur. L’export sert de copie manuelle.'}</p>
+    <p class="m">${window.FONTE_LOCAL ? 'Tes données sont stockées sur ce téléphone, dans l’appli : si tu la désinstalles ou effaces ses données, elles disparaissent. Exporte-les régulièrement ; séances et photos sont dans deux fichiers séparés. L’export contient aussi ton profil, y compris tes réponses au questionnaire de santé : garde ce fichier pour toi.' : 'La base est sur le serveur. L’export sert de copie manuelle. Ton profil (questionnaire de départ) reste dans ce navigateur et n’est pas dans cet export.'}</p>
     <a class="sm" style="display:inline-block;text-decoration:none;margin-top:6px" href="/api/export" onclick="return exportClick('data')">Télécharger l'export (JSON)</a>${window.FONTE_LOCAL ? ' <a class="sm" style="display:inline-block;text-decoration:none;margin-top:6px" href="#" onclick="return exportClick(\'photos\')">Télécharger les photos (JSON)</a>' : ''}
     <h3>Importer</h3>
     <p class="m">• Export de l'ancienne appli (bouton « Exporter » puis copier) : les séances sont <b>ajoutées</b>, les doublons ignorés.<br>• Export de ce service : <b>remplace toute la base</b>.${window.FONTE_LOCAL ? '<br>• Export des photos : les photos sont <b>ajoutées</b>.' : ''}</p>
@@ -1485,13 +1527,24 @@ function vPhotos() {
 }
 
 /* passerelle lue par jeu.js (les let/const ci-dessus ne sont pas sur window) */
-window.APPX = {SESS: () => SESS, EX: () => EX, zonesOf, mondayOf, today, get WGOAL() { return WGOAL; }, computePRs, figSvg, toast, R, go, nav};
+/* après le remplacement des programmes par le questionnaire : les séances en cours non enregistrées sont gardées,
+   rattachées à « séance libre » ; un formulaire vide et intact est simplement oublié */
+function forgetWorkouts(ids) {
+  const gone = f => f && f.wid != null && ids.includes(f.wid);
+  if (gone(F)) { if (F.dirty || F.xid || F.mode === 'edit') { F.wid = null; if (!F.xid && F.mode === 'new') store(draftKey(), F); } else { F = null; store(draftKey()); } }
+  XS.forEach(x => { if (gone(x)) x.wid = null; }); saveXS();
+  const d = recall(draftKey());
+  if (gone(d)) { if (d.dirty) { d.wid = null; store(draftKey(), d); } else store(draftKey()); }
+  curW = null; progW = null; progDraft = null; FOC = null;
+}
+function pendingDraft() { const d = recall(draftKey()); return XS.length > 0 || !!(d && d.dirty) || !!(F && F.mode === 'new' && F.dirty); }
+window.APPX = {SESS: () => SESS, EX: () => EX, WO: () => WO, zonesOf, mondayOf, today, get WGOAL() { return WGOAL; }, computePRs, figSvg, toast, R, go, nav, api, load, forgetWorkouts, pendingDraft};
 
 /* ------------------------------------------------------------------ démarrage */
 if (!window.FONTE_LOCAL && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 (async () => {
   /* l'appli s'ouvre sur l'accueil */
-  try { await load(); if (window.JEU) { JEU.init(); JEU.applyWardrobe(); } R(); }
+  try { await load(); if (window.JEU) { JEU.init(); JEU.applyWardrobe(); } if (window.PROFIL && PROFIL.init()) view = 'profil'; R(); }
   catch (e) { $('app').innerHTML = `<p class="empty">${window.FONTE_LOCAL ? 'Impossible de lire les données de l’appli' : 'Impossible de joindre le serveur'} : ${esc(e.message)}</p>`; }
 })();
 </script>

@@ -5,6 +5,7 @@ import os, time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); STATIC = os.path.join(ROOT, "server", "static")
 from playwright.sync_api import sync_playwright
 ok = lambda c, m: print(("OK    " if c else "ÉCHEC "), m)
+PROFIL_FAIT = "localStorage.getItem('muscu-profil') || localStorage.setItem('muscu-profil', JSON.stringify({version: 1, created: '2026-10-20T00:00:00Z', answers: {detail: 'non'}}))"   # profil déjà rempli : le questionnaire de départ ne s'impose pas
 HOST = "appassets.androidplatform.net"
 def handler(route):
     p = route.request.url.split(HOST, 1)[1].split("?")[0]; p = "index.html" if p in ("", "/") else p[1:]
@@ -15,7 +16,7 @@ def handler(route):
 with sync_playwright() as p:
     b = p.chromium.launch()
     for avec in (True, False):
-        ctx = b.new_context(viewport={"width": 390, "height": 844}); errs = []
+        ctx = b.new_context(viewport={"width": 390, "height": 844}); errs = []; ctx.add_init_script(PROFIL_FAIT)
         ctx.route(f"https://{HOST}/**", handler)
         if avec: ctx.add_init_script("window.__icons=[]; window.FonteApp={setIcon:function(k){window.__icons.push(k)}, saveFile:function(){}};")
         pg = ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))

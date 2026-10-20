@@ -15,7 +15,8 @@ def jpeg(color, size):
     b = io.BytesIO(); Image.effect_noise((size, size), 60).convert("RGB").save(b, "JPEG", quality=80); return base64.b64encode(b.getvalue()).decode()
 IMG, THUMB = jpeg(0, 300), jpeg(0, 100)
 BAD = base64.b64encode(b"not a jpeg" * 100).decode()
-DROP = {"ts", "updated_at", "exported_at", "jeu"}   # « jeu » : état du mini-jeu, propre à la version locale
+PROFIL_FAIT = "localStorage.getItem('muscu-profil') || localStorage.setItem('muscu-profil', JSON.stringify({version: 1, created: '2026-10-20T00:00:00Z', answers: {detail: 'non'}}))"   # profil déjà rempli : le questionnaire de départ ne s'impose pas
+DROP = {"ts", "updated_at", "exported_at", "jeu", "profil"}   # « jeu », « profil » : état du mini-jeu et questionnaire de départ, joints à l'export local seulement
 def norm(x):
     # le champ diagram est un texte JSON : Python l'écrit avec des espaces, JavaScript sans ; on compare le contenu
     if isinstance(x, dict): return {k: (json.loads(v) if k == "diagram" and isinstance(v, str) else norm(v)) for k, v in x.items() if k not in DROP}
@@ -29,7 +30,8 @@ from playwright.sync_api import sync_playwright
 fails = 0; total = 0
 with sync_playwright() as p:
     b = p.chromium.launch()
-    A = b.new_context().new_page(); B = b.new_context().new_page()
+    cA, cB = b.new_context(), b.new_context(); cA.add_init_script(PROFIL_FAIT); cB.add_init_script(PROFIL_FAIT)
+    A = cA.new_page(); B = cB.new_page()
     A.goto(f"http://127.0.0.1:{PORT}/"); B.goto(f"http://127.0.0.1:{PORT}/?local=1")
     A.wait_for_selector(".tabbar button"); B.wait_for_selector(".tabbar button")
     print("mode local actif :", B.evaluate("window.FONTE_LOCAL"), "| serveur :", A.evaluate("window.FONTE_LOCAL"))
