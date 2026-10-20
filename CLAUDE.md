@@ -37,6 +37,7 @@ Ce fichier est la **référence** du projet pour Claude Code. Le lire en entier 
   - `index.html` : appli entière (vues, état `EX`, `WO`, `SESS`, `BW`, `go()`, `R()`), exposée au reste par la passerelle `window.APPX`.
   - `local-backend.js` : remplace `fetch('/api/...')` par IndexedDB en mode local (`/?local=1`, ou toujours dans l'appli Android).
   - `figure.js` + `figure-data.js` : moteur d'animation 2D des exercices (squelette, IK, `limbTube`), 50 animations. `figure-data.js` est **généré** et fait foi (les sources `d0..d4.js` + `merge.py` n'ont pas été conservées).
+    Postures revues le 20/10/2026 (audit biomécanique, validé sur téléphone). Le pied posé au sol se mesure par rapport au sol (ftAbs, ftRel pour les exceptions) ; la vue de face accepte un raccourci de perspective (tk, hk, k, k1, k2). tests/figures.py contrôle les points corrigés.
   - `creatures.js` : dessin actuel des 27 esprits en SVG (6 silhouettes × 3 stades, auras par rareté), à remplacer par les sprites pixel art (section 8). `jeu.js` : règles du jeu (jetons, tirages, quêtes, boutique, garde-robe par variables CSS `--f3 --f4 --f5 --fxc`).
   - `profil.js` : questionnaire de départ et programme généré (section 8 bis).
   - `sw.js` : service worker du mode serveur (cache à l'exécution, rien à lister).
