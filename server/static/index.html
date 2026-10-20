@@ -679,7 +679,7 @@ function dayWord(iso) {   // « demain », sinon le jour de la semaine
 function acceptZones() { ZSEL = new Set(todayZones().map(x => x.k)); store('muscu-zones', [...ZSEL]); genZones(); }
 function vAccueil() {
   const ws = weekStart(), wk = SESS.filter(s => dayDate(s.day) >= ws), n = wk.length;
-  const vol = wk.reduce((a, s) => a + sessionVolume(s), 0), {streak} = streakInfo();
+  const vol = wk.reduce((a, s) => a + sessionVolume(s), 0), total = SESS.length;
   const pending = XS.length > 0 || !!(F && F.mode === 'new' && F.dirty);
   const sch = window.PROFIL && PROFIL.schedule ? PROFIL.schedule(today()) : null, slot = sch && (sch.today || sch.next);
   const nw = (slot && WO.find(w => w.id === slot.wid)) || nextWorkout();   // avec le placement : la séance prévue ; sinon celle qui suit la dernière faite
@@ -701,7 +701,7 @@ function vAccueil() {
     + (sch && !sch.planned ? '<p class="rest">Jour de repos : la récupération compte aussi.</p>' : '') + '</section>';
   if (window.PROFIL && PROFIL.homeCards) h += PROFIL.homeCards();   // proposition (phase, semaine allégée, reprise) : toujours sous le bouton
   h += `<section class="card wk"><h2>Cette semaine</h2><div class="wkm"><div class="wkbig"><b>${n}</b><span>sur ${WGOAL} séances</span></div><div class="dots">${Array.from({length: WGOAL}, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</div></div>
-    <div class="tiles"><div><b>${streak}</b><span>semaine${streak > 1 ? 's' : ''} d’affilée</span></div><div><b>${Math.round(vol)}</b><span>kg soulevés</span></div><div><b>${esc(feel)}</b><span>dernier ressenti</span></div></div></section>`;
+    <div class="tiles"><div><b>${total}</b><span>séance${total > 1 ? 's' : ''} au total</span></div><div><b>${Math.round(vol)}</b><span>kg soulevés</span></div><div><b>${esc(feel)}</b><span>dernier ressenti</span></div></div></section>`;
   if (jeuOn()) h += JEU.homeCard();
   const tz = todayZones(), st = zoneStats();
   h += `<section class="card"><h2>Que travailler aujourd’hui ?</h2><p class="m">${SESS.length ? 'Les zones que tu as le moins travaillées récemment.' : 'Pas encore d’historique : voici un point de départ.'}</p>
@@ -829,27 +829,22 @@ function vZones() {
 }
 
 
-/* ------------------------------------------------------------------ Progrès : série de semaines, records, calendrier, courbes */
+/* ------------------------------------------------------------------ Progrès : séances au total, records, calendrier, courbes */
 const WGOAL = 3;   // objectif : séances par semaine
 const FLAME = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2c.6 3.2-2.4 4.6-3.7 7.2C8.7 11.3 9.4 13 10.5 14c-1.8-.2-3-1.6-3.2-3.4C5.6 12.4 5 14 5 15.5 5 19.1 8 22 12 22s7-2.9 7-6.5c0-3.7-2.5-6-4-8-.5 1.2-1.3 2-2.2 2.4.6-2.6.4-5.6-1.3-7.9z"/></svg>';
 const isoOf = d => { const x = new Date(d); x.setMinutes(x.getMinutes() - x.getTimezoneOffset()); return x.toISOString().slice(0, 10); };
 function mondayOf(day) { const d = dayDate(day); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return isoOf(d); }
 function addWeeks(k, n) { const d = dayDate(k); d.setDate(d.getDate() + 7 * n); return isoOf(d); }
-function streakInfo() {
-  const c = {}; SESS.forEach(s => { const k = mondayOf(s.day); c[k] = (c[k] || 0) + 1; });
+/* Pas de série à perdre (garde-fou) : l'ancien compteur « semaines d'affilée » retombait à 0 après une pause.
+   On affiche les séances au total, un chiffre qui ne baisse jamais, et la semaine en cours. */
+function totalInfo() {
   const cur = mondayOf(today());
-  let streak = 0, k = (c[cur] || 0) >= WGOAL ? cur : addWeeks(cur, -1);
-  while ((c[k] || 0) >= WGOAL) { streak++; k = addWeeks(k, -1); }
-  let best = 0, run = 0;
-  const keys = Object.keys(c).sort();
-  if (keys.length) for (let w = keys[0]; w <= cur; w = addWeeks(w, 1)) { if ((c[w] || 0) >= WGOAL) { run++; best = Math.max(best, run); } else run = 0; }
-  return {streak, best: Math.max(best, streak), thisWeek: c[cur] || 0};
+  return {total: SESS.length, thisWeek: SESS.filter(s => mondayOf(s.day) === cur).length};
 }
 function streakBar() {
-  const {streak, best, thisWeek} = streakInfo();
+  const {total, thisWeek} = totalInfo();
   const pct = Math.min(thisWeek / WGOAL, 1) * 100;
-  const t = streak ? `${streak} semaine${streak > 1 ? 's' : ''} d'affilée` : 'Série à lancer';
-  return `<div class="streak"><div class="flame">${FLAME}<b>${streak}</b></div><div style="flex:1"><b>${t}</b> <span class="m">· record ${best}</span><div class="pbar"><i style="width:${pct}%"></i></div><div class="m">${thisWeek}/${WGOAL} séances cette semaine${thisWeek >= WGOAL ? ' : objectif atteint' : ''}</div></div></div>`;
+  return `<div class="streak"><div class="flame">${FLAME}<b>${total}</b></div><div style="flex:1"><b>${total} séance${total > 1 ? 's' : ''} au total</b><div class="pbar"><i style="width:${pct}%"></i></div><div class="m">${thisWeek}/${WGOAL} séances cette semaine${thisWeek >= WGOAL ? ' : objectif atteint' : ''}</div></div></div>`;
 }
 
 // records : une série « bat » le record si son score dépasse tout ce qui a été fait avant sur le même exercice

@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-# Lot 2C, partie 1 : moins de texte, plus direct (le fonctionnement ne change pas). Dates simulées (horloge de Playwright).
+# Lot 2C, dates simulées (horloge de Playwright).
+# Partie 1 : moins de texte, plus direct (le fonctionnement ne change pas) :
 # - une carte de proposition (phase, semaine légère, reprise) : 25 mots visibles au plus hors « Détails » et hors boutons,
 #   titre de 6 mots au plus, une seule phrase de 15 mots au plus ;
 # - le bloc d'un exercice dans Séance affiche une seule ligne de conseil (ni rappel de phase, ni 1RM hors « Détails ») ;
 # - les replis « Détails » sont fermés par défaut et leur bouton fait au moins 44 px de haut ;
 # - toujours visibles, jamais dans un repli : avertissement médical et « Arrête l'exercice… » (résumé), « Consulte un médecin »
 #   (santé « Oui »), messages de blessure, bouton « Démarrer la séance » en tête de l'accueil.
+# Partie 2 : pas de série à perdre ; « séances au total » remplace « semaines d’affilée » (aucun chiffre de série à 0 après 22 jours sans séance).
 #   python3 tests/lot2c.py
 import json, os, re, subprocess, sys, time
 from datetime import date, timedelta
@@ -156,7 +158,19 @@ try:
         ctx, pg, errs = page(J(0)); s = gen(pg, BASE); wa = s["workouts"][0]["id"]; pc = next(e["id"] for e in s["exercises"] if e["slug"] == "pc")
         pg.evaluate(SEANCES, [{"day": J(k), "workout_id": wa, "entries": [{"exercise_id": pc, "sets": [[50, 10]] * 3, "effort": 3}]} for k in (0, 2, 4)])
         le(pg, J(12)); carte_ok(pg, "[data-offer=allegee]", "carte « Bon retour ! » (semaine légère après une pause)")
-        le(pg, J(26)); t = carte_ok(pg, "[data-offer=reprise]", "carte « Bon retour ! » (reprise)")
+        # partie 2 : pas de série à perdre. Après 22 jours sans séance, aucun compteur de série à 0 ; « séances au total » ne baisse jamais
+        le(pg, J(26))
+        tu = pg.evaluate("() => [...document.querySelectorAll('#app .tiles > div')].map(d => [d.querySelector('b').textContent.trim(), d.querySelector('span').textContent.trim()])")
+        zero = [x for x in tu if x[0] == "0" and re.search(r"affil|série|semaine|record", x[1], re.I)]
+        ok(["3", "séances au total"] in tu and not zero, f"22 jours sans séance : « 3 séances au total » à l'accueil, aucun chiffre de série à 0 {tu}")
+        vus = []
+        for v in ("accueil", "progres", "seance"):
+            pg.evaluate(f"go('{v}')"); time.sleep(.2); pg.evaluate("document.querySelectorAll('#app details').forEach(d => d.open = true)")
+            if re.search(r"affilée|Série à lancer", pg.inner_text("body")): vus.append(v)
+        ok(not vus, f"plus de « semaines d'affilée » ni de « Série à lancer » (accueil, Progrès, Séance) {vus}")
+        ok("3 séances au total" in pg.evaluate("go('progres'), document.getElementById('app').innerText"), "Progrès : « 3 séances au total »")
+        pg.evaluate("go('accueil')"); time.sleep(.2)
+        t = carte_ok(pg, "[data-offer=reprise]", "carte « Bon retour ! » (reprise)")
         ok("Bon retour !" in t and "On reprend à 80 % pendant 7 jours." in t, "reprise : titre et phrase")
         pg.click("[data-offer=reprise] button:has-text('Accepter')"); time.sleep(.4); carte_ok(pg, "[data-light]", "reprise en cours")
         ok(not errs, f"aucune erreur JavaScript (reprise) {errs[:2]}"); ctx.close()

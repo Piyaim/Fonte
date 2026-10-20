@@ -84,6 +84,7 @@ Valeurs actuelles (v0.3.1) :
 - Quêtes : objectif de séances `WGOAL` +2, 5 zones différentes +1, équipe complète +2.
 - État dans `localStorage`, clé `muscu-jeu`. 27 esprits dans le code (45 prévus par le bestiaire v3), 25 objets (tenue, cheveux, muscle). L'onglet « Esprits » peut être masqué dans les options.
 - Un esprit **ne régresse jamais** si l'utilisateur fait une pause : une zone oubliée reste visible pour inviter à la travailler, sans punir.
+- **Aucun compteur de série** (lot 2C, 20/10/2026) : rien qui retombe à 0 après une pause ni qui récompense des jours ou des semaines consécutifs. L'ancien « N semaines d'affilée » (accueil et Progrès, avec son « record ») est remplacé par **« N séances au total »**, qui ne baisse jamais. Restent, car ce ne sont pas des séries (rien d'acquis n'est perdu) : l'objectif de la semaine (« n/3 », anneau et carte « Cette semaine » de l'accueil, barre de Progrès) et les quêtes de la semaine du jeu (règle du jeu : non touchée).
 
 ---
 
