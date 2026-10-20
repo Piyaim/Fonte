@@ -749,6 +749,13 @@ const GRPZ = {'Jambes':['quadriceps','fessiers','ischios','mollets'], 'Pectoraux
 const ZAVOID = ['split-squat-bulgare','elevations-frontales'];   // avancé / à utiliser peu : exclus sauf case cochée
 const CARDIO_DOUX = ['tapis-incline','velo','rameur'];
 let ZSEL = new Set(recall('muscu-zones') || []), ZN = recall('muscu-zn') || 6, ZADV = !!recall('muscu-zadv'), ZCARD = !!recall('muscu-zcard');
+/* Poids du corps uniquement : sans machine, poulie, barre ni haltère. Par défaut, suit la réponse « Poids du corps seulement »
+   du questionnaire tant que l'utilisateur n'a pas touché la case. Catalogue : matériel de la table de profil.js ;
+   exercice créé par l'utilisateur : retenu s'il se saisit en répétitions ou en secondes (pas de charge à saisir). */
+let ZPDC = recall('muscu-zpdc');
+function zPdc() { return ZPDC != null ? !!ZPDC : !!(window.PROFIL && PROFIL.lieu && PROFIL.lieu() === 'pdc'); }
+function isPdc(e) { const t = window.PROFIL && PROFIL.pdc ? PROFIL.pdc(e.slug) : null; return t != null ? t : (e.kind === 'reps' || e.kind === 'time'); }
+function zOk(e) { return !e.archived && e.kind !== 'cardio' && (!zPdc() || isPdc(e)); }
 
 function zonesOf(e) {
   const m = EXZ[e.slug];
@@ -758,12 +765,12 @@ function ago(id) {   // nombre de séances depuis la dernière fois (null = jama
   for (let i = SESS.length - 1; i >= 0; i--) if (setsOf(SESS[i], id)) return SESS.length - 1 - i;
   return null;
 }
-function zCount(z) { return Object.values(EX).filter(e => !e.archived && e.kind !== 'cardio' && zonesOf(e).p.includes(z)).length; }
+function zCount(z) { return Object.values(EX).filter(e => zOk(e) && zonesOf(e).p.includes(z)).length; }
 function togZone(k) { ZSEL.has(k) ? ZSEL.delete(k) : ZSEL.add(k); store('muscu-zones', [...ZSEL]); R(); }
 
 function buildZones() {
   const n = Math.max(ZN, Math.min(ZSEL.size, 8));
-  let cands = Object.values(EX).filter(e => !e.archived && e.kind !== 'cardio' && (ZADV || !ZAVOID.includes(e.slug)) && zonesOf(e).p.some(z => ZSEL.has(z)));
+  let cands = Object.values(EX).filter(e => zOk(e) && (ZADV || !ZAVOID.includes(e.slug)) && zonesOf(e).p.some(z => ZSEL.has(z)));
   const cov = {}, chosen = [];
   while (chosen.length < n && cands.length) {
     let best = null, bs = -1;
@@ -786,7 +793,7 @@ function buildZones() {
   chosen.sort((a, b) => (b.rest - a.rest) || a.name.localeCompare(b.name, 'fr'));
   const ids = chosen.map(e => e.id);
   if (ZCARD) {
-    const c = Object.values(EX).filter(e => !e.archived && CARDIO_DOUX.includes(e.slug))
+    const c = Object.values(EX).filter(e => !e.archived && CARDIO_DOUX.includes(e.slug) && (!zPdc() || isPdc(e)))
       .sort((a, b) => (ago(b.id) ?? 999) - (ago(a.id) ?? 999))[0];
     if (c) ids.push(c.id);
   }
@@ -797,14 +804,15 @@ function genZones() {
   if (F && F.mode === 'edit') return toast("Termine d'abord la modification de la séance");
   stashCurrent();
   const ids = buildZones();
-  if (!ids.length) return toast('Aucun exercice disponible pour ces zones');
+  if (!ids.length) return toast(zPdc() ? 'Aucun exercice au poids du corps pour ces zones' : 'Aucun exercice disponible pour ces zones');
+  const vides = zPdc() ? ZONES.filter(([k]) => ZSEL.has(k) && !zCount(k)).map(([, t]) => t) : [];
   const names = ZONES.filter(([k]) => ZSEL.has(k)).map(([, t]) => t);
   const xid = 'x' + Date.now(), label = names.slice(0, 2).join(' + ') + (names.length > 2 ? '…' : '');
   F = {mode: 'new', sid: null, wid: null, wname: 'Séance par zones : ' + names.join(', '), ids, day: today(), notes: '', vals: {}, xid, label};
   XS.push(F); saveXS(); store('muscu-xcur', xid); store(draftKey(), undefined);
   FOC = null; curW = 0; view = 'seance'; store('muscu-view', 'seance');
   R(); window.scrollTo(0, 0);
-  toast(ids.length + ' exercices : nouvelle séance ajoutée à côté des autres.');
+  toast(ids.length + ' exercices : nouvelle séance ajoutée à côté des autres.' + (vides.length ? ' Sans exercice au poids du corps : ' + vides.join(', ') + '.' : ''));
 }
 
 function Z(k, shapes) {
@@ -827,6 +835,7 @@ function vZones() {
     <p class="m">Le petit chiffre = exercices disponibles pour la zone.</p></div>`;
   h += `<div class="card"><div class="g2"><label>Nombre d'exercices<select onchange="ZN=+this.value;store('muscu-zn',ZN)">${[4,5,6,7,8].map(n => `<option value="${n}" ${n === ZN ? 'selected' : ''}>${n}</option>`).join('')}</select></label><div></div></div>
     <label class="ck"><input type="checkbox" ${ZCARD ? 'checked' : ''} onchange="ZCARD=this.checked;store('muscu-zcard',ZCARD)">Ajouter un cardio doux en fin de séance</label>
+    <label class="ck"><input type="checkbox" ${zPdc() ? 'checked' : ''} onchange="ZPDC=this.checked;store('muscu-zpdc',ZPDC);R()">Poids du corps uniquement (sans machine ni charge)</label>
     <label class="ck"><input type="checkbox" ${ZADV ? 'checked' : ''} onchange="ZADV=this.checked;store('muscu-zadv',ZADV)">Inclure les exercices avancés ou à utiliser peu</label>
     <p class="m">Avec beaucoup de zones, le nombre d'exercices monte (jusqu'à 8) pour en couvrir un maximum.</p></div>`;
   h += `<button class="go" onclick="genZones()">Générer la séance${ZSEL.size ? ' (' + ZSEL.size + ' zone' + (ZSEL.size > 1 ? 's' : '') + ')' : ''}</button>`;
@@ -1388,9 +1397,9 @@ function exForm() {
   const inPrograms = isNew ? [] : WO.filter(w => w.items.includes(e.id)).map(w => w.name), ownIn = isNew ? [] : WO.filter(w => exIn(e, w).own).map(w => w.name);
   let h = `<div class="card"><h2>${isNew ? 'Nouvel exercice' : 'Modifier l\'exercice'}</h2>
     <label>Nom<input id="e-name" value="${esc(d.name)}" maxlength="120"></label>
-    <div class="g2"><label>Groupe<input id="e-grp" list="grps" value="${esc(d.grp)}" maxlength="60"></label>
+    <div class="g2"><label>Groupe<select id="e-grps" onchange="grpPick()">${grpChoices(d.grp).map(g => `<option value="${esc(g)}" ${g === d.grp ? 'selected' : ''}>${esc(g)}</option>`).join('')}<option value="">Autre groupe…</option></select></label>
       <label>Type de saisie<select id="e-kind" onchange="kindHint()">${Object.entries(KIND_LABEL).map(([k, t]) => `<option value="${k}" ${k === d.kind ? 'selected' : ''}>${t}</option>`).join('')}</select></label></div>
-    <datalist id="grps">${groups().map(g => `<option value="${esc(g)}">`).join('')}</datalist>
+    <label id="e-grpl" style="display:none;margin-top:8px">Nom du nouveau groupe<input id="e-grp" value="" maxlength="60"></label>
     <div class="g3"><label>Séries<input id="e-sets" type="number" min="1" max="10" value="${d.sets}"></label>
       <label id="e-minl">Cible min<input id="e-min" type="number" min="1" value="${d.target_min ?? ''}"></label>
       <label id="e-maxl">Cible max<input id="e-max" type="number" min="1" value="${d.target_max ?? ''}"></label></div>
@@ -1412,13 +1421,19 @@ function exForm() {
   setTimeout(kindHint, 0);
   return h + '</div>';
 }
+/* Groupe : liste déroulante (le champ libre avec suggestions ne montrait que le groupe déjà écrit sur Android).
+   Groupes du catalogue + groupes standard, puis « Autre groupe… » qui ouvre un champ libre. */
+function grpChoices(cur) { const l = [...new Set([...GROUP_ORDER, ...groups()])]; if (cur && !l.includes(cur)) l.push(cur); return l; }
+function grpPick() { const o = $('e-grps').value === ''; $('e-grpl').style.display = o ? '' : 'none'; if (o) $('e-grp').focus(); }
+function grpValue() { const v = $('e-grps').value; return v === '' ? $('e-grp').value.trim() : v; }
 function kindHint() {
   const k = $('e-kind') && $('e-kind').value; if (!k) return;
   $('e-hint').textContent = {weight: 'Cible en répétitions par série.', reps: 'Cible en répétitions par série, lest facultatif.', time: 'Cible en secondes par série.', cardio: 'Cible en minutes. Le nombre de séries est ignoré.'}[k];
   $('e-assl').style.display = k === 'weight' ? '' : 'none';
 }
 function saveEx() {
-  const d = {name: $('e-name').value, grp: $('e-grp').value, kind: $('e-kind').value, sets: $('e-sets').value,
+  if (!grpValue()) return toast('Écris le nom du nouveau groupe');
+  const d = {name: $('e-name').value, grp: grpValue(), kind: $('e-kind').value, sets: $('e-sets').value,
     target_min: $('e-min').value, target_max: $('e-max').value, rest: $('e-rest').value, focus: $('e-focus').value,
     tip: $('e-tip').value, per_side: $('e-side').checked, assisted: $('e-ass').checked, green: !!(editEx && editEx.green)};
   const id = editEx.id;

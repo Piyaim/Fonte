@@ -27,7 +27,7 @@ JS = """() => {
 # Postures : pieds à plat quand ils sont posés au sol, et règles techniques issues de l'audit des postures (20/10/2026).
 # Chaque règle échoue sur l'ancienne version des animations : elle mesure la faute qui avait été dessinée.
 POSTURE = """() => {
-  const res = {flat: [], rules: []}, deg = 180 / Math.PI, B = FIG.BODY.m;
+  const res = {flat: [], rules: [], under: []}, deg = 180 / Math.PI, B = FIG.BODY.m;
   const ang = (a, b, c) => { const u = [a[0] - b[0], a[1] - b[1]], v = [c[0] - b[0], c[1] - b[1]]; return Math.acos(Math.max(-1, Math.min(1, (u[0] * v[0] + u[1] * v[1]) / Math.hypot(...u) / Math.hypot(...v)))) * deg; };
   const frames = slug => { const s = FIGDATA[slug]; FIG.prepare(s); const out = []; for (let i = 0; i <= 40; i++) { const t = s._T * i / 40, p = FIG.poseAt(s, t); out.push({t, p, g: FIG.solveSide(p, B, s.f || 1), f: s.f || 1}); } return out; };
   const elbow = r => ang(r.g.armN.root, r.g.armN.mid, r.g.armN.end), knee = r => ang(r.g.legN.root, r.g.legN.mid, r.g.legN.end);
@@ -40,6 +40,12 @@ POSTURE = """() => {
         if (Math.abs(a) > 5) res.flat.push(slug + ' t=' + r.t.toFixed(2) + ' pied à ' + a.toFixed(0) + '°');
       });
     });
+  });
+  // aucun bras ne passe sous le sol (dead bug du 20/10/2026 : le bras allait derrière la tête en traversant le sol)
+  Object.keys(FIGDATA).forEach(slug => {
+    if (FIGDATA[slug].view) return;
+    const bad = frames(slug).find(r => [r.g.armN.mid, r.g.armN.end, r.g.armF.mid, r.g.armF.end].some(q => q[1] > FIG.FLOOR + 0.5));
+    if (bad) res.under.push(slug + ' t=' + bad.t.toFixed(2));
   });
   const rule = (ok, msg) => { if (!ok) res.rules.push(msg); };
   const minOf = (slug, fn) => Math.min(...frames(slug).map(fn)), maxOf = (slug, fn) => Math.max(...frames(slug).map(fn));
@@ -70,3 +76,4 @@ with sync_playwright() as p:
     q = pg.evaluate(POSTURE)
     ok(not q["flat"], f"les pieds posés au sol restent à plat : {q['flat'][:4]}")
     ok(not q["rules"], f"règles de posture de l'audit respectées : {q['rules']}")
+    ok(not q["under"], f"aucun bras ne passe sous le sol : {q['under'][:4]}")

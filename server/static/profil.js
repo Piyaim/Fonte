@@ -941,6 +941,9 @@
     start, typed, typedOther, pick, tog, yn, togEv, next, back, edit, setDetail, generate, apply, keep, regen, redo, quit, dropDraft,
     cancel: () => { P.plan = null; to('resume'); }, home: () => { P.mode = 'home'; },
     exportState: () => profile(),
+    // matériel : true si l'exercice du catalogue se fait au poids du corps, null s'il est absent de la table (exercice créé)
+    pdc: slug => LIB[slug] ? LIB[slug][2].includes('pdc') : null,
+    lieu: () => { const o = profile(); return o && o.answers ? o.answers.lieu || null : null; },
     importState: o => { if (valid(o)) put(KEY, o); },
     // pour les tests
     _: {adaptations, planC, structOf, seqFor, LIB, FROM_PDF, LIEUX, STRUCT, PRM, PRM3, CORE, NB_EX, CARDIO_MIN, QS, SANTE, PLIO, bmiOf, bmiBand, energy, plan, params, check, clean, context, usable, weekPlan, phaseSettings, groupsOf}

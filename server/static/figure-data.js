@@ -312,7 +312,7 @@ window.FIGDATA = {
     scene: [{ t: 'floor', sx: 90, rx: 50 }, { t: 'rect', x: 30, y: 90.4, w: 112, h: 2, r: 1 }],
     base: { hip: [100, 84.2], tor: -90, neck: 0, arm: { a: [180, 0] }, arm2: { a: [180, 0] }, leg: { a: [180, 90] }, leg2: { a: [180, 90] }, ft: 0, fx: 0 },
     muscles: ['abdos', 'obliques'],
-    keys: [{ t: 0, p: {} }, { t: 1.6, p: { leg: { a: [100, 0] }, arm2: { a: [-100, 0] }, fx: 1 } }, { t: 2.0, p: { leg: { a: [100, 0] }, arm2: { a: [-100, 0] }, fx: 1 } }, { t: 3.4, p: { fx: 0.2 } }, { t: 3.8, p: {} }]
+    keys: [{ t: 0, p: {} }, { t: 1.6, p: { leg: { a: [100, 0] }, arm2: { a: [260, 0] }, fx: 1 } }, { t: 2.0, p: { leg: { a: [100, 0] }, arm2: { a: [260, 0] }, fx: 1 } }, { t: 3.4, p: { fx: 0.2 } }, { t: 3.8, p: {} }]
   },
   'crunch-machine': {
     f: 1, vb: '34 20 90 74', thumb: 2.2,
