@@ -83,7 +83,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}td{padding:6px 4px;bord
 .st b{display:block;font-size:20px;color:var(--a)}.st span{font-size:12px;color:var(--m)}
 .bar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:6px;align-items:center;justify-content:center;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));background:var(--c);border-top:1px solid var(--l);z-index:5}
 .bar b{min-width:56px;text-align:center;font-size:20px;color:var(--a)}
-details{margin:8px 0}summary{font-weight:700;cursor:pointer}
+details{margin:8px 0}summary{font-weight:700;cursor:pointer;min-height:44px;padding:12px 0;box-sizing:border-box}
 .sug{color:var(--a);font-size:13px;margin:4px 0}
 .li{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--l)}
 .li:first-child{border-top:0}
@@ -331,6 +331,9 @@ body.onb main{padding-bottom:40px}
 .hero .rest{margin:12px 0 0;font-size:15px;font-weight:600}
 [data-style="b"] .hero .rest{color:rgba(255,255,255,.95)}
 .offer{border-left:5px solid var(--a)}
+details.det{margin:6px 0}details.det>summary{color:var(--m);font-size:14px}
+details.card.det>summary{color:var(--t);font-size:17px;font-weight:700}
+.qnames{margin:4px 0;padding-left:20px}.qnames li{margin:3px 0}
 .offer h2{margin-bottom:6px}
 .offb{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:12px}
 .offb .go{margin:0}.offb .sm{min-height:48px}
@@ -413,6 +416,7 @@ function target(e) {
   if (e.kind === 'cardio') return `${r} min`;
   return `${e.sets} × ${r}${e.kind === 'time' ? ' s' : ''}${e.per_side ? ' / côté' : ''}`;
 }
+const targetLine = e => target(e) + (e.rest && e.kind !== 'cardio' ? ` · repos ${e.rest} s` : '');   // « 3 × 10-12 · repos 90 s »
 const ITEM_KEYS = ['sets', 'target_min', 'target_max', 'rest'];
 function exIn(e, w) {   // l'exercice avec les réglages propres au programme w (séries, cible, repos), s'il en a ; own = réglage du programme
   const s = e && w && w.settings && w.settings[e.id]; if (!s) return e;
@@ -433,7 +437,7 @@ const EFF = ['Très facile', 'Facile', 'Juste bien', 'Dur', 'À fond'];
 function effBox(e) {
   if (e.kind === 'cardio') return '';
   const v = (F.eff && F.eff[e.id]) || 0;
-  return `<div class="eff"><span class="m">Difficulté ressentie${v ? ' : <b>' + EFF[v - 1] + '</b>' : ' (note-la après tes séries)'}</span><div class="effb">${[1, 2, 3, 4, 5].map(n => `<button class="${n <= v ? 'on' : ''}" onclick="setEff(${e.id},${n})" aria-label="${EFF[n - 1]}">${n}</button>`).join('')}</div><div class="effh"><span>très facile</span><span>à fond</span></div></div>`;
+  return `<div class="eff"><span class="m">Difficulté ressentie${v ? ' : <b>' + EFF[v - 1] + '</b>' : ''}</span><div class="effb">${[1, 2, 3, 4, 5].map(n => `<button class="${n <= v ? 'on' : ''}" onclick="setEff(${e.id},${n})" aria-label="${EFF[n - 1]}">${n}</button>`).join('')}</div><div class="effh"><span>très facile</span><span>à fond</span></div></div>`;
 }
 function setEff(id, n) { syncForm(); F.eff = F.eff || {}; F.eff[id] = F.eff[id] === n ? 0 : n; F.dirty = true; syncForm(); R(); }
 function sessionVolume(s) {
@@ -525,71 +529,83 @@ new MutationObserver(() => FIG.scan()).observe(document.documentElement, {childL
    4. ressenti 5 (garder), 5. montée (double progression, ou ressenti 1-2 avec toutes les séries au moins au minimum).
    Les séances de semaine allégée et de reprise ne comptent pas comme séances sous la fourchette. */
 const r05 = v => Math.round(v * 2) / 2;
+/* renvoie [conseil d'une ligne, explication pour « Détails »] */
 function loadTip(e, ref, cs, ef) {
   const inLight = d => (cs.periods || []).some(p => p.start <= d && d <= p.end);
   const l = setsOf(ref[0], e.id), mn = e.target_min || e.target_max || 0, mx = e.target_max || mn;
   const top = (s, k) => { const v = setsOf(s, e.id).map(a => a[k]).filter(x => x != null && x > 0); return v.length ? Math.max(...v) : null; };
   const L = top(ref[0], 0), V = top(ref[0], 1);
   const w = e.kind === 'weight' && !e.assisted, as = e.kind === 'weight' && e.assisted;
-  if (cs.light) {   // 1 et 2 : base = dernière séance hors semaine allégée et reprise
+  if (cs.light) {   // 1 et 2 : base = dernière séance hors semaine légère et reprise
     const b = ref.find(s => !inLight(s.day)) || ref[0], bL = top(b, 0), bV = top(b, 1);
-    const pre = cs.light.kind === 'reprise' ? 'Reprise en douceur' : 'Semaine allégée', pc = cs.light.kind === 'reprise' ? '80 % de' : 'environ 20 % de moins que';
-    if (w && bL) return `${pre} : vise environ ${fmt(r05(bL * .8))} kg (${pc} ${fmt(bL)} kg), mêmes séries.`;
-    if (as && bL) return `${pre} : ajoute environ 20 % d’assistance, soit ${fmt(r05(bL * 1.2))} kg.`;
-    if (e.kind === 'time' && bV) return `${pre} : tiens environ ${Math.round(bV * .8)} s par série.`;
-    if (e.kind === 'reps' && bV) return `${pre} : vise environ ${Math.max(1, Math.round(bV * .8))} reps par série.`;
-    if (e.kind === 'cardio') { const m = setsOf(b, e.id).reduce((t, a) => t + (a[1] || 0), 0); return `${pre} : durée et allure plus douces${m ? ', environ ' + Math.round(m * .8) + ' min' : ''}.`; }
-    return `${pre} : environ 20 % plus léger que d’habitude.`;
+    const tag = cs.light.kind === 'reprise' ? ' (reprise)' : ' (semaine légère)', pre = cs.light.kind === 'reprise' ? 'Reprise en douceur' : 'Semaine légère';
+    const why = cs.light.kind === 'reprise' ? '80 % de' : 'environ 20 % de moins que';
+    if (w && bL) return [`${fmt(r05(bL * .8))} kg${bV ? ' × ' + bV : ''}${tag}`, `${pre} : ${why} ${fmt(bL)} kg, mêmes séries.`];
+    if (as && bL) return [`${fmt(r05(bL * 1.2))} kg d’assistance${tag}`, `${pre} : environ 20 % d’assistance en plus.`];
+    if (e.kind === 'time' && bV) return [`${Math.round(bV * .8)} s par série${tag}`, `${pre} : environ 20 % de moins.`];
+    if (e.kind === 'reps' && bV) return [`${Math.max(1, Math.round(bV * .8))} reps par série${tag}`, `${pre} : environ 20 % de moins.`];
+    if (e.kind === 'cardio') { const m = setsOf(b, e.id).reduce((t, a) => t + (a[1] || 0), 0); return [`${m ? Math.round(m * .8) + ' min, ' : ''}allure douce${tag}`, `${pre} : durée et allure plus douces.`]; }
+    return [`20 % plus léger${tag}`, `${pre}.`];
   }
-  if (e.kind === 'cardio') return 'Garde la durée, ou ajoute 2-3 min si c\'était confortable.';
+  if (e.kind === 'cardio') return ['même durée, ou +2-3 min', 'Ajoute 2 à 3 minutes si c’était confortable.'];
   const counted = ref.filter(s => !inLight(s.day));
   const under = s => { const v = setsOf(s, e.id).filter(a => a[1] != null); return v.length > 0 && v.filter(a => a[1] < mn).length * 2 >= v.length; };
   if (counted.length >= 2 && under(counted[0]) && under(counted[1])) {   // 3
-    const cL = top(counted[0], 0), pre = 'Deux séances de suite sous ta fourchette';
-    if (w && cL) return `${pre} : baisse un peu, entre ${fmt(r05(cL * .9))} et ${fmt(r05(cL * .95))} kg (5 à 10 % de moins), et vise ${mn} reps.`;
-    if (as) return `${pre} : ajoute 5 kg d’assistance et vise ${mn} reps.`;
-    if (e.kind === 'time') return `${pre} : vise ${mn} s par série, sans forcer.`;
-    if (e.kind === 'reps') return `${pre} : vise ${mn} reps propres, sans forcer.`;
-    return `${pre} : allège la charge de 5 à 10 % et vise ${mn} reps.`;
+    const cL = top(counted[0], 0), why = 'Deux séances de suite sous ta fourchette : on baisse un peu, 5 à 10 %.';
+    if (w && cL) return [`${fmt(r05(cL * .9))}-${fmt(r05(cL * .95))} kg × ${mn}`, why];
+    if (as) return [`+5 kg d’assistance × ${mn}`, why];
+    if (e.kind === 'time') return [`${mn} s par série, sans forcer`, why];
+    if (e.kind === 'reps') return [`${mn} reps propres, sans forcer`, why];
+    return [`−5 à 10 % de charge × ${mn}`, why];
   }
-  if (ef >= 5) return w && L ? `Ressenti « à fond » : garde ${fmt(L)} kg la prochaine fois.` : 'Ressenti « à fond » : garde le même objectif la prochaine fois.';   // 4
+  if (ef >= 5) return [w && L ? `garde ${fmt(L)} kg` : 'même objectif', 'Ressenti « à fond » la dernière fois : on garde.'];   // 4
   const full = l.length >= e.sets, atTop = full && l.every(a => (a[1] || 0) >= mx), atMin = full && l.every(a => (a[1] || 0) >= mn);
   if (atTop || (ef && ef <= 2 && atMin)) {   // 5
-    const why = atTop ? 'Toutes les séries au haut de la fourchette' : `Ressenti ${EFF[ef - 1].toLowerCase()}`;
-    if (w && L) return `${why} : passe à ${fmt(L + r05(Math.min(2.5, Math.max(1, L * .025))))} kg (ou au cran suivant) et repars à ${mn} reps.`;
-    if (w) return `${why} : monte de 1 à 2 kg (ou d’un cran) et repars à ${mn} reps.`;
-    if (as) return `${why} : réduis l’assistance de 5 kg.`;
-    if (e.kind === 'time') return `${why} : ajoute 5 à 10 s par série, ou une série de plus.`;
-    return `${why} : ajoute 1 à 2 reps par série, ou une série de plus.`;
+    const why = (atTop ? 'Toutes les séries au haut de la fourchette' : `Ressenti ${EFF[ef - 1].toLowerCase()}`) + ' : on monte.';
+    if (w && L) return [`${fmt(L + r05(Math.min(2.5, Math.max(1, L * .025))))} kg × ${mn}`, why + ' Ou le cran suivant de la machine.'];
+    if (w) return [`+1 à 2 kg × ${mn}`, why];
+    if (as) return ['−5 kg d’assistance', why];
+    if (e.kind === 'time') return ['+5 à 10 s par série', why + ' Ou une série de plus.'];
+    return ['+1 à 2 reps par série', why + ' Ou une série de plus.'];
   }
-  if (e.kind === 'time') return `Objectif : tenir ${mx} s partout.`;
-  if (e.kind === 'reps') return `Vise ${mx} reps contrôlées partout.`;
-  return w && L ? `Garde ${fmt(L)} kg et vise ${mx} reps sur chaque série.` : `Garde la charge et vise ${mx} reps sur chaque série.`;
+  if (e.kind === 'time') return [`${mx} s par série`, ''];
+  if (e.kind === 'reps') return [`${mx} reps par série`, ''];
+  return [w && L ? `${fmt(L)} kg × ${mx}` : `même charge × ${mx}`, ''];
+}
+// « Dernière : 3 × 10 à 50 kg » si toutes les séries sont identiques, sinon la liste des séries
+function lastTxt(e, l) {
+  const same = l.every(a => a[0] === l[0][0] && a[1] === l[0][1]), [w, v] = l[0];
+  if (e.kind === 'cardio') return l.map(a => setText(e, a)).join(' · ');
+  if (same && l.length > 1) return `${l.length} × ${fmt(v)}${e.kind === 'time' ? ' s' : ''}${w != null ? ' à ' + fmt(w) + ' kg' : ''}`;
+  return l.map(a => setText(e, a)).join(' · ');
 }
 function advice(e, exceptSid, wid) {   // wid : programme de la séance en cours (« dernière fois » = même programme s'il a déjà été fait)
   const ref = refSessions(e.id, wid, exceptSid), l = ref.length ? setsOf(ref[0], e.id) : null;
-  if (!l) {
-    return e.kind === 'cardio' ? '<p class="sug">Première fois : allure confortable, tu dois pouvoir parler.</p>'
-      : e.kind === 'weight' ? '<p class="sug">Première fois : charge légère, finis chaque série à 2-3 reps de l\'échec.</p>'
-      : '<p class="sug">Première fois : vise une exécution propre, sans forcer.</p>';
-  }
   const cs = window.PROFIL && PROFIL.coach ? PROFIL.coach() : {};
+  const ph1 = cs.phase === 1 && e.kind !== 'cardio' ? '<p class="m">Phase 1 : garde 2 à 3 répétitions en réserve, jamais jusqu’à l’échec.</p>' : '';
+  if (!l) {
+    return (e.kind === 'cardio' ? '<p class="sug">Conseil : allure confortable, tu dois pouvoir parler</p>'
+      : e.kind === 'weight' ? '<p class="sug">Conseil : charge légère, 2-3 reps en réserve</p>'
+      : '<p class="sug">Conseil : exécution propre, sans forcer</p>') + (ph1 || e.tip || e.own ? `<details class="det"><summary>Détails</summary>${ph1}${e.tip ? `<p class="m">${esc(e.tip)}</p>` : ''}${e.own ? '<p class="m">Réglage propre à ce programme.</p>' : ''}</details>` : '');
+  }
   const en = ref[0].entries.find(x => x.exercise_id === e.id), ef = e.kind === 'cardio' ? 0 : (en && en.effort) || 0;
   const other = wid && ref[0].workout_id !== wid && ref[0].workout_name ? ` (${esc(ref[0].workout_name)})` : '';
-  let h = `<p class="m">Dernière fois${other} : ${l.map(a => setText(e, a)).join(' · ')}${ef ? ' · ressenti : ' + EFF[ef - 1] + ' (' + ef + '/5)' : ''}</p>`;
-  h += `<p class="sug">${esc(loadTip(e, ref, cs, ef))}</p>`;
-  if (cs.phase === 1 && e.kind !== 'cardio') h += '<p class="m">Phase 1 : garde 2 à 3 répétitions en réserve, jamais jusqu’à l’échec.</p>';
+  const [tip, why] = loadTip(e, ref, cs, ef);
+  let h = `<p class="m">Dernière${other} : ${esc(lastTxt(e, l))}</p><p class="sug">Conseil : ${esc(tip)}</p>`;
+  let d = (why ? `<p class="m">${esc(why)}</p>` : '') + ph1 + (e.tip ? `<p class="m">${esc(e.tip)}</p>` : '');
+  if (ef) d += `<p class="m">Dernière fois : ${l.map(a => setText(e, a)).join(' · ')} · ressenti : ${EFF[ef - 1]} (${ef}/5)</p>`;
+  if (e.own) d += '<p class="m">Réglage propre à ce programme.</p>';
   if (e.kind === 'weight' && !e.assisted) {
     let b = 0;
     SESS.forEach(s => (setsOf(s, e.id) || []).forEach(a => b = Math.max(b, (a[0] || 0) * (1 + (a[1] || 0) / 30))));
-    if (b) h += `<p class="m">1RM estimé : ${Math.round(b)} kg</p>`;
+    if (b) d += `<p class="m">1RM estimé : ${Math.round(b)} kg</p>`;
   }
   const pts = SESS.map(s => setsOf(s, e.id)).filter(Boolean).slice(-12).map(x =>
     e.kind === 'weight' ? (e.assisted ? Math.min(...x.map(a => a[0] || 0)) : Math.max(...x.map(a => a[0] || 0)))
     : e.kind === 'cardio' ? x.reduce((t, a) => t + (a[1] || 0), 0)
     : Math.max(...x.map(a => a[1] || 0)));
   const lab = e.kind === 'weight' ? (e.assisted ? 'Assistance (plus bas = mieux)' : 'Charge max') : e.kind === 'cardio' ? 'Minutes' : 'Meilleure série';
-  return h + spark(pts, `${lab}, ${pts.length} séances`);
+  return h + `<details class="det"><summary>Détails</summary>${d}${spark(pts, `${lab}, ${pts.length} séances`)}</details>`;
 }
 
 /* ------------------------------------------------------------------ navigation */
@@ -673,15 +689,16 @@ function vAccueil() {
   const efs = ls ? ls.entries.map(e => e.effort).filter(Boolean) : [];
   const feel = efs.length ? EFF[Math.max(1, Math.round(efs.reduce((a, b) => a + b, 0) / efs.length)) - 1] : '—';
   const dt0 = new Date().toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long'}), dt = dt0.charAt(0).toUpperCase() + dt0.slice(1);
-  const when = !sch || !slot ? '' : sch.today ? 'Prévue aujourd’hui. ' : `Prévue ${dayWord(slot.day)}. `;
-  const sub = (pending ? 'Tu as une séance commencée.' : nw ? `${when}${nEx} exercice${nEx > 1 ? 's' : ''} au programme.` : 'Compose ta séance depuis l’onglet Séance.')
-    + (ls ? ` Dernière séance ${ago === 0 ? 'aujourd’hui' : ago === 1 ? 'hier' : 'il y a ' + ago + ' jours'}.` : ' Aucune séance enregistrée pour l’instant.');
+  // « 6 exercices · prévue aujourd'hui », puis « Dernière : il y a 2 j »
+  const when = !sch || !slot ? '' : sch.today ? ' · prévue aujourd’hui' : ` · prévue ${dayWord(slot.day)}`;
+  const sub = pending ? 'Tu as une séance commencée.' : nw ? `${nEx} exercice${nEx > 1 ? 's' : ''}${when}` : 'Compose ta séance depuis l’onglet Séance.';
+  const sub2 = ls ? `Dernière : ${ago === 0 ? 'aujourd’hui' : ago === 1 ? 'hier' : 'il y a ' + ago + ' j'}` : 'Aucune séance pour l’instant';
   const pct = Math.min(n / WGOAL, 1), C = 251.3;
   const ring = `<svg class="ring" viewBox="0 0 100 100" role="img" aria-label="${n} séance${n > 1 ? 's' : ''} sur ${WGOAL} cette semaine"><circle class="tr" cx="50" cy="50" r="40"/><circle class="pg" cx="50" cy="50" r="40" style="stroke-dasharray:${(pct * C).toFixed(1)} ${C}"/><text x="50" y="58" font-size="26">${n}/${WGOAL}</text></svg>`;
-  let h = `<section class="hero"><p class="dt">${esc(dt)}</p>${ring}<h2>${pending ? 'Séance en cours' : nw ? esc(nw.name) : 'Séance libre'}</h2><p class="sub">${esc(sub)}</p>`
+  let h = `<section class="hero"><p class="dt">${esc(dt)}</p>${ring}<h2>${pending ? 'Séance en cours' : nw ? esc(nw.name) : 'Séance libre'}</h2><p class="sub">${esc(sub)}</p><p class="sub">${esc(sub2)}</p>`
     + (pending ? `<button class="go" onclick="go('seance')">Reprendre la séance</button>`
       : nw ? `<button class="go" onclick="startFromHome(${nw.id})">Démarrer la séance</button>` : `<button class="go" onclick="go('seance')">Ouvrir la séance</button>`)
-    + (sch && !sch.planned ? '<p class="rest">Jour de repos : la récupération fait partie du progrès.</p>' : '') + '</section>';
+    + (sch && !sch.planned ? '<p class="rest">Jour de repos : la récupération compte aussi.</p>' : '') + '</section>';
   if (window.PROFIL && PROFIL.homeCards) h += PROFIL.homeCards();   // proposition (phase, semaine allégée, reprise) : toujours sous le bouton
   h += `<section class="card wk"><h2>Cette semaine</h2><div class="wkm"><div class="wkbig"><b>${n}</b><span>sur ${WGOAL} séances</span></div><div class="dots">${Array.from({length: WGOAL}, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</div></div>
     <div class="tiles"><div><b>${streak}</b><span>semaine${streak > 1 ? 's' : ''} d’affilée</span></div><div><b>${Math.round(vol)}</b><span>kg soulevés</span></div><div><b>${esc(feel)}</b><span>dernier ressenti</span></div></div></section>`;
@@ -1016,8 +1033,7 @@ function vFocus() {
   const dn = (F.dn && F.dn[e.id]) || [], [l1, l2] = inputLabels(e);
   const nDone = ids.filter(id => { const r = F.vals[id] || rowsFor(exF(id)), d = (F.dn && F.dn[id]) || []; return r.length && r.every((_, k) => d[k]); }).length;
   let h = `<div class="focus"><div class="fhead"><b>Exercice ${FOC + 1}/${ids.length}</b><button class="sm" onclick="exitFocus()">Quitter le focus</button></div><div class="pbar"><i style="width:${nDone / ids.length * 100}%"></i></div>`;
-  h += `<div class="fdia">${diagram(e, true)}</div><h2 class="ft">${esc(e.name)}</h2><p class="fta">${esc(target(e))}${ownTag(e)}</p>`;
-  if (e.tip) h += `<p class="m">${esc(e.tip)}</p>`;
+  h += `<div class="fdia">${diagram(e, true)}</div><h2 class="ft">${esc(e.name)}</h2><p class="fta">${esc(targetLine(e))}</p>`;
   h += advice(e, F.sid, F.wid);
   rows.forEach((a, i) => {
     h += `<div class="frow ${dn[i] ? 'ok' : ''}"><span>${e.kind === 'cardio' ? '' : 'S' + (i + 1)}</span>
@@ -1119,9 +1135,7 @@ function statsHeader() {
 function exCard(e) {
   const rows = rowsFor(e); F.vals[e.id] = rows;
   const [l1, l2] = inputLabels(e);
-  let h = `<div class="card"><div class="top${window.FIGDATA && e.slug && window.FIGDATA[e.slug] ? ' topf' : ''}">${diagram(e, true)}<div style="flex:1;min-width:0"><h2>${esc(e.name)}</h2><b>${esc(target(e))}</b>${ownTag(e)}`;
-  if (e.rest) h += `<p class="m">Repos entre séries : ${e.rest} s</p>`;
-  if (e.tip) h += `<p class="m">${esc(e.tip)}</p>`;
+  let h = `<div class="card"><div class="top${window.FIGDATA && e.slug && window.FIGDATA[e.slug] ? ' topf' : ''}">${diagram(e, true)}<div style="flex:1;min-width:0"><h2>${esc(e.name)}</h2><b>${esc(targetLine(e))}</b>`;
   h += `</div></div>${advice(e, F.sid, F.wid)}`;
   rows.forEach((a, i) => {
     h += `<div class="row"><span>${e.kind === 'cardio' ? '' : 'S' + (i + 1)}</span>

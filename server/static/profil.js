@@ -174,14 +174,14 @@
   const JOURS = [['lun', 'Lundi'], ['mar', 'Mardi'], ['mer', 'Mercredi'], ['jeu', 'Jeudi'], ['ven', 'Vendredi'], ['sam', 'Samedi'], ['dim', 'Dimanche']];
   const ZONES_CI = ['epaules', 'dos', 'genoux', 'hanches', 'poignets'];
   const QS = [
-    {k: 'prenom', t: 'text', q: 'Comment t’appelles-tu ?', h: 'Facultatif. Ton prénom sert seulement à personnaliser l’appli.', opt: true, s: 'Prénom'},
+    {k: 'prenom', t: 'text', q: 'Comment t’appelles-tu ?', h: 'Facultatif.', opt: true, s: 'Prénom'},
     {k: 'age', t: 'num', q: 'Quel âge as-tu ?', unit: 'ans', min: 16, max: 75, int: true, s: 'Âge', err: 'Indique un âge entre 16 et 75 ans.'},
-    {k: 'sexe', t: 'one', q: 'Quel est ton sexe ?', h: 'Facultatif. Sert uniquement à estimer tes besoins caloriques.', opt: true, s: 'Sexe',
+    {k: 'sexe', t: 'one', q: 'Quel est ton sexe ?', h: 'Facultatif. Sert seulement au calcul des calories.', opt: true, s: 'Sexe',
       o: [['f', 'Femme'], ['h', 'Homme'], ['nr', 'Je préfère ne pas répondre']]},
     {k: 'taille', t: 'num', q: 'Quelle est ta taille ?', unit: 'cm', min: 120, max: 230, int: true, s: 'Taille', err: 'Indique une taille entre 120 et 230 cm.'},
-    {k: 'poids', t: 'num', q: 'Quel est ton poids ?', unit: 'kg', min: 30, max: 250, h: 'Une décimale possible, par exemple 72,5.', s: 'Poids', err: 'Indique un poids entre 30 et 250 kg.'},
+    {k: 'poids', t: 'num', q: 'Quel est ton poids ?', unit: 'kg', min: 30, max: 250, h: 'Par exemple 72,5.', s: 'Poids', err: 'Indique un poids entre 30 et 250 kg.'},
     {k: 'objectif', t: 'one', q: 'Quel est ton objectif principal ?', o: OBJ, s: 'Objectif principal'},
-    {k: 'objectifs2', t: 'multi', q: 'As-tu des objectifs secondaires ?', h: 'Choisis 1 ou 2 réponses.', max: 2, s: 'Objectifs secondaires',
+    {k: 'objectifs2', t: 'multi', q: 'As-tu des objectifs secondaires ?', h: '1 ou 2 réponses.', max: 2, s: 'Objectifs secondaires',
       o: [...OBJ, ['mobilite', 'Mobilité et posture']]},
     {k: 'niveau', t: 'one', q: 'Où en es-tu aujourd’hui ?', s: 'Niveau',
       o: [['jamais', 'Jamais pratiqué'], ['reprise', 'Reprise après un arrêt de plus d’un an'], ['debutant', 'Débutant (moins de 6 mois)'],
@@ -193,14 +193,14 @@
     {k: 'duree', t: 'one', q: 'Combien de temps dure une séance ?', s: 'Durée d’une séance', o: [[30, '30 minutes'], [45, '45 minutes'], [60, '60 minutes'], [75, '75 minutes']]},
     {k: 'lieu', t: 'one', q: 'Où t’entraînes-tu ?', s: 'Lieu',
       o: [['complete', 'Salle complète'], ['machines', 'Salle (machines uniquement)'], ['halteres', 'Haltères à la maison'], ['pdc', 'Poids du corps seulement']]},
-    {k: 'blessures', t: 'multi', q: 'As-tu des blessures ou des douleurs ?', h: 'Plusieurs réponses possibles. L’appli écarte les exercices déconseillés pour ces zones.',
+    {k: 'blessures', t: 'multi', q: 'As-tu des blessures ou des douleurs ?', h: 'Les exercices déconseillés seront écartés.',
       none: 'aucune', s: 'Blessures ou douleurs',
       o: [['aucune', 'Aucune'], ['epaules', 'Épaules'], ['dos', 'Dos et lombaires'], ['genoux', 'Genoux'], ['hanches', 'Hanches'], ['poignets', 'Poignets et coudes'], ['autre', 'Autre']]},
-    {k: 'sante', t: 'sante', q: 'Questionnaire de santé', h: 'Réponds par oui ou par non à chaque question.', s: 'Questionnaire de santé'},
-    {k: 'eviter', t: 'eviter', q: 'Y a-t-il des exercices que tu veux éviter ?', h: 'Facultatif. Touche les exercices à écarter de ton programme.', opt: true, s: 'Exercices à éviter'},
+    {k: 'sante', t: 'sante', q: 'Questionnaire de santé', s: 'Questionnaire de santé'},
+    {k: 'eviter', t: 'eviter', q: 'Y a-t-il des exercices que tu veux éviter ?', h: 'Facultatif. Touche un exercice pour l’écarter.', opt: true, s: 'Exercices à éviter'},
     {k: 'jours', t: 'multi', q: 'Quels jours es-tu disponible ?', s: 'Jours disponibles', o: JOURS},
-    {k: 'detail', t: 'one', q: 'Veux-tu voir le détail santé (IMC, besoins caloriques, protéines, repères nutrition) ?', s: 'Détail santé',
-      h: 'Tu pourras changer d’avis plus tard dans « Mon profil ».', o: [['non', 'Non, juste mon programme'], ['oui', 'Oui, montre-moi le détail']]}
+    {k: 'detail', t: 'one', q: 'Veux-tu voir le détail santé ?', s: 'Détail santé',
+      h: 'IMC, calories, protéines. Modifiable dans « Mon profil ».', o: [['non', 'Non, juste mon programme'], ['oui', 'Oui, montre-moi le détail']]}
   ];
   const QI = Object.fromEntries(QS.map((q, i) => [q.k, i]));
 
@@ -385,9 +385,12 @@
     pl.workouts.forEach(w => w.missing.forEach(l => (m[l] = m[l] || []).push(w.name)));
     return Object.entries(m).map(([l, ws]) => `${l} (${ws.join(', ')})`);
   }
-  const WARN = '<div class="qwarn"><p>Cette appli ne remplace pas un avis médical. En cas de doute, consulte un médecin avant de commencer.</p><p>Arrête l’exercice en cas de douleur vive, de vertige ou de gêne à la poitrine.</p></div>';
-  const SANTE_WARN = '<div class="qwarn" role="alert"><p><b>Consulte un médecin avant de commencer.</b></p><p>Tu as répondu « Oui » à une question de santé. L’appli te proposera un programme allégé, sans effort maximal ni intervalles.</p></div>';
-  const MINOR_WARN = '<div class="qwarn"><p><b>Tu as moins de 18 ans.</b> Demande l’accord d’un parent et, si possible, fais-toi encadrer. Charges légères, la technique d’abord.</p></div>';
+  // toujours visibles, jamais dans un repli : avertissement médical, alerte santé, message aux moins de 18 ans
+  const WARN = '<div class="qwarn"><p>Cette appli ne remplace pas un avis médical. En cas de doute, consulte un médecin.</p><p>Arrête l’exercice en cas de douleur vive, de vertige ou de gêne à la poitrine.</p></div>';
+  const SANTE_WARN = '<div class="qwarn" role="alert"><p><b>Consulte un médecin avant de commencer.</b></p><p>Programme allégé : 2 séries, sans effort maximal ni intervalles.</p></div>';
+  const MINOR_WARN = '<div class="qwarn"><p><b>Tu as moins de 18 ans.</b> Demande l’accord d’un parent. Charges légères, technique d’abord.</p></div>';
+  // repli « Détails », fermé par défaut : explications, exemples et réglages
+  const det = inner => inner ? `<details class="det"><summary>Détails</summary>${inner}</details>` : '';
   function healthBlock(a0) {
     const a = clean(a0), b = bmiOf(a.poids, a.taille), band = bmiBand(b), en = energy(a);
     let h = `<div class="card"><h2>Détail santé</h2><p class="qbig"><b>IMC : ${dec(b)}</b> · ${band.t}</p><p class="m">L’IMC est un repère général. Il ne distingue pas le muscle de la graisse.</p><p>Ce que l’appli adapte : ${esc(band.fx)}</p>`;
@@ -495,7 +498,7 @@
       BUSY = false; await A().load();
     } else c.light = [...c.light, {kind: k, start: t, end: addD(t, 6)}];
     delete c.later[k]; o.cycle = c; o.updated = nowIso(); put(KEY, o);
-    A().toast({phase: 'Nouvelle phase enregistrée : réglages de tes séances mis à jour.', allegee: 'Semaine allégée lancée pour 7 jours.', reprise: 'Reprise en douceur lancée pour 7 jours.'}[k]);
+    A().toast({phase: 'Nouvelle phase enregistrée : réglages de tes séances mis à jour.', allegee: 'Semaine légère lancée pour 7 jours.', reprise: 'Reprise en douceur lancée pour 7 jours.'}[k]);
     A().R();
   }
   function later(k) {
@@ -547,26 +550,31 @@
   }
 
   /* cartes : accueil (sous le bouton de séance) et « Mon profil » */
+  /* une idée par carte : titre de 6 mots au plus, une phrase de 15 mots au plus, le reste dans « Détails » */
+  const rangeTxt = s => `${s.sets} × ${s.target_min === s.target_max ? s.target_min : s.target_min + '-' + s.target_max}`;
   function offerCard(f, o) {
-    const p = o.program, t = todayIso();
-    let title, body;
-    if (f.k === 'reprise') { title = 'Bon retour ! On reprend en douceur.'; body = '<p>Pendant 7 jours, l’appli te propose environ 80 % de tes dernières charges. Ensuite, la progression reprend normalement.</p>'; }
+    let title, line, more;
+    if (f.k === 'reprise') { title = 'Bon retour !'; line = 'On reprend à 80 % pendant 7 jours.'; more = '<p>Environ 80 % de tes dernières charges. Ensuite, la progression reprend normalement.</p>'; }
     else if (f.k === 'allegee') {
-      title = f.why === 'pause' ? 'Bon retour ! Une semaine plus légère pour reprendre le rythme.' : 'Semaine allégée';
-      body = (f.why === 'pause' ? '' : '<p>Tu t’entraînes régulièrement depuis 5 semaines : bravo ! Une semaine plus légère aide le corps à récupérer, et donc à progresser.</p>')
-        + '<p>Charges environ 20 % plus basses, même nombre de séances. Elle se termine seule au bout de 7 jours.</p>';
+      title = f.why === 'pause' ? 'Bon retour !' : 'Semaine légère ?';
+      line = f.why === 'pause' ? 'Semaine légère : −20 % sur les charges pendant 7 jours.' : '−20 % sur les charges pendant 7 jours.';
+      more = (f.why === 'pause' ? '' : '<p>Tu t’entraînes régulièrement depuis 5 semaines : bravo ! Une semaine plus légère aide le corps à récupérer, et donc à progresser.</p>')
+        + '<p>Même nombre de séances. Elle se termine seule au bout de 7 jours.</p>';
     } else {
       const lst = phaseSettings(o, f.to), EX = A().EX();
-      title = f.to === 2 ? 'Passer à la phase 2 : progression' : 'Passer à la phase 3 : hybride';
-      body = `<p>${f.to === 2 ? `Tes ${P1_DAYS(o.answers.niveau) / 7} semaines de réadaptation sont faites : bravo !` : 'Tes semaines de progression sont faites : bravo !'} ${esc(phaseTxt(f.to, o.answers.niveau))}</p>`
-        + lst.map(({w, type, settings}) => { const id = w.items.find(i => EX[i] && LIB[EX[i].slug] && LIB[EX[i].slug][0] !== 'cardio' && LIB[EX[i].slug][0] !== 'tronc'), s = id && settings[id];
-          return `<div class="qex"><b>${esc(w.name)}${type ? ' : ' + TYPE_TXT[type] : ''}</b>${s ? `<span>par exemple ${esc(EX[id].name)} : ${esc(prmTxt(EX[id], {sets: s.sets, min: s.target_min, max: s.target_max, rest: s.rest}))}</span>` : ''}</div>`; }).join('')
+      const ex = lst.map(({w, settings}) => { const id = w.items.find(i => EX[i] && LIB[EX[i].slug] && LIB[EX[i].slug][0] !== 'cardio' && LIB[EX[i].slug][0] !== 'tronc'); return id && {id, s: settings[id]}; });
+      title = `Phase ${f.to} prête`;
+      line = f.to === 2 ? (ex[0] ? `Charges un peu plus lourdes : ${rangeTxt(ex[0].s)}.` : 'Charges un peu plus lourdes.') : 'Chaque séance prend un rôle : force, volume ou puissance.';
+      more = `<p>${f.to === 2 ? `Tes ${P1_DAYS(o.answers.niveau) / 7} semaines de réadaptation sont faites : bravo !` : 'Tes semaines de progression sont faites : bravo !'} ${esc(phaseTxt(f.to, o.answers.niveau))}</p>`
+        + lst.map(({w, type}, i) => { const e = ex[i], s = e && e.s;
+          return `<div class="qex"><b>${esc(w.name)}${type ? ' : ' + TYPE_TXT[type] : ''}</b>${s ? `<span>par exemple ${esc(EX[e.id].name)} : ${esc(prmTxt(EX[e.id], {sets: s.sets, min: s.target_min, max: s.target_max, rest: s.rest}))}</span>` : ''}</div>`; }).join('')
         + '<p class="m">Seuls les réglages de tes séances changent (séries, répétitions, repos) : tes exercices et ton historique restent les mêmes.</p>';
     }
-    return `<section class="card offer" data-offer="${f.k}"><h2>${esc(title)}</h2>${body}<div class="offb"><button class="go" onclick="PROFIL.accept('${f.k}')">Accepter</button><button class="sm" onclick="PROFIL.later('${f.k}')">Plus tard</button></div></section>`;
+    return `<section class="card offer" data-offer="${f.k}"><h2>${esc(title)}</h2><p>${esc(line)}</p>${det(more)}<div class="offb"><button class="go" onclick="PROFIL.accept('${f.k}')">Accepter</button><button class="sm" onclick="PROFIL.later('${f.k}')">Plus tard</button></div></section>`;
   }
-  function lightCard(l) {
-    return `<section class="card offer" data-light="${l.kind}"><h2>${l.kind === 'reprise' ? 'Reprise en douceur' : 'Semaine allégée'}</h2><p>${l.kind === 'reprise' ? 'Environ 80 % de tes dernières charges' : 'Charges environ 20 % plus basses'}, jusqu’au ${esc(frDay(l.end))} inclus. Le conseil de charge de chaque exercice en tient compte.</p></section>`;
+  function lightCard(l) {   // une ligne : « Semaine légère jusqu'au dim. 13/12 : −20 % »
+    const end = frDay(l.end, {weekday: 'short', day: '2-digit', month: '2-digit'});
+    return `<section class="card offer" data-light="${l.kind}"><p><b>${l.kind === 'reprise' ? 'Reprise' : 'Semaine légère'} jusqu’au ${esc(end)} : ${l.kind === 'reprise' ? '80 %' : '−20 %'}</b></p></section>`;
   }
   function homeCards() {   // une seule carte à la fois : la semaine allégée ou la reprise en cours, sinon la première proposition
     const o = profile(); if (!o) return '';
@@ -578,10 +586,11 @@
     let h = '<div class="card"><h2>Ta progression</h2>';
     if (p) {
       const wk = Math.floor((dn(t) - dn(p.phase_start || p.start)) / 7) + 1;
-      h += `<p><b>Phase ${p.phase}</b> depuis le ${esc(frDay(p.phase_start || p.start, {weekday: undefined}))} (semaine ${wk}).</p><p class="m">${esc(phaseTxt(p.phase, o.answers.niveau))}</p>`;
-      if (p.phase === 3) h += `<p class="m">${p.ids.map((id, i) => { const w = A().WO().find(v => v.id === id); return `${esc(w.name)} : ${TYPE_TXT[typeOf(i, 3)]}`; }).join(' ; ')}.</p>`;
-      if (sch) h += `<p>Cette semaine : ${sch.week.map(s => `${esc(frDay(s.day, {day: undefined, month: undefined}))} ${esc((A().WO().find(w => w.id === s.wid) || {}).name || '')}`).join(', ')}.</p>`;
-    } else h += '<p class="m">Phases et placement sur tes jours : ils fonctionnent avec un programme généré par l’appli.</p>';
+      h += `<p><b>Phase ${p.phase} · semaine ${wk}</b></p>`;
+      if (sch) h += `<p>Cette semaine : ${sch.week.map(s => `${esc(frDay(s.day, {weekday: 'short', day: undefined, month: undefined}))} ${esc((A().WO().find(w => w.id === s.wid) || {}).name || '')}`).join(', ')}.</p>`;
+      h += det(`<p class="m">Depuis le ${esc(frDay(p.phase_start || p.start, {weekday: undefined}))}. ${esc(phaseTxt(p.phase, o.answers.niveau))}</p>`
+        + (p.phase === 3 ? `<p class="m">${p.ids.map((id, i) => { const w = A().WO().find(v => v.id === id); return `${esc(w.name)} : ${TYPE_TXT[typeOf(i, 3)]}`; }).join(' ; ')}.</p>` : ''));
+    } else h += '<p class="m">Phases et placement : avec un programme généré par l’appli.</p>';
     h += '</div>';
     if (l) h += lightCard(l);
     return h + fs.map(f => offerCard(f, o)).join('');
@@ -739,21 +748,18 @@
     return `<button class="qopt${on ? ' on' : ''}" onclick="${onclick}" aria-pressed="${on}"${extra || ''}><span class="qck${multi ? ' qsq' : ''}" aria-hidden="true">${on ? '✓' : ''}</span><span>${esc(label)}</span></button>`;
   }
   function vIntro() {
-    const n = A().SESS().length;
     return `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">Bienvenue dans Fonte</h2>
-      <p>Avant de commencer, ${QS.length} questions courtes (environ 3 minutes) pour te proposer un programme adapté.</p>
-      <p class="m">Tes réponses restent sur cet appareil. Tu peux quitter à tout moment : elles sont gardées.</p>
-      ${n ? `<p class="m">Ton historique (${n} séance${n > 1 ? 's' : ''}) est conservé. Tes programmes actuels ne changeront qu’après ta confirmation, à la fin.</p>` : ''}
-      <p class="m">L’appli donne des conseils d’entraînement généraux. Elle ne remplace ni un médecin ni un coach.</p>
+      <p>${QS.length} questions, 3 minutes, pour un programme fait pour toi.</p>
       <button class="go" onclick="PROFIL.start()">Commencer</button>
-      <button class="sm w" onclick="go('donnees')">J’ai une sauvegarde : l’importer</button></div>`;
+      <button class="sm w" onclick="go('donnees')">J’ai une sauvegarde</button>
+      <p class="m">Tes réponses restent sur ce téléphone. Ce n’est pas un avis médical.</p></div>`;
   }
   function vQuestion() {
     const i = Math.min(D.i || 0, QS.length - 1), q = QS[i], a = D.answers;
     let h = `<div class="qprog"><span class="m">Question ${i + 1} sur ${QS.length}</span><div class="pbar" role="progressbar" aria-label="Progression du questionnaire" aria-valuemin="1" aria-valuemax="${QS.length}" aria-valuenow="${i + 1}"><i style="width:${(i + 1) / QS.length * 100}%"></i></div></div>`;
     h += `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">${esc(q.q)}</h2>`;
     let hint = q.h || '';
-    if (q.k === 'jours') hint = `Au moins ${a.seances || 'autant de'} jour${a.seances > 1 ? 's' : ''}, un par séance. L’appli place tes séances sur ces jours, avec un jour de repos entre deux séances qui travaillent les mêmes muscles quand c’est possible.`;
+    if (q.k === 'jours') hint = `Au moins ${a.seances || 1} jour${a.seances > 1 ? 's' : ''}.`;
     if (hint) h += `<p class="m">${esc(hint)}</p>`;
     if (q.t === 'text') h += `<label class="qlab">Prénom<input id="qin" class="qinp" value="${esc(a[q.k] || '')}" maxlength="30" autocomplete="given-name" oninput="PROFIL.typed(this.value)" onkeydown="if(event.key==='Enter')PROFIL.next()"></label>`;
     if (q.t === 'num') {
@@ -782,52 +788,71 @@
     }
     h += `<p id="qerr" class="qerr" role="alert">${esc(P.err)}</p>`;
     h += `<div class="qnav"><button class="sm" onclick="PROFIL.back()">${P.ret ? 'Annuler' : '‹ Retour'}</button><button class="go" onclick="PROFIL.next()">${P.ret ? 'Valider' : i === QS.length - 1 ? 'Voir le résumé' : 'Suivant'}</button></div></div>`;
-    if (D.redo && !P.ret) h += `<button class="sm w" onclick="PROFIL.quit()">Quitter (tes réponses sont gardées)</button>`;
+    if (D.redo && !P.ret) h += `<button class="sm w" onclick="PROFIL.quit()">Quitter et garder mes réponses</button>`;
     return h;
   }
+  // « Ton programme » en 3 puces au plus ; les messages de blessure restent visibles ; le reste va dans « Détails »
+  const STRUCT_SHORT = {2: 'A et B en alternance', 3: 'A, B, A puis B, A, B', 4: 'haut et bas du corps, 2 fois chacun', 5: 'poussée, tirage, jambes, haut, bas'};
+  const PHASE_SHORT = {1: 'Phase 1 : 4 semaines de réadaptation', 2: 'Phase 2 : progression', 3: 'Phase 3 : force, volume, puissance et cardio'};
+  function bullets(pl) {
+    const x = pl.x, a = x.a, k = pl.workouts.length, rot = k > (STRUCT[a.seances] || []).length;
+    return [`${a.seances} séances par semaine : ${rot ? pl.workouts.map(w => w.name).join(', ') + ' en rotation' : STRUCT_SHORT[a.seances]}`,
+      x.phase === 1 && a.niveau === 'debutant' ? 'Phase 1 : 2 semaines de réadaptation' : PHASE_SHORT[x.phase],
+      x.sante ? 'Programme allégé : 2 séries, sans intervalles' : x.minor ? 'Charges légères, technique d’abord' : x.bmi >= 30 ? 'Cardio à faible impact, repos allongés'
+        : `Séances de ${a.duree} min, cardio compris`];
+  }
+  const isAlert = t => t.includes('aucun exercice de ce type') || t.startsWith('Pour la douleur');
   function programPreview(pl, title) {
-    const x = pl.x, a = x.a, miss = missingTxt(pl);
-    let h = `<div class="card"><h2>${title || 'Ton programme'}</h2><p>${esc(STRUCT_TXT[a.seances])}</p><ul class="qul">${adaptations(pl).map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
-    if (miss.length) h += `<p class="qmiss"><b>Il manque dans la bibliothèque, pour ton lieu d’entraînement ou tes réponses :</b> ${esc(miss.join(' ; '))}. Les séances concernées auront moins d’exercices.</p>`;
-    return h + '</div>';
+    const miss = missingTxt(pl), all = adaptations(pl);
+    let h = `<div class="card"><h2>${title || 'Ton programme'}</h2><ul class="qul">${bullets(pl).map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
+    h += all.filter(isAlert).map(t => `<p class="qmiss">${esc(t)}</p>`).join('');
+    if (miss.length) h += `<p class="qmiss">Manquants : ${esc(miss.join(' ; '))}.</p>`;
+    return h + det(`<ul class="qul">${all.filter(t => !isAlert(t)).map(t => `<li>${esc(t)}</li>`).join('')}</ul>`) + '</div>';
   }
   function cardioEnd(w) { const c = w.items.find(p => p.role === 'cardio'); return !c ? '' : c.slug === 'intervalles' ? ', puis des intervalles' : ', puis un cardio facile'; }
-  function workoutsHtml(pl) {
-    return pl.workouts.map(w => `<div class="card"><h2>${esc(w.name)}</h2>${w.items.map(p => { const e = pl.x.ex[p.slug]; return `<div class="qex"><b>${esc(e.name)}</b><span>${esc(prmTxt(e, w.prm[p.slug]))}</span></div>`; }).join('')}
-      <p class="m">${w.items.filter(p => p.role !== 'cardio').length} exercices de force${cardioEnd(w)}. Échauffement de 8 à 10 minutes avant, étirements de 3 à 5 minutes après.</p></div>`).join('');
+  // une séance : noms des exercices visibles, réglages dans « Détails »
+  function workoutCard(w, x, more) {
+    return `<div class="card"><h2>${esc(w.name)}${w.type ? ' : ' + TYPE_TXT[w.type] : ''}</h2><ul class="qnames">${w.items.map(p => `<li>${esc(x.ex[p.slug].name)}</li>`).join('')}</ul>`
+      + det(w.items.map(p => { const e = x.ex[p.slug]; return `<div class="qex"><b>${esc(e.name)}</b><span>${esc(prmTxt(e, w.prm[p.slug]))}</span></div>`; }).join('') + (more ? `<p class="m">${more(w)}</p>` : '')) + '</div>';
   }
-  function answersHtml(a, editable) {
-    return `<div class="card"><h2>Tes réponses</h2>${QS.map((q, i) => { const bad = editable && check(q, a); return `<div class="qrow"><div><span class="m">${esc(q.s)}</span><p${bad ? ' class="qerr"' : ''}>${esc(answerTxt(q, a))}</p></div>${editable ? `<button class="sm" onclick="PROFIL.edit(${i})" aria-label="Modifier : ${esc(q.s)}">Modifier</button>` : ''}</div>`; }).join('')}</div>`;
+  function workoutsHtml(pl) {
+    return pl.workouts.map(w => workoutCard(w, pl.x, w => `${w.items.filter(p => p.role !== 'cardio').length} exercices de force${cardioEnd(w)}. Échauffement de 8 à 10 minutes avant, étirements de 3 à 5 minutes après.`)).join('');
+  }
+  function answersHtml(a, editable) {   // repli fermé par défaut, ouvert s'il reste une réponse à compléter
+    const open = editable && QS.some(q => check(q, a));
+    return `<details class="card det"${open ? ' open' : ''}><summary>Tes réponses</summary>${QS.map((q, i) => { const bad = editable && check(q, a); return `<div class="qrow"><div><span class="m">${esc(q.s)}</span><p${bad ? ' class="qerr"' : ''}>${esc(answerTxt(q, a))}</p></div>${editable ? `<button class="sm" onclick="PROFIL.edit(${i})" aria-label="Modifier : ${esc(q.s)}">Modifier</button>` : ''}</div>`; }).join('')}</details>`;
   }
   function detailToggle(on) {
     return `<button class="sm w qtog" onclick="PROFIL.setDetail(${!on})" aria-pressed="${on}">${on ? 'Masquer le détail santé' : 'Afficher le détail santé'}</button>`;
   }
   function vResume() {
     const a = D.answers, ok = !QS.some(q => check(q, a)), x = ok ? context(a) : null;
-    let h = `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">${a.prenom ? esc(String(a.prenom).trim()) + ', voici ton résumé' : 'Voici ton résumé'}</h2><p class="m">Vérifie tes réponses : chacune se modifie avant de générer le programme.</p></div>`;
+    let h = `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">${a.prenom ? esc(String(a.prenom).trim()) + ', voici ton résumé' : 'Voici ton résumé'}</h2><p class="m">Vérifie, puis génère ton programme.</p></div>`;
     if (x && x.sante) h += SANTE_WARN;
     if (x && x.minor) h += MINOR_WARN;
     if (ok) { h += programPreview(plan(a, phaseFor(a))); h += detailToggle(a.detail === 'oui'); if (a.detail === 'oui') h += healthBlock(a); }
     h += WARN + answersHtml(a, true);
     h += ok ? `<button class="go" onclick="PROFIL.generate()">Générer mon programme</button>` : `<p class="qerr">Complète les réponses marquées avant de générer le programme.</p><button class="go" onclick="PROFIL.generate()">Compléter</button>`;
-    if (D.redo) h += `<button class="sm w" onclick="PROFIL.quit()">Quitter (tes réponses sont gardées)</button>`;
+    if (D.redo) h += `<button class="sm w" onclick="PROFIL.quit()">Quitter et garder mes réponses</button>`;
     return h;
   }
   function vConfirm() {
-    const pl = P.plan, WO = A().WO(), EX = A().EX(), dr = A().pendingDraft();
-    let h = `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">Avant de remplacer tes programmes</h2><p>Rien ne change tant que tu ne confirmes pas.</p>${A().SESS().length ? '<p class="m">Ton historique de séances reste intact : chaque séance passée garde son nom.</p>' : ''}${dr ? '<p class="m">Ta séance en cours non enregistrée est conservée.</p>' : ''}</div>`;
-    h += `<div class="card"><h2>Programmes supprimés</h2>${WO.length ? WO.map(w => `<div class="qex"><b>${esc(w.name)}</b><span>${w.items.filter(i => EX[i]).length} exercices</span></div>`).join('') : '<p class="m">Aucun programme à supprimer.</p>'}</div>`;
-    h += `<div class="card"><h2>Nouveaux programmes</h2><p class="m">Séries, répétitions et repos de chaque séance. Ils valent dans ce programme seulement : tes exercices ne sont pas modifiés.</p></div>`;
-    h += pl.workouts.map(w => `<div class="card"><h2>${esc(w.name)}${w.type ? ' : ' + TYPE_TXT[w.type] : ''}</h2>${w.items.map(p => { const e = pl.x.ex[p.slug]; return `<div class="qex"><b>${esc(e.name)}</b><span>${esc(prmTxt(e, w.prm[p.slug]))}</span></div>`; }).join('')}</div>`).join('');
+    const pl = P.plan, WO = A().WO(), dr = A().pendingDraft();
+    let h = `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">Remplacer tes programmes ?</h2><p>Rien ne change tant que tu ne confirmes pas.</p>`
+      + `<p class="m">${WO.length ? 'Programmes supprimés : ' + esc(WO.map(w => w.name).join(', ')) + '.' : 'Aucun programme à supprimer.'}</p>`
+      + det(`${A().SESS().length ? '<p class="m">Ton historique de séances reste intact : chaque séance passée garde son nom.</p>' : ''}${dr ? '<p class="m">Ta séance en cours non enregistrée est conservée.</p>' : ''}`
+        + '<p class="m">Séries, répétitions et repos valent dans chaque nouveau programme seulement : tes exercices ne sont pas modifiés.</p>'
+        + '<p class="m">« Garder mes programmes » enregistre ton profil sans toucher à tes programmes ni à tes exercices. Tu pourras générer le programme plus tard depuis « Mon profil ».</p>') + '</div>';
+    h += pl.workouts.map(w => workoutCard(w, pl.x)).join('');
     const miss = missingTxt(pl);
-    if (miss.length) h += `<p class="qmiss"><b>Manquants :</b> ${esc(miss.join(' ; '))}.</p>`;
-    h += `<button class="go" onclick="PROFIL.apply()" ${P.busy ? 'disabled' : ''}>${P.busy ? 'Remplacement en cours…' : 'Remplacer mes programmes'}</button><button class="sm w" onclick="PROFIL.keep()" ${P.busy ? 'disabled' : ''}>Garder mes programmes</button><p class="m">« Garder mes programmes » enregistre ton profil sans toucher à tes programmes ni à tes exercices. Tu pourras générer le programme plus tard depuis « Mon profil ».</p><button class="sm w" onclick="PROFIL.cancel()" ${P.busy ? 'disabled' : ''}>Annuler</button>`;
+    if (miss.length) h += `<p class="qmiss">Manquants : ${esc(miss.join(' ; '))}.</p>`;
+    h += `<button class="go" onclick="PROFIL.apply()" ${P.busy ? 'disabled' : ''}>${P.busy ? 'Remplacement en cours…' : 'Remplacer mes programmes'}</button><button class="sm w" onclick="PROFIL.keep()" ${P.busy ? 'disabled' : ''}>Garder mes programmes</button><button class="sm w" onclick="PROFIL.cancel()" ${P.busy ? 'disabled' : ''}>Annuler</button>`;
     return h;
   }
   function currentPlan() { const o = profile(); return filled(o) ? plan(o.answers, phaseFor(o.answers)) : null; }
   function vDone() {
     const o = profile(), pl = currentPlan();
-    let h = `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">Ton programme est prêt</h2><p>${o && o.answers.prenom ? esc(o.answers.prenom) + ', tes' : 'Tes'} séances sont dans l’onglet Séance. L’accueil te propose la séance prévue, sur les jours que tu as choisis.</p></div>`;
+    let h = `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">Ton programme est prêt</h2><p>${o && o.answers.prenom ? esc(o.answers.prenom) + ', l’accueil' : 'L’accueil'} te propose chaque jour la bonne séance.</p></div>`;
     if (pl) h += programPreview(pl) + workoutsHtml(pl);
     return h + WARN + `<button class="go" onclick="PROFIL.home();go('accueil')">Aller à l’accueil</button>`;
   }
@@ -836,16 +861,16 @@
     if (!o) return vIntro();
     const a = o.answers, pl = currentPlan(), d = draft();
     if (o.imported) {   // sauvegarde importée sans profil : le questionnaire est proposé, jamais imposé
-      let h = `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">Mon profil</h2><p>Tes données viennent d’une sauvegarde importée le ${new Date(o.created).toLocaleDateString('fr-FR')}. Tes programmes sont gardés tels quels.</p>
-        <p class="m">Le questionnaire de départ n’a pas été rempli. Il te propose un programme adapté à tes réponses. Tes programmes ne changent qu’après ta confirmation.</p>`;
+      let h = `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">Mon profil</h2><p>Sauvegarde importée le ${new Date(o.created).toLocaleDateString('fr-FR')}, programmes gardés.</p>
+        <p class="m">Questionnaire non rempli. Rien ne change sans ta confirmation.</p>`;
       h += d && d.redo ? `<button class="go" onclick="PROFIL.redo()">Reprendre le questionnaire</button><button class="sm w" onclick="PROFIL.dropDraft()">Abandonner les réponses en cours</button>`
         : `<button class="go" onclick="PROFIL.redo()">Remplir le questionnaire</button>`;
       return h + '</div>' + WARN;
     }
     let h =`<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">${a.prenom ? esc(a.prenom) : 'Mon profil'}</h2><p class="m">Profil créé le ${new Date(o.created).toLocaleDateString('fr-FR')}${o.program ? ', programme généré le ' + new Date(o.program.generated).toLocaleDateString('fr-FR') : ''}.</p>`;
     h += d && d.redo ? `<button class="go" onclick="PROFIL.redo()">Reprendre le questionnaire</button><button class="sm w" onclick="PROFIL.dropDraft()">Abandonner les réponses en cours</button>`
-      : `<button class="go" onclick="PROFIL.redo()">Refaire le questionnaire</button><button class="sm w" onclick="PROFIL.regen()">Générer un programme à partir de ce profil</button><p class="m">Un nouveau programme ne remplace les tiens qu’après ta confirmation.</p>`;
-    if (!o.program) h += '<p class="m">Tu as gardé tes propres programmes : aucun programme n’a été généré.</p>';
+      : `<button class="go" onclick="PROFIL.redo()">Refaire le questionnaire</button><button class="sm w" onclick="PROFIL.regen()">Générer un programme à partir de ce profil</button>`;
+    if (!o.program) h += '<p class="m">Tu as gardé tes propres programmes.</p>';
     h += '</div>';
     h += progressHtml(o);
     if (pl) h += programPreview(pl, o.program ? 'Ton programme' : 'Programme proposé (non appliqué)');
@@ -864,7 +889,7 @@
     const p = managed(o), ph = p ? p.phase : START[o.answers.niveau] || 1, l = lightNow(o, todayIso());
     const txt = {1: 'Phase 1 : réadaptation. Reste à 2-3 reps de l\'échec, technique avant charge.', 2: 'Phase 2 : progression. Ajoute charge ou reps dès que toutes les séries sont réussies.',
       3: 'Phase 3 : hybride. Chaque séance a son rôle : force, volume et endurance, puissance et cardio.'}[ph];
-    return (l ? (l.kind === 'reprise' ? 'Reprise en douceur : environ 80 % de tes charges cette semaine. ' : 'Semaine allégée : charges environ 20 % plus basses. ') : '') + txt;
+    return (l ? (l.kind === 'reprise' ? 'Reprise en douceur : environ 80 % de tes charges cette semaine. ' : 'Semaine légère : charges environ 20 % plus basses. ') : '') + txt;
   }
 
   window.PROFIL = {

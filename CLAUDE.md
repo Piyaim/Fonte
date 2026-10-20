@@ -16,6 +16,14 @@ Ce fichier est la **référence** du projet pour Claude Code. Le lire en entier 
 - Il ne colle **jamais** de secrets (clé de signature, mots de passe, jetons). Ne jamais lui en demander, ne jamais afficher un fichier de config entier : filtrer à la source (`grep -v`, `sed`).
 - Réponses courtes : ce qui a été fait, le fichier ou la capture à regarder, la prochaine étape si elle est réelle. Pas de récit des étapes.
 
+### Écrire l'interface : moins de texte, plus direct (décision du 20/10/2026, lot 2C)
+- L'utilisateur doit comprendre chaque écran en 2 secondes. **Une idée par carte** : titre de 6 mots au plus, puis une seule phrase de 15 mots au plus.
+- Tout le reste (explications, exemples, détails de réglages) va dans un repli **« Détails »** fermé par défaut (`<details class="det">`, fonction `det()` de `profil.js`). Bouton du repli : 44 px de haut au moins.
+- Des chiffres plutôt que des phrases (« 3 × 10-12 · repos 90 s », « Conseil : 55 kg × 8 »). Pas de parenthèses explicatives. Pas de répétition d'une info déjà visible sur l'écran. Pas de jargon visible (« 1RM » seulement dans « Détails » ou Progrès).
+- Mots fixés : « Semaine légère » (et non plus « semaine allégée »), « Conseil : … » (une seule ligne de conseil par exercice), « Dernière : … », « Détails ».
+- **Toujours visibles, jamais dans un repli** : l'avertissement médical et « Arrête l'exercice en cas de douleur vive, de vertige ou de gêne à la poitrine » (au moins sur le résumé), l'alerte « Consulte un médecin » (santé « Oui »), les messages de blessure (« aucun exercice de ce type ne convient… »), le bouton « Démarrer la séance » en tête de l'accueil.
+- Contrôlé par `tests/lot2c.py` (carte de proposition : 25 mots visibles au plus hors « Détails » et hors boutons ; une seule ligne de conseil par bloc d'exercice). Dans les tests, ouvrir les replis avant de chercher un texte qui doit exister (`OUVRIR`), et surtout avant de vérifier qu'un mot interdit (« IMC », « manquée ») est absent.
+
 ### Méthode de vérification (non négociable)
 - Une chose « configurée » n'est pas une chose qui fonctionne : exiger une vérification réelle avant de conclure.
 - Un test doit contenir un élément qui **diffère selon l'hypothèse**, sinon il ne prouve rien.
@@ -87,6 +95,7 @@ Fichiers dans `tests/`, à lancer avec `python3 tests/nom.py` (Playwright et Fla
 - `migration.py` : sort le code du commit 805eba3 de Git, lui fait créer de vraies données (SQLite, IndexedDB, photos, profil, jeu), puis vérifie que le code actuel les rouvre sans perte. À garder tant que l'historique Git contient ce commit.
 - `reglages_seance.py` : même exercice réglé différemment dans deux programmes (écrans Programmes et Séance, conseil de charge, minuteur, retour aux valeurs de l'exercice), modes local et serveur.
 - `import_profil.py` : un import réussi fait sauter le questionnaire (depuis « Bienvenue » et depuis Données, modes local et serveur) ; import en échec ou annulé : rien ne change.
+- `lot2c.py` : règles d'écriture (cartes courtes, un seul conseil par exercice, replis fermés et de 44 px, avertissements toujours visibles).
 - `lot2b.py` : dates simulées (horloge de Playwright, `page.clock.set_fixed_time`) : phases, « Plus tard », semaine allégée, reprise, mot « manquée », placement (624 choix de jours), conseil combiné, IMC ≥ 30, bouton « Démarrer la séance » en tête, boutons de 44 px. `migration_lot2b.py` : données créées par le code de 64e77a8 (programme généré par l'interface) rouvertes par le code actuel, et nouvel export importé dans l'ancien code.
 - Témoins par mutation : script de session `temoins.py` (une règle faussée à la fois dans le code, test relancé, fichier remis à l'identique, empreinte vérifiée). Piège : dans un test Playwright synchrone, `time.sleep` bloque les boîtes `alert` ; attendre avec `pg.wait_for_timeout`.
 - **Polices sur Bazzite** : le Chromium de Playwright ne lit pas la configuration de polices du système (aucun texte rendu, `inner_text` vide, tests en échec). Toujours lancer les tests ainsi, depuis `/home/PM/Fonte` :

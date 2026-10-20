@@ -16,6 +16,7 @@ fails = []
 def ok(c, m):
     print(("OK    " if c else "ÉCHEC "), m)
     if not c: fails.append(m)
+OUVRIR = "document.querySelectorAll('#app details').forEach(d => d.open = true)"   # lot 2C : explications et réglages sont dans des replis « Détails »
 
 NON = {k: False for k in ["poitrine", "vertiges", "coeur", "tension", "articulaire", "traitement", "autre"]}
 BASE = {"prenom": "Léa", "age": 40, "sexe": "f", "taille": 170, "poids": 66, "objectif": "athletique", "objectifs2": ["forme"],
@@ -186,7 +187,7 @@ try:
         pg.click("button:has-text(\"Masquer le détail santé\")"); time.sleep(.2)
         # confirmation : Annuler ne change rien
         avant = ev("fetch('/api/state').then(r => r.json())"); cata0 = ev(CATA)
-        pg.click("button:has-text(\"Générer mon programme\")"); time.sleep(.3); tx = pg.inner_text("#app")
+        pg.click("button:has-text(\"Générer mon programme\")"); time.sleep(.3); pg.evaluate(OUVRIR); tx = pg.inner_text("#app")
         ok("Programmes supprimés" in tx and "Séance A" in tx and "Haut du corps" in tx and "Développé incliné haltères\n4 × 4 à 6 · repos 2 min 30" in tx, "confirmation : programmes supprimés, nouveaux programmes et réglages de chaque séance")
         ok("Exercices modifiés" not in tx and "valent partout" not in tx and "→" not in tx, "confirmation : plus de section « Exercices modifiés » ni d'avertissement « ces réglages valent partout »")
         ok("séance en cours non enregistrée est conservée" in tx, "confirmation : le brouillon de séance est annoncé conservé")
@@ -215,7 +216,7 @@ try:
         pg.evaluate("go('seance')"); time.sleep(.3)
         ok(pg.input_value("#f-notes") == "brouillon témoin", "onglet Séance : le brouillon s'affiche avec ses valeurs")
         pg.evaluate("go('seance')"); pg.evaluate(f"pickWorkout({hc['id']})"); time.sleep(.3)
-        crd = pg.locator(".card", has_text="Développé incliné haltères").first.inner_text()
+        pg.evaluate(OUVRIR); crd = pg.locator(".card", has_text="Développé incliné haltères").first.inner_text()
         ok("4 × 4-6" in crd and "propre à ce programme" in crd and "150 s" in crd, f"écran Séance : le développé incliné affiche le réglage de la séance ({crd[:60]!r})")
         pg.evaluate("go('accueil')"); time.sleep(.2)
         # Mon profil, Refaire le questionnaire, Quitter
@@ -263,7 +264,7 @@ try:
         pg3.evaluate("a => localStorage.setItem('muscu-profil-brouillon', JSON.stringify({version: 1, answers: a, mode: 'resume', i: 16, redo: false}))", prof(poids=92.5, detail="non"))
         pg3.reload(); pg3.wait_for_selector("button:has-text('Générer mon programme')")
         def cache(nom):
-            t = pg3.inner_text("#app"); vus = [m for m in CACHE if m in t]
+            pg3.evaluate(OUVRIR); t = pg3.inner_text("#app"); vus = [m for m in CACHE if m in t]
             ok(not vus, f"IMC caché, écran {nom} : aucun de {CACHE} ({vus})"); return t
         t = cache("résumé"); ok("Cardio à faible impact, sans sauts" in t, "IMC caché : l'adaptation est écrite sans sa raison")
         pg3.click("button:has-text('Générer mon programme')"); time.sleep(.3); cache("confirmation")
@@ -278,7 +279,7 @@ try:
         avant = pg4.evaluate("fetch('/api/state').then(r => r.json())")
         pg4.evaluate("a => localStorage.setItem('muscu-profil-brouillon', JSON.stringify({version: 1, answers: a, mode: 'resume', i: 16, redo: false}))", prof(objectif="force", niveau="intermediaire"))
         pg4.reload(); pg4.wait_for_selector("button:has-text('Générer mon programme')"); pg4.click("button:has-text('Générer mon programme')"); time.sleep(.3)
-        ok("4 × 4 à 6" in pg4.inner_text("#app"), "(la confirmation annonce des réglages différents du catalogue)")
+        pg4.evaluate(OUVRIR); ok("4 × 4 à 6" in pg4.inner_text("#app"), "(la confirmation annonce des réglages différents du catalogue)")
         pg4.click("button:has-text('Garder mes programmes')"); time.sleep(.5)
         apres = pg4.evaluate("fetch('/api/state').then(r => r.json())")
         pr = pg4.evaluate("JSON.parse(localStorage.getItem('muscu-profil'))")
