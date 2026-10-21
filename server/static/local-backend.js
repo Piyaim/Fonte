@@ -12,19 +12,9 @@
   const PHURL = {};
   window.photoUrl = (id, kind) => LOCAL ? (PHURL[id + ':' + kind] || '') : '/photos/' + id + '/' + kind;
 
-  /* ------------------------------------------------------------------ icône (dessinée, pour le logo dans l'appli) */
-  const ICON_BG = {orange: '#ff7a1a', blue: '#4dabf7', green: '#51cf66', violet: '#9775fa', red: '#ff6b6b', mono: '#ffffff'};
-  window.FONTE_ICON = (key, size) => {
-    const c = document.createElement('canvas'); c.width = c.height = size;
-    const g = c.getContext('2d'), u = size * 0.9 / 100, m = size / 2;
-    g.fillStyle = ICON_BG[key] || ICON_BG.orange; g.fillRect(0, 0, size, size); g.fillStyle = '#0e161c';
-    const rr = (x0, y0, x1, y1, r) => { g.beginPath(); g.roundRect(m + x0 * u, m + y0 * u, (x1 - x0) * u, (y1 - y0) * u, r * u); g.fill(); };
-    rr(-30, -5, 30, 5, 3);
-    for (const s of [-1, 1]) for (const [a, b, h, r] of [[24, 34, 20, 4], [34, 42, 13, 4], [42, 50, 5, 3]]) {
-      const lo = Math.min(s * a, s * b), hi = Math.max(s * a, s * b); rr(lo, -h, hi, h, r);
-    }
-    return c.toDataURL('image/png');
-  };
+  /* ------------------------------------------------------------------ logo (menu, onglet) : un SVG par couleur, généré par tools/logo.py */
+  const LOGOS = ['orange', 'blue', 'green', 'violet', 'red', 'mono'];
+  window.FONTE_ICON = (key) => '/static/icons/logo-' + (LOGOS.includes(key) ? key : 'orange') + '.svg';
 
   /* ------------------------------------------------------------------ export (lien « Télécharger ») */
   function download(name, mime, text) {

@@ -1,10 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="window_bg">#eef1f4</color>
-    <color name="ic_bg">#ff7a1a</color>
-    <color name="ic_bg_blue">#4dabf7</color>
-    <color name="ic_bg_green">#51cf66</color>
-    <color name="ic_bg_violet">#9775fa</color>
-    <color name="ic_bg_red">#ff6b6b</color>
-    <color name="ic_bg_mono">#ffffff</color>
 </resources>

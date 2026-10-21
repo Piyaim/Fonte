@@ -1,6 +1,6 @@
 // Fonte : coquille de l'appli en cache, données toujours prises sur le serveur en priorité.
-const V = 'fonte-v1';
-const SHELL = ['/', '/manifest.webmanifest', '/static/icons/icon-192.png', '/static/icons/icon-512.png'];
+const V = 'fonte-v2';
+const SHELL = ['/', '/manifest.webmanifest', '/static/icons/icon-192.webp', '/static/icons/icon-512.webp'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim()));

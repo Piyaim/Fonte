@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Logo : silhouette pour l'icône à thème (Android 13+). Fichier généré par tools/logo.py : ne pas modifier à la main. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <group android:pivotX="54" android:pivotY="54" android:rotation="-24" android:scaleX="0.94" android:scaleY="0.94">
+        <path android:fillColor="#ffffff" android:pathData="M22.50,50.40H26.50A1.54,3.6 0 0 1 26.50,57.60H22.50A1.54,3.6 0 0 1 22.50,50.40Z"/>
+        <path android:fillColor="#ffffff" android:pathData="M24.96,54.00A1.54,3.6 0 1 1 28.04,54.00A1.54,3.6 0 1 1 24.96,54.00Z"/>
+        <path android:fillColor="#ffffff" android:pathData="M26.50,44.50H31.50A2.8,9.5 0 0 1 31.50,63.50H26.50A2.8,9.5 0 0 1 26.50,44.50Z"/>
+        <path android:fillColor="#ffffff" android:pathData="M28.70,54.00A2.8,9.5 0 1 1 34.30,54.00A2.8,9.5 0 1 1 28.70,54.00Z"/>
+        <path android:fillColor="#ffffff" android:pathData="M31.50,40.00H38.00A2.8,14 0 0 1 38.00,68.00H31.50A2.8,14 0 0 1 31.50,40.00Z"/>
+        <path android:fillColor="#ffffff" android:pathData="M35.20,54.00A2.8,14 0 1 1 40.80,54.00A2.8,14 0 1 1 35.20,54.00Z"/>
+        <path android:fillColor="#ffffff" android:pathData="M38.00,51.40H70.00A1.0,2.6 0 0 1 70.00,56.60H38.00A1.0,2.6 0 0 1 38.00,51.40Z"/>
+        <path android:fillColor="#ffffff" android:pathData="M69.00,54.00A1.0,2.6 0 1 1 71.00,54.00A1.0,2.6 0 1 1 69.00,54.00Z"/>
+        <path android:fillColor="#ffffff" android:pathData="M70.00,40.00H76.50A2.8,14 0 0 1 76.50,68.00H70.00A2.8,14 0 0 1 70.00,40.00Z"/>
+        <path android:fillColor="#ffffff" android:pathData="M73.70,54.00A2.8,14 0 1 1 79.30,54.00A2.8,14 0 1 1 73.70,54.00Z"/>
+        <path android:fillColor="#ffffff" android:pathData="M76.50,44.50H81.50A2.8,9.5 0 0 1 81.50,63.50H76.50A2.8,9.5 0 0 1 76.50,44.50Z"/>
+        <path android:fillColor="#ffffff" android:pathData="M78.70,54.00A2.8,9.5 0 1 1 84.30,54.00A2.8,9.5 0 1 1 78.70,54.00Z"/>
+        <path android:fillColor="#ffffff" android:pathData="M81.50,50.40H85.50A1.54,3.6 0 0 1 85.50,57.60H81.50A1.54,3.6 0 0 1 81.50,50.40Z"/>
+        <path android:fillColor="#ffffff" android:pathData="M83.96,54.00A1.54,3.6 0 1 1 87.04,54.00A1.54,3.6 0 1 1 83.96,54.00Z"/>
+    </group>
+</vector>

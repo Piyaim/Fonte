@@ -5,6 +5,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py seed.py ./
 COPY static ./static
+COPY icons ./icons
 RUN useradd -u 10001 -r app && mkdir -p /data && chown app /data
 USER app
 VOLUME /data

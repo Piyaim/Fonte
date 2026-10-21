@@ -49,7 +49,8 @@ with sync_playwright() as p:
     ok(pg2.evaluate("document.querySelectorAll('.phgrid img').length") == 1, "la photo importée survit au rechargement")
     # couleurs
     pg2.click("#menu-btn"); time.sleep(.3); txt = pg2.inner_text("#drawer"); ok("icône sur l’écran d’accueil du téléphone reste orange" in txt, "mention honnête sur l'icône dans le menu")
-    pg2.click('.sw[aria-label="Vert"]'); time.sleep(.2); lg = pg2.evaluate("document.getElementById('lg').src"); ok(lg.startswith("data:image/png"), "logo du menu dessiné en local")
+    pg2.click('.sw[aria-label="Vert"]'); time.sleep(.2); lg = pg2.evaluate("document.getElementById('lg').src"); time.sleep(.3)
+    ok(lg.endswith("/static/icons/logo-green.svg") and pg2.evaluate("document.getElementById('lg').naturalWidth") > 0, f"logo du menu à la couleur choisie, affiché ({lg[-30:]})")
     ok(not errs, f"erreurs JavaScript : {errs}")
     ext = [u for u in reqs if not u.startswith(f"http://127.0.0.1:{PORT}") and not u.startswith("blob:") and not u.startswith("data:")]
     ok(not ext, f"aucune requête vers l'extérieur : {ext}")

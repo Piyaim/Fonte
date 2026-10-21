@@ -609,9 +609,7 @@ def photo_delete(pid):
 
 
 # --- application installable (PWA) : manifeste et icônes à la couleur choisie (patch F)
-import struct
-import zlib
-
+# Les icônes sont dessinées par tools/logo.py (dossier server/icons, hors de l'APK).
 from flask import Response, abort
 
 ICON_ACC = {
@@ -619,49 +617,9 @@ ICON_ACC = {
     "green": ((81, 207, 102), "#2b8a3e"), "violet": ((151, 117, 250), "#7048e8"),
     "red": ((255, 107, 107), "#e03131"), "mono": ((255, 255, 255), "#111111"),
 }
-_ICON_CACHE = {}
-
-
-def _icon_png(size, bg):
-    """Haltère sombre sur fond de couleur, dessiné sans bibliothèque (rectangles arrondis, lissage 2x2)."""
-    if (size, bg) in _ICON_CACHE:
-        return _ICON_CACHE[(size, bg)]
-    fg = (14, 22, 28)
-    S = size * 2
-    u = S * (0.78 if size == 512 else 0.9) / 100
-    c = S / 2
-    m = [bytearray(S) for _ in range(S)]
-
-    def rr(x0, y0, x1, y1, r):
-        X0, X1, Y0, Y1, R = round(c + x0 * u), round(c + x1 * u), round(c + y0 * u), round(c + y1 * u), max(1, round(r * u))
-        for y in range(Y0, Y1):
-            k = min(y - Y0, Y1 - 1 - y)
-            ins = 0 if k >= R else round(R - (R * R - (R - k - 0.5) ** 2) ** 0.5)
-            if X1 - ins > X0 + ins:
-                m[y][X0 + ins:X1 - ins] = b"\xff" * (X1 - X0 - 2 * ins)
-
-    rr(-30, -5, 30, 5, 3)
-    for s in (-1, 1):
-        for a, b, h, r in ((24, 34, 20, 4), (34, 42, 13, 4), (42, 50, 5, 3)):
-            a, b = sorted((s * a, s * b))
-            rr(a, -h, b, h, r)
-    luts = [bytes(round(bg[i] + (fg[i] - bg[i]) * v / 1020) for v in range(1021)) for i in range(3)]
-    raw = bytearray()
-    for y in range(size):
-        a, b = m[2 * y], m[2 * y + 1]
-        sm = [p + q + r + t for p, q, r, t in zip(a[0::2], a[1::2], b[0::2], b[1::2])]
-        row = bytearray(size * 3)
-        for i in range(3):
-            row[i::3] = bytes(luts[i][v] for v in sm)
-        raw += b"\x00" + row
-
-    def chunk(t, d):
-        return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xFFFFFFFF)
-
-    png = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 2, 0, 0, 0)) \
-        + chunk(b"IDAT", zlib.compress(bytes(raw), 9)) + chunk(b"IEND", b"")
-    _ICON_CACHE[(size, bg)] = png
-    return png
+ICON_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
+ICON_FILES = {"180.png": "image/png", "192.webp": "image/webp", "512.webp": "image/webp"}
+ICON_OLD = {"192.png": "192.webp", "512.png": "512.webp"}   # adresses d'avant la 0.5.2 (PWA déjà installées)
 
 
 def _acc():
@@ -669,11 +627,13 @@ def _acc():
     return k if k in ICON_ACC else "orange"
 
 
-@app.get("/icon/<int:size>.png")
-def pwa_icon(size):
-    if size not in (180, 192, 512):
+@app.get("/icon/<name>")
+def pwa_icon(name):
+    name = ICON_OLD.get(name, name)
+    if name not in ICON_FILES:
         abort(404)
-    r = Response(_icon_png(size, ICON_ACC[_acc()][0]), mimetype="image/png")
+    size, ext = name.split(".")
+    r = send_from_directory(ICON_DIR, f"icon-{_acc()}-{size}.{ext}", mimetype=ICON_FILES[name])
     r.headers["Cache-Control"] = "public, max-age=86400"
     return r
 
@@ -686,8 +646,8 @@ def pwa_manifest():
     if k != "orange":
         mf["theme_color"] = ICON_ACC[k][1]
         mf["icons"] = [
-            {"src": f"/icon/192.png?c={k}", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-            {"src": f"/icon/512.png?c={k}", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
+            {"src": f"/icon/192.webp?c={k}", "sizes": "192x192", "type": "image/webp", "purpose": "any"},
+            {"src": f"/icon/512.webp?c={k}", "sizes": "512x512", "type": "image/webp", "purpose": "any maskable"},
         ]
     r = Response(json.dumps(mf, ensure_ascii=False), mimetype="application/manifest+json")
     r.headers["Cache-Control"] = "no-cache"

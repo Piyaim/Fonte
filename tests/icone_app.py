@@ -27,13 +27,18 @@ for k in cles:
     manque = [n for n, c in [
         ("MainActivity.ICONS", f'"{k}"' in java),
         ("alias du manifeste", f'android:name=".Icon{k.capitalize()}"' in man and f"@mipmap/ic_launcher{suf}\"" in man),
-        ("couleur de fond", f'name="ic_bg{suf}"' in coul),
+        ("fond dessiné", os.path.isfile(os.path.join(RES, "drawable", f"ic_bg_{k}.xml")) and f"@drawable/ic_bg_{k}" in lire("android", "app", "src", "main", "res", "mipmap-anydpi-v26", f"ic_launcher{suf}.xml")),
         ("icône adaptative", os.path.isfile(os.path.join(RES, "mipmap-anydpi-v26", f"ic_launcher{suf}.xml"))),
-        ("icônes PNG (5 tailles)", all(os.path.isfile(os.path.join(RES, f"mipmap-{d}", f"ic_launcher{suf}.png")) for d in ("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"))),
-        ("logo local (local-backend.js)", re.search(rf"\b{k}: '#", lb) is not None),
+        ("icônes WebP (5 tailles)", all(os.path.isfile(os.path.join(RES, f"mipmap-{d}", f"ic_launcher{suf}.webp")) for d in ("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"))),
+        ("logo du menu (SVG)", os.path.isfile(os.path.join(STATIC, "icons", f"logo-{k}.svg")) and f"'{k}'" in lb),
         ("icône PWA (app.py)", f'"{k}": ((' in srv),
+        ("icônes PWA (server/icons)", all(os.path.isfile(os.path.join(ROOT, "server", "icons", f"icon-{k}-{n}")) for n in ("180.png", "192.webp", "512.webp"))),
     ] if not c]
     ok(not manque, f"couleur {k} présente partout" + (f" ; manque : {manque}" if manque else ""))
+# Deux fichiers pour la même ressource (ic_launcher.png et ic_launcher.webp) font échouer la construction de l'APK.
+doublons = [f"{d}/{n}" for d in os.listdir(RES) if d.startswith("mipmap-") for n in os.listdir(os.path.join(RES, d))
+            if n.endswith(".png") and os.path.isfile(os.path.join(RES, d, n[:-4] + ".webp"))]
+ok(not doublons, f"aucune icône en double (png et webp) : {doublons}")
 
 with sync_playwright() as p:
     b = p.chromium.launch()

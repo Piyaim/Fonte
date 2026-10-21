@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#e8590c">
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" type="image/png" href="/static/icons/icon-192.png">
-<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+<link rel="icon" type="image/svg+xml" href="/static/icons/logo-orange.svg">
+<link rel="apple-touch-icon" href="/icon/180.png">
 <script src="/static/local-backend.js"></script>
 <script src="/static/figure.js"></script>
 <script src="/static/figure-data.js"></script>
@@ -19,7 +19,7 @@ var ACC = [['orange','Orange','#ff7a1a'],['blue','Bleu','#4dabf7'],['green','Ver
 var ACC_TC = {orange:'#e8590c', blue:'#1971c2', green:'#2b8a3e', violet:'#7048e8', red:'#e03131', mono:'#111111'};
 var ACCENT = 'orange';
 try { var _a = JSON.parse(localStorage.getItem('muscu-accent') || 'null'); if (ACC_TC[_a]) ACCENT = _a; } catch (e) {}
-function icoUrl(n) { if (window.FONTE_LOCAL) return window.FONTE_ICON(ACCENT, n); return ACCENT === 'orange' ? '/static/icons/icon-192.png' : '/icon/' + n + '.png?c=' + ACCENT; }
+function icoUrl(n) { if (window.FONTE_LOCAL || n !== 180) return window.FONTE_ICON(ACCENT); return '/icon/180.png?c=' + ACCENT; }   // logo SVG (menu, onglet) ; icône Apple en PNG (version serveur)
 function applyAccent() {
   var d = document.documentElement, q = function (s) { return document.querySelector(s); };
   d.dataset.accent = ACCENT;
