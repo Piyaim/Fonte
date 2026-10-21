@@ -101,6 +101,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
+        <!-- Noir et blanc : nouvelle entrée en 0.5.3. Des lanceurs gardaient en mémoire l'ancien dessin de .IconMono
+             même après la mise à jour ; une entrée jamais vue les oblige à lire le nouveau. -->
+        <activity-alias
+            android:name=".IconNoirBlanc"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_mono"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <!-- Ancienne entrée noir et blanc (avant 0.5.3) : gardée pour que l'icône ne disparaisse pas pendant la mise à jour.
+             Au premier lancement, MainActivity.migrateIcon la remplace par .IconNoirBlanc ; elle n'est plus jamais activée. -->
         <activity-alias
             android:name=".IconMono"
             android:enabled="false"

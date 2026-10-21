@@ -54,6 +54,21 @@ public class MainActivity extends Activity {
         configureWebView();
         setContentView(web, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         web.loadUrl(START_URL);
+        migrateIcon();
+    }
+
+    /** 0.5.3 : l'ancienne entrée noir et blanc (.IconMono) est remplacée par .IconNoirBlanc, que le lanceur n'a jamais vue. */
+    private void migrateIcon() {
+        PackageManager pm = getPackageManager();
+        try {
+            ComponentName old = new ComponentName(getPackageName(), LEGACY_MONO);
+            if (pm.getComponentEnabledSetting(old) != PackageManager.COMPONENT_ENABLED_STATE_ENABLED) return;
+            // la nouvelle d'abord, pour qu'il y ait toujours une icône dans le lanceur
+            pm.setComponentEnabledSetting(new ComponentName(getPackageName(), "app.fonte.IconNoirBlanc"), PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+            pm.setComponentEnabledSetting(old, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+        } catch (RuntimeException ignored) {
+            // système qui refuse : l'ancienne entrée reste, l'appli reste accessible
+        }
     }
 
     private void configureWebView() {
@@ -140,6 +155,7 @@ public class MainActivity extends Activity {
     }
 
     private static final String[] ICONS = {"orange", "blue", "green", "violet", "red", "mono"};
+    private static final String LEGACY_MONO = "app.fonte.IconMono";   // entrée noir et blanc d'avant la 0.5.3
 
     /** Appelé par la page (local-backend.js) pour enregistrer une sauvegarde : le système demande où la ranger. */
     private class Bridge {
@@ -243,6 +259,7 @@ public class MainActivity extends Activity {
                         for (String k : ICONS) {
                             if (!k.equals(key)) pm.setComponentEnabledSetting(alias(k), PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
                         }
+                        pm.setComponentEnabledSetting(new ComponentName(getPackageName(), LEGACY_MONO), PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
                     } catch (RuntimeException ignored) {
                         // lanceur ou système qui refuse : l'icône reste celle d'avant
                     }
@@ -251,7 +268,8 @@ public class MainActivity extends Activity {
         }
 
         private ComponentName alias(String key) {
-            return new ComponentName(MainActivity.this.getPackageName(), "app.fonte.Icon" + Character.toUpperCase(key.charAt(0)) + key.substring(1));
+            String nom = key.equals("mono") ? "NoirBlanc" : Character.toUpperCase(key.charAt(0)) + key.substring(1);
+            return new ComponentName(MainActivity.this.getPackageName(), "app.fonte.Icon" + nom);
         }
     }
 

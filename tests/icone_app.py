@@ -26,7 +26,7 @@ for k in cles:
     suf = "" if k == "orange" else "_" + k
     manque = [n for n, c in [
         ("MainActivity.ICONS", f'"{k}"' in java),
-        ("alias du manifeste", f'android:name=".Icon{k.capitalize()}"' in man and f"@mipmap/ic_launcher{suf}\"" in man),
+        ("alias du manifeste", re.search(rf'android:name="\.Icon{"NoirBlanc" if k == "mono" else k.capitalize()}"[^>]*android:icon="@mipmap/ic_launcher{suf}"', man, re.S) is not None),
         ("fond dessiné", os.path.isfile(os.path.join(RES, "drawable", f"ic_bg_{k}.xml")) and f"@drawable/ic_bg_{k}" in lire("android", "app", "src", "main", "res", "mipmap-anydpi-v26", f"ic_launcher{suf}.xml")),
         ("icône adaptative", os.path.isfile(os.path.join(RES, "mipmap-anydpi-v26", f"ic_launcher{suf}.xml"))),
         ("icônes WebP (5 tailles)", all(os.path.isfile(os.path.join(RES, f"mipmap-{d}", f"ic_launcher{suf}.webp")) for d in ("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"))),
@@ -35,6 +35,12 @@ for k in cles:
         ("icônes PWA (server/icons)", all(os.path.isfile(os.path.join(ROOT, "server", "icons", f"icon-{k}-{n}")) for n in ("180.png", "192.webp", "512.webp"))),
     ] if not c]
     ok(not manque, f"couleur {k} présente partout" + (f" ; manque : {manque}" if manque else ""))
+# 0.5.3 : le noir et blanc a une nouvelle entrée de lanceur (.IconNoirBlanc) ; l'ancienne (.IconMono) reste déclarée
+# pour que l'icône ne disparaisse pas à la mise à jour, et la coque la désactive (au lancement et à chaque choix de couleur).
+mact = lire("android", "app", "src", "main", "java", "app", "fonte", "MainActivity.java")
+ok('android:name=".IconMono"' in man, "ancienne entrée noir et blanc toujours déclarée (pas d'icône perdue à la mise à jour)")
+ok('"NoirBlanc"' in mact and 'LEGACY_MONO = "app.fonte.IconMono"' in mact, "la coque utilise la nouvelle entrée pour le noir et blanc")
+ok(mact.count("LEGACY_MONO), PackageManager.COMPONENT_ENABLED_STATE_DISABLED") >= 1 and "migrateIcon();" in mact, "l'ancienne entrée est désactivée (choix de couleur et premier lancement)")
 # Deux fichiers pour la même ressource (ic_launcher.png et ic_launcher.webp) font échouer la construction de l'APK.
 doublons = [f"{d}/{n}" for d in os.listdir(RES) if d.startswith("mipmap-") for n in os.listdir(os.path.join(RES, d))
             if n.endswith(".png") and os.path.isfile(os.path.join(RES, d, n[:-4] + ".webp"))]
