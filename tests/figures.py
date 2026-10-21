@@ -56,10 +56,32 @@ POSTURE = """() => {
   ['developpe-couche', 'barre-front'].forEach(s => { const b = FIGDATA[s].scene.find(o => o.t === 'bench'), h = frames(s)[0].g.head; rule(h[0] >= b.x + 3, s + ' : tête à x=' + h[0].toFixed(1) + ', banc dès x=' + b.x + ' (tête posée sur le banc attendue)'); });
   rule(maxOf('preacher', elbow) <= 170, 'preacher : bras à ' + maxOf('preacher', elbow).toFixed(0) + '° en bas (170 au plus, sans verrouiller)');
   rule(minOf('pl', knee) >= 165, 'pl : genoux à ' + minOf('pl', knee).toFixed(0) + '° (165 au moins, corps aligné)');
-  ['de', 'developpe-militaire'].forEach(s => { const m = maxOf(s, elbow); rule(m >= 140, s + ' : coude à ' + m.toFixed(0) + '° en haut (140 au moins, bras presque tendus)'); });
-  // face pull : en fin de tirage, coude à hauteur d'épaule et sous les mains (avant-bras qui remonte vers le visage)
-  const fp = frames('face-pull').reduce((a, b) => (b.g.armN.end[0] < a.g.armN.end[0] ? b : a)), fe = fp.g.armN.mid, fh = fp.g.armN.end;
-  rule(fe[1] >= fh[1] + 6 && Math.abs(fe[1] - fp.g.S[1]) <= 5, 'face-pull : coude à y=' + fe[1].toFixed(1) + ', mains à y=' + fh[1].toFixed(1) + ', épaule à y=' + fp.g.S[1].toFixed(1) + " (coude sous les mains, à hauteur d'épaule)");
+  // Remarques de Georgio (20/10/2026) : coudes vers l'extérieur, avant-bras verticaux, charge qui monte et descend à la verticale.
+  const L2 = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]), l1 = B.upper * B.sc;
+  // avant-bras d'orientation fixe (fore) : le bras dessiné en raccourci ne peut pas dépasser sa vraie longueur
+  Object.keys(FIGDATA).forEach(slug => { if (FIGDATA[slug].view) return; frames(slug).forEach(r => { if (!r.p.arm || r.p.arm.fore == null) return;
+    const u = L2(r.g.armN.root, r.g.armN.mid); if (u > l1 + 0.3 || u < 1) rule(false, slug + ' t=' + r.t.toFixed(2) + ' : bras dessiné sur ' + u.toFixed(1) + ' (entre 1 et ' + l1.toFixed(1) + ' attendu)'); }); });
+  ['developpe-couche', 'di'].forEach(s => { const fr = frames(s), xs = fr.map(r => r.g.armN.end[0]), lo = fr.reduce((a, b) => (b.g.armN.end[1] > a.g.armN.end[1] ? b : a));
+    rule(Math.max(...xs) - Math.min(...xs) <= 1, s + ' : la charge se déplace de ' + (Math.max(...xs) - Math.min(...xs)).toFixed(1) + " à l'horizontale (1 au plus, trajet vertical)");
+    rule(Math.abs(lo.g.armN.mid[0] - lo.g.armN.end[0]) <= 0.5 && L2(lo.g.armN.root, lo.g.armN.mid) <= 9, s + ' : en bas, avant-bras vertical et coude écarté (bras en raccourci) attendus'); });
+  const dp = frames('dips-assistes'), dlo = dp.reduce((a, b) => (b.g.S[1] > a.g.S[1] ? b : a)), du = L2(dlo.g.armN.root, dlo.g.armN.mid);
+  rule(dlo.p.tor >= 25, 'dips-assistes : buste penché de ' + dlo.p.tor.toFixed(0) + '° en bas (25 au moins)');
+  rule(du >= 7 && du <= 11 && Math.abs(dlo.g.armN.mid[0] - dlo.g.armN.end[0]) <= 0.5, 'dips-assistes : bras dessiné sur ' + du.toFixed(1) + ' en bas (7 à 11 : coude écarté à environ 45°, avant-bras vertical)');
+  const po = frames('pull-over').reduce((a, b) => (b.g.armN.end[1] > a.g.armN.end[1] ? b : a));
+  rule(po.g.armN.end[0] - po.p.hip[0] <= 15, 'pull-over : mains à ' + (po.g.armN.end[0] - po.p.hip[0]).toFixed(1) + ' devant le bassin en fin de tirage (15 au plus)');
+  // vues de face et de dos : coudes à l'extérieur des épaules, avant-bras verticaux
+  const front = slug => { const s = FIGDATA[slug]; FIG.prepare(s); const Bf = Object.assign({}, FIG.FB.m, { sc: B.sc, torso: 24, upper: B.upper, fore: B.fore, thigh: B.thigh, shank: B.shank }), out = [];
+    for (let i = 0; i <= 40; i++) { const t = s._T * i / 40, p = FIG.poseAt(s, t); out.push({t, p, g: FIG.solveFront(p, Bf, 1)}); } return out; };
+  ['de', 'developpe-militaire'].forEach(s => {
+    if (FIGDATA[s].view !== 'front') return rule(false, s + ' : vue de face attendue (coudes écartés sur les côtés)');
+    const fr = front(s), lo = fr[0], hi = fr.reduce((a, b) => (b.g.armR.end[1] < a.g.armR.end[1] ? b : a)), A = lo.g.armR;
+    rule(A.mid[0] - A.root[0] >= 10 && A.mid[1] >= A.root[1] - 1, s + ' : en bas, coude à ' + (A.mid[0] - A.root[0]).toFixed(1) + " à l'extérieur de l'épaule et pas au-dessus (10 au moins)");
+    rule(fr.every(r => Math.abs(r.g.armR.mid[0] - r.g.armR.end[0]) <= 0.5), s + ' : avant-bras vertical sur tout le mouvement');
+    const e = ang(hi.g.armR.root, hi.g.armR.mid, hi.g.armR.end); rule(e >= 140, s + ' : coude à ' + e.toFixed(0) + '° en haut (140 au moins, bras presque tendus)'); });
+  if (FIGDATA['face-pull'].view !== 'back') rule(false, "face-pull : vue de dos attendue (coudes qui s'ouvrent sur les côtés)");
+  else { const fr = front('face-pull'), end = fr.reduce((a, b) => (b.g.armR.mid[0] > a.g.armR.mid[0] ? b : a)), A = end.g.armR;
+    rule(A.mid[0] - A.root[0] >= 10 && Math.abs(A.mid[1] - A.root[1]) <= 4 && A.mid[1] - A.end[1] >= 8, "face-pull : en fin de tirage, coude à hauteur d'épaule, sur le côté, mains au-dessus des coudes");
+    rule(fr.every(r => r.g.armR.mid[1] >= r.g.armR.root[1] - 4), 'face-pull : les coudes ne montent jamais au-dessus des épaules'); }
   return res;
 }"""
 with sync_playwright() as p:
@@ -67,6 +89,10 @@ with sync_playwright() as p:
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.set_content("<html><body></body></html>")
     pg.add_script_tag(path=os.path.join(STATIC, "figure.js")); pg.add_script_tag(path=os.path.join(STATIC, "figure-data.js"))
+    # secondes vues (bouton « Tourner ») : contrôlées comme des animations à part entière, sous le nom « slug~alt »
+    alts = pg.evaluate("""() => Object.keys(FIGDATA).filter(s => FIGDATA[s].alt).map(s => { FIGDATA[s + '~alt'] = FIGDATA[s].alt;
+      const v = x => x.view || 'side'; return [s, v(FIGDATA[s]), v(FIGDATA[s].alt)]; })""")
+    ok(len(alts) >= 4 and all(a[1] != a[2] for a in alts), f"{len(alts)} exercices à deux vues, chaque seconde vue montre un autre côté : {alts}")
     r = pg.evaluate(JS)
     ok(not errs, f"aucune erreur JavaScript : {errs}")
     ok(r["n"] > 0 and not r["bad"], f"{r['n']} images calculées, aucune valeur invalide {r['bad'][:3]}")

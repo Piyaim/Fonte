@@ -7,6 +7,8 @@
  *   dessus du pied posé sur un banc), ftRel: true force la mesure par rapport au tibia (talons au sol, jambes tendues).
  * Vue de face : tk < 1 raccourcit le tronc (buste penché vers le spectateur), hk < 1 abaisse la tête,
  *   k, k1, k2 < 1 raccourcissent un membre dirigé vers le spectateur.
+ * Bras de profil : fore (avec ik) fixe la direction de l'avant-bras (0 = vers le bas, 180 = vers le haut) ; le bras se dessine
+ *   en raccourci, ce qui montre un coude écarté vers l'extérieur (développés couché et incliné, dips).
  * Postures revues le 20/10/2026 (audit biomécanique) : tests/figures.py contrôle les points corrigés.
  */
 
@@ -40,9 +42,9 @@ window.FIGDATA = {
 'developpe-couche': {
     f: 1, vb: '46 22 90 72', thumb: 2.6,
     scene: [{ t: 'floor', sx: 90, rx: 30 }, { t: 'line', x1: 51, y1: 40, x2: 51, y2: 92 }, { t: 'line', x1: 51, y1: 40, x2: 55, y2: 40 }, { t: 'bench', x: 56, w: 64, y: 71, h: 5 }],
-    base: { hip: [100, 65], tor: -90, bend: 0, neck: 0, arm: { ik: 'bar', bend: -1 }, leg: { ik: [114, 88], bend: 1 }, ft: 0, bar: [79, 39.5], fx: 0 },
+    base: { hip: [100, 65], tor: -90, bend: 0, neck: 0, arm: { ik: 'bar', fore: 180 }, leg: { ik: [114, 88], bend: 1 }, ft: 0, bar: [81, 40.8], fx: 0 },
     props: [{ t: 'plate', at: 'bar', r: 8.5 }], muscles: ['pectoraux', 'triceps', 'epaules'],
-    keys: [{ t: 0, p: {} }, { t: 1.7, p: { bar: [85, 57], fx: 0.2 } }, { t: 2.0, p: { bar: [85, 57], fx: 0.2 } }, { t: 2.6, fx: 1 }, { t: 3.2, p: { bar: [79, 39.5], fx: 0.4 } }, { t: 3.7, p: { bar: [79, 39.5], fx: 0.1 } }]
+    keys: [{ t: 0, p: {} }, { t: 1.7, p: { bar: [81, 57], fx: 0.2 } }, { t: 2.0, p: { bar: [81, 57], fx: 0.2 } }, { t: 2.6, fx: 1 }, { t: 3.2, p: { bar: [81, 40.8], fx: 0.4 } }, { t: 3.7, p: { bar: [81, 40.8], fx: 0.1 } }]
   },
   'curl-halteres': {
     f: 1, vb: '40 4 80 92', thumb: 1.2,
@@ -154,9 +156,9 @@ window.FIGDATA = {
   'di': {
     f: 1, vb: '34 10 90 84', thumb: 2.4,
     scene: [{ t: 'floor', sx: 82, rx: 34 }, { t: 'line', x1: 87, y1: 75, x2: 60, y2: 59.4 }, { t: 'line', x1: 80, y1: 77, x2: 102, y2: 77 }, { t: 'line', x1: 90, y1: 77, x2: 90, y2: 92 }, { t: 'line', x1: 70, y1: 65, x2: 70, y2: 92 }],
-    base: { hip: [90, 70], tor: -60, neck: 18, arm: { ik: 'bar', bend: -1 }, leg: { ik: [108, 88], bend: 1 }, ft: 0, bar: [71, 34], fx: 0 },
+    base: { hip: [90, 70], tor: -60, neck: 18, arm: { ik: 'bar', fore: 180 }, leg: { ik: [108, 88], bend: 1 }, ft: 0, bar: [74, 33.7], fx: 0 },
     props: [{ t: 'plate', at: 'bar', r: 4.6 }], muscles: ['pectoraux', 'epaules', 'triceps'],
-    keys: [{ t: 0, p: {} }, { t: 1.7, p: { bar: [81, 53], fx: 0.2 } }, { t: 2.0, p: { bar: [81, 53], fx: 0.2 } }, { t: 2.6, fx: 1 }, { t: 3.2, p: { bar: [71, 34], fx: 0.4 } }, { t: 3.7, p: { bar: [71, 34], fx: 0.1 } }]
+    keys: [{ t: 0, p: {} }, { t: 1.7, p: { bar: [74, 52], fx: 0.2 } }, { t: 2.0, p: { bar: [74, 52], fx: 0.2 } }, { t: 2.6, fx: 1 }, { t: 3.2, p: { bar: [74, 33.7], fx: 0.4 } }, { t: 3.7, p: { bar: [74, 33.7], fx: 0.1 } }]
   },
   'chest-press': {
     f: 1, vb: '34 20 90 74', thumb: 2.2,
@@ -175,9 +177,9 @@ window.FIGDATA = {
   'dips-assistes': {
     f: 1, vb: '36 6 88 88', thumb: 2.4,
     scene: [{ t: 'floor', sx: 90, rx: 30 }, { t: 'line', x1: 78, y1: 57, x2: 104, y2: 57 }, { t: 'line', x1: 100, y1: 57, x2: 100, y2: 92 }],
-    base: { hip: [80, 56], tor: 8, neck: 0, arm: { ik: [84, 57], bend: -1 }, leg: { a: [20, 105] }, ft: 0, fx: 0 },
+    base: { hip: [80, 56], tor: 8, neck: 0, arm: { ik: [84, 57], fore: 0 }, leg: { a: [20, 105] }, ft: 0, fx: 0 },
     props: [{ t: 'pad', at: ['thigh', 1, 0], dx: 0, dy: 5, l: 16, h: 3.4 }], muscles: ['triceps', 'pectoraux', 'epaules'],
-    keys: [{ t: 0, p: {} }, { t: 1.6, p: { hip: [80, 62.4], tor: 16, neck: -6, fx: 0.3 } }, { t: 2.0, p: { hip: [80, 62.4], tor: 16, neck: -6, fx: 0.3 } }, { t: 2.6, fx: 1 }, { t: 3.5, p: { fx: 0.1 } }, { t: 4.0, p: {} }]
+    keys: [{ t: 0, p: {} }, { t: 1.6, p: { hip: [81, 66], tor: 30, neck: -16, leg: { a: [40, 115] }, fx: 0.3 } }, { t: 2.0, p: { hip: [81, 66], tor: 30, neck: -16, leg: { a: [40, 115] }, fx: 0.3 } }, { t: 2.6, fx: 1 }, { t: 3.5, p: { fx: 0.1 } }, { t: 4.0, p: {} }]
   },
   'tractions-assistees': {
     f: 1, vb: '34 0 92 94', thumb: 2.2,
@@ -212,7 +214,7 @@ window.FIGDATA = {
     scene: [{ t: 'floor', sx: 76, rx: 22 }, { t: 'line', x1: 122, y1: 6, x2: 122, y2: 92 }, { t: 'line', x1: 122, y1: 6, x2: 112, y2: 6 }, { t: 'circ', c: 'fpr', x: 112, y: 6, r: 2.4 }],
     base: { hip: [72, 51], tor: 25, neck: -14, arm: { a: [120, -8] }, leg: { ik: [78, 88], bend: 1 }, ft: 0, fx: 0 },
     props: [{ t: 'cable', from: [112, 6], to: 'hands' }, { t: 'handle' }], muscles: ['dos', 'abdos'],
-    keys: [{ t: 0, p: {} }, { t: 1.6, p: { arm: { a: [26, 0] }, tor: 25, fx: 0.5 } }, { t: 2.2, p: { arm: { a: [26, 0] }, tor: 25, fx: 1 } }, { t: 3.6, p: { fx: 0.1 } }, { t: 4.0, p: {} }]
+    keys: [{ t: 0, p: {} }, { t: 1.6, p: { arm: { a: [6, 0] }, tor: 25, fx: 0.5 } }, { t: 2.2, p: { arm: { a: [6, 0] }, tor: 25, fx: 1 } }, { t: 3.6, p: { fx: 0.1 } }, { t: 4.0, p: {} }]
   },
   'extensions-lombaires': {
     f: 1, vb: '30 4 104 90', thumb: 2.2,
@@ -222,25 +224,28 @@ window.FIGDATA = {
     keys: [{ t: 0, p: {} }, { t: 1.6, p: { tor: 48, neck: 0, fx: 1 } }, { t: 2.4, p: { tor: 48, fx: 1 } }, { t: 3.8, p: { tor: 130, neck: 6, fx: 0.1 } }, { t: 4.2, p: {} }]
   },
   'face-pull': {
-    f: 1, vb: '36 0 100 94', thumb: 1.8,
-    scene: [{ t: 'floor', sx: 78, rx: 22 }, { t: 'line', x1: 128, y1: 16, x2: 128, y2: 92 }, { t: 'circ', c: 'fpr', x: 124, y: 16, r: 2.4 }],
-    base: { hip: [80, 50.6], tor: -3, neck: 0, arm: { ik: 'bar', bend: -1 }, leg: { ik: [80, 88], bend: 1 }, ft: 0, bar: [102, 17], fx: 0 },
-    props: [{ t: 'cable', from: [124, 16], to: 'hands' }, { t: 'handle' }], muscles: ['epaules', 'trapezes', 'dos'],
-    keys: [{ t: 0, p: {} }, { t: 1.4, p: { bar: [91, 15], fx: 0.5 } }, { t: 2.0, p: { bar: [91, 15], fx: 1 } }, { t: 3.4, p: { fx: 0.1 } }, { t: 3.8, p: {} }]
+    view: 'back', vb: '36 0 88 96', thumb: 1.7,
+    // vu de dos, face à la poulie : la corde part vers l'avant ; les coudes s'ouvrent sur les côtés à hauteur d'épaule, avant-bras verticaux en fin de tirage
+    scene: [{ t: 'floor', sx: 80, rx: 18 }],
+    base: { hip: [80, 50], lean: 0, arm: { a: [120, 80], k1: 0.25, k2: 0.4 }, leg: { a: [4, 0] }, fx: 0 },
+    props: [{ t: 'cable', from: [80, 16], to: 'handL' }, { t: 'cable', from: [80, 16], to: 'handR' }, { t: 'handles' }], muscles: ['epaules', 'trapezes', 'dos'],
+    keys: [{ t: 0, p: {} }, { t: 1.4, p: { arm: { a: [94, 86], k1: 1, k2: 1 }, fx: 0.5 } }, { t: 2.0, p: { arm: { a: [94, 86], k1: 1, k2: 1 }, fx: 1 } }, { t: 3.4, p: { fx: 0.1 } }, { t: 3.8, p: {} }]
   },
   'de': {
-    f: 1, vb: '34 4 90 90', thumb: 1.8,
-    scene: [{ t: 'floor', sx: 74, rx: 30 }, { t: 'rect', x: 48, y: 74, w: 26, h: 4, r: 2 }, { t: 'line', x1: 50, y1: 76, x2: 46, y2: 44 }, { t: 'line', x1: 62, y1: 78, x2: 62, y2: 92 }, { t: 'line', x1: 46, y1: 20, x2: 46, y2: 92 }],
-    base: { hip: [56, 72], tor: -4, neck: 0, arm: { ik: 'bar', bend: -1 }, leg: { ik: [76, 88], bend: 1 }, ft: 0, bar: [63.9, 45.7], fx: 0 },
-    props: [{ t: 'handle' }], muscles: ['epaules', 'triceps', 'trapezes'],
-    keys: [{ t: 0, p: {} }, { t: 1.5, p: { bar: [55.5, 23.5], fx: 1 } }, { t: 1.9, p: { bar: [55.5, 23.5], fx: 1 } }, { t: 2.3, fx: 0.6 }, { t: 3.4, p: { bar: [63.9, 45.7], fx: 0.1 } }, { t: 3.8, p: {} }]
+    view: 'front', vb: '36 -2 88 98', thumb: 0,
+    // vu de face, assis : coudes écartés sur les côtés, avant-bras verticaux, mains à hauteur des oreilles en bas
+    scene: [{ t: 'floor', sx: 80, rx: 22 }, { t: 'rect', x: 68, y: 18, w: 24, h: 45, r: 3 }, { t: 'rect', x: 62, y: 62, w: 36, h: 4.5, r: 2 }, { t: 'line', x1: 80, y1: 66.5, x2: 80, y2: 92 }],
+    base: { hip: [80, 62], lean: 0, arm: { a: [80, 100] }, legL: { a: [10, -10], k1: 0.35 }, legR: { a: [10, -10], k1: 0.35 }, fx: 0 },
+    props: [{ t: 'handles' }], muscles: ['epaules', 'triceps', 'trapezes'],
+    keys: [{ t: 0, p: {} }, { t: 1.5, p: { arm: { a: [150, 30] }, fx: 1 } }, { t: 1.9, p: { arm: { a: [150, 30] }, fx: 1 } }, { t: 2.3, fx: 0.6 }, { t: 3.4, p: { arm: { a: [80, 100] }, fx: 0.1 } }, { t: 3.8, p: {} }]
   },
   'developpe-militaire': {
-    f: 1, vb: '34 4 90 90', thumb: 1.8,
-    scene: [{ t: 'floor', sx: 70, rx: 30 }, { t: 'rect', x: 48, y: 74, w: 26, h: 4, r: 2 }, { t: 'line', x1: 52, y1: 76, x2: 48, y2: 40 }, { t: 'line', x1: 62, y1: 78, x2: 62, y2: 92 }, { t: 'line', x1: 50, y1: 56, x2: 50, y2: 92 }],
-    base: { hip: [57, 72], tor: -4, neck: 0, arm: { ik: 'bar', bend: -1 }, leg: { ik: [77, 88], bend: 1 }, ft: 0, bar: [64.9, 45.7], fx: 0 },
-    props: [{ t: 'plate', at: 'bar', r: 4.6 }], muscles: ['epaules', 'triceps', 'trapezes'],
-    keys: [{ t: 0, p: {} }, { t: 1.5, p: { bar: [56.5, 23.5], fx: 1 } }, { t: 1.9, p: { bar: [56.5, 23.5], fx: 1 } }, { t: 2.3, fx: 0.6 }, { t: 3.4, p: { bar: [64.9, 45.7], fx: 0.1 } }, { t: 3.8, p: {} }]
+    view: 'front', vb: '36 -2 88 98', thumb: 0,
+    // vu de face, assis : coudes écartés sur les côtés, avant-bras verticaux, mains à hauteur des oreilles en bas
+    scene: [{ t: 'floor', sx: 80, rx: 22 }, { t: 'rect', x: 70, y: 30, w: 20, h: 33, r: 3 }, { t: 'rect', x: 62, y: 62, w: 36, h: 4.5, r: 2 }, { t: 'line', x1: 80, y1: 66.5, x2: 80, y2: 92 }],
+    base: { hip: [80, 62], lean: 0, arm: { a: [80, 100] }, legL: { a: [10, -10], k1: 0.35 }, legR: { a: [10, -10], k1: 0.35 }, fx: 0 },
+    props: [{ t: 'dbH' }], muscles: ['epaules', 'triceps', 'trapezes'],
+    keys: [{ t: 0, p: {} }, { t: 1.5, p: { arm: { a: [150, 30] }, fx: 1 } }, { t: 1.9, p: { arm: { a: [150, 30] }, fx: 1 } }, { t: 2.3, fx: 0.6 }, { t: 3.4, p: { arm: { a: [80, 100] }, fx: 0.1 } }, { t: 3.8, p: {} }]
   },
   'oiseau': {
     view: 'front', vb: '30 4 100 92', thumb: 1.5,
@@ -394,4 +399,35 @@ window.FIGDATA = {
     props: [{ t: 'pad', at: ['spine', -3, 0], a: 0, l: 13, h: 3.4 }, { t: 'cable', from: [118, 70], to: 'hands' }, { t: 'handle' }], muscles: ['quadriceps', 'dos', 'biceps'],
     keys: [{ t: 0, p: {} }, { t: 0.7, p: { hip: [64, 80], tor: 28, bar: [97, 66], fx: 1 } }, { t: 1.2, p: { hip: [60.5, 80], tor: -20, neck: 4, bar: [78, 63], fx: 1 } }, { t: 1.6, p: { hip: [60.5, 80], tor: -22, neck: 4, bar: [66, 62], fx: 0.8 } }, { t: 2.0, p: { hip: [60.5, 80], tor: -22, bar: [78, 63], fx: 0.4 } }, { t: 2.6, p: { hip: [66, 80], tor: 24, bar: [97, 66], fx: 0.3 } }, { t: 3.4, p: { hip: [84, 80], tor: 24, bar: [114, 68], fx: 0.5 } }]
   }
+};
+
+/* ---- secondes vues (bouton « Tourner » dans la fiche) : FIGDATA[slug].alt ---- */
+window.FIGDATA['de'].alt = {
+  f: 1, vb: '34 -4 90 100', thumb: 1.8,   // même format que la vue de face : la fiche ne saute pas
+  scene: [{ t: 'floor', sx: 74, rx: 30 }, { t: 'rect', x: 48, y: 74, w: 26, h: 4, r: 2 }, { t: 'line', x1: 50, y1: 76, x2: 46, y2: 44 }, { t: 'line', x1: 62, y1: 78, x2: 62, y2: 92 }, { t: 'line', x1: 46, y1: 20, x2: 46, y2: 92 }],
+  base: { hip: [56, 72], tor: -4, neck: 0, arm: { ik: 'bar', fore: 180 }, leg: { ik: [76, 88], bend: 1 }, ft: 0, bar: [57.8, 41.5], fx: 0 },
+  props: [{ t: 'handle' }], muscles: ['epaules', 'triceps', 'trapezes'],
+  keys: [{ t: 0, p: {} }, { t: 1.5, p: { bar: [57.8, 23.4], fx: 1 } }, { t: 1.9, p: { bar: [57.8, 23.4], fx: 1 } }, { t: 2.3, fx: 0.6 }, { t: 3.4, p: { bar: [57.8, 41.5], fx: 0.1 } }, { t: 3.8, p: {} }]
+};
+window.FIGDATA['developpe-militaire'].alt = {
+  f: 1, vb: '34 -4 90 100', thumb: 1.8,   // même format que la vue de face : la fiche ne saute pas
+  scene: [{ t: 'floor', sx: 70, rx: 30 }, { t: 'rect', x: 48, y: 74, w: 26, h: 4, r: 2 }, { t: 'line', x1: 52, y1: 76, x2: 48, y2: 40 }, { t: 'line', x1: 62, y1: 78, x2: 62, y2: 92 }, { t: 'line', x1: 50, y1: 56, x2: 50, y2: 92 }],
+  base: { hip: [57, 72], tor: -4, neck: 0, arm: { ik: 'bar', fore: 180 }, leg: { ik: [77, 88], bend: 1 }, ft: 0, bar: [58.8, 41.5], fx: 0 },
+  props: [{ t: 'plate', at: 'bar', r: 4.6 }], muscles: ['epaules', 'triceps', 'trapezes'],
+  keys: [{ t: 0, p: {} }, { t: 1.5, p: { bar: [58.8, 23.4], fx: 1 } }, { t: 1.9, p: { bar: [58.8, 23.4], fx: 1 } }, { t: 2.3, fx: 0.6 }, { t: 3.4, p: { bar: [58.8, 41.5], fx: 0.1 } }, { t: 3.8, p: {} }]
+};
+window.FIGDATA['face-pull'].alt = {
+  f: 1, vb: '38 0 92 100', thumb: 1.8,
+  scene: [{ t: 'floor', sx: 78, rx: 22 }, { t: 'line', x1: 128, y1: 16, x2: 128, y2: 92 }, { t: 'circ', c: 'fpr', x: 124, y: 16, r: 2.4 }],
+  base: { hip: [80, 50.6], tor: -3, neck: 0, arm: { ik: 'bar', fore: 112 }, leg: { ik: [80, 88], bend: 1 }, ft: 0, bar: [102, 17], fx: 0 },
+  props: [{ t: 'cable', from: [124, 16], to: 'hands' }, { t: 'handle' }], muscles: ['epaules', 'trapezes', 'dos'],
+  keys: [{ t: 0, p: {} }, { t: 1.4, p: { bar: [82.4, 14.7], arm: { fore: 172 }, fx: 0.5 } }, { t: 2.0, p: { bar: [82.4, 14.7], arm: { fore: 172 }, fx: 1 } }, { t: 3.4, p: { fx: 0.1 } }, { t: 3.8, p: {} }]
+};
+window.FIGDATA['dips-assistes'].alt = {
+  view: 'front', vb: '36 6 88 88', thumb: 1.8,
+  // vu de face, genoux sur le coussin : coudes qui s'écartent vers l'extérieur en descendant, buste penché vers l'avant (tk)
+  scene: [{ t: 'floor', sx: 80, rx: 22 }, { t: 'line', x1: 62, y1: 57, x2: 62, y2: 92 }, { t: 'line', x1: 98, y1: 57, x2: 98, y2: 92 }, { t: 'rect', x: 59, y: 56, w: 8, h: 2.4, r: 1 }, { t: 'rect', x: 93, y: 56, w: 8, h: 2.4, r: 1 }],
+  base: { hip: [80, 55.8], lean: 0, tk: 1, armR: { ik: [96, 57], bend: 1, k1: 1 }, armL: { ik: [64, 57], bend: 1, k1: 1 }, leg: { a: [3, 0], k1: 0.95, k2: 0.25 }, fx: 0 },
+  props: [{ t: 'kneepads' }], muscles: ['triceps', 'pectoraux', 'epaules'],
+  keys: [{ t: 0, p: {} }, { t: 1.6, p: { hip: [80, 65.7], tk: 0.87, armR: { k1: 0.7 }, armL: { k1: 0.7 }, fx: 0.3 } }, { t: 2.0, p: { hip: [80, 65.7], tk: 0.87, armR: { k1: 0.7 }, armL: { k1: 0.7 }, fx: 0.3 } }, { t: 2.6, fx: 1 }, { t: 3.5, p: { fx: 0.1 } }, { t: 4.0, p: {} }]
 };

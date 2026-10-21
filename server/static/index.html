@@ -64,6 +64,7 @@ nav button.on{background:var(--a);border-color:var(--a);color:var(--on)}
 .top svg{width:120px;flex:none;background:var(--bg);border-radius:8px}
 .top b{color:var(--a)}
 .topf{flex-direction:column;gap:6px}.topf>div{width:100%}
+.figturn{display:block;margin:6px auto 0}.topf .figturn{margin:0}
 .row{display:grid;grid-template-columns:28px 1fr 1fr;gap:8px;align-items:center;margin-top:6px}
 .row span{color:var(--m);font-size:13px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
@@ -527,12 +528,30 @@ function poseFrames(g) {   // pour chaque trait : liste d'images (points) ou d'o
 }
 const PLA = 'fill="none" stroke="var(--a)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"';
 let GENDER = recall('muscu-gender') === 'f' ? 'f' : 'm'; window.FIG_GENDER = GENDER;
+/* « Tourner » : certains exercices ont une seconde vue (fd.alt), par exemple de face et de côté.
+   La vue choisie vaut pour la session (non enregistrée) ; les vignettes des listes gardent la vue principale. */
+const FIGALT = {};
+function figSpec(e, anim) { const fd = window.FIGDATA[e.slug]; return anim && FIGALT[e.slug] && fd.alt ? fd.alt : fd; }
+function vueNom(fd) { return fd.view === 'front' ? 'de face' : fd.view === 'back' ? 'de dos' : 'de côté'; }
 function figSvg(e, fd, anim) {
   const live = anim && !REDUCED;
-  return `<svg class="fig" viewBox="${fd.vb || '0 0 160 100'}" role="img" aria-label="Animation ${esc(e.name)}"${live ? ` data-fig="${esc(e.slug)}" style="cursor:pointer" title="Touche pour mettre en pause"` : ''}><g>${FIG.sideSvg(fd, live ? 0 : (fd.thumb || 0), {g: GENDER})}</g></svg>`;
+  return `<svg class="fig" viewBox="${fd.vb || '0 0 160 100'}" role="img" aria-label="Animation ${esc(e.name)}, vue ${vueNom(fd)}"${live ? ` data-fig="${esc(e.slug)}"${FIGALT[e.slug] ? ' data-alt="1"' : ''} style="cursor:pointer" title="Touche pour mettre en pause"` : ''}><g>${FIG.sideSvg(fd, live ? 0 : (fd.thumb || 0), {g: GENDER})}</g></svg>`;
+}
+function turnBtn(e) {
+  const fd = window.FIGDATA[e.slug], other = FIGALT[e.slug] ? fd : fd.alt;
+  return `<button class="sm figturn" data-s="${esc(e.slug)}" onclick="figTurn(this.dataset.s)" aria-label="Tourner le personnage : voir ${vueNom(other)}">↻ Voir ${vueNom(other)}</button>`;
+}
+function figTurn(slug) {
+  const e = Object.values(EX).find(x => x.slug === slug); if (!e) return;
+  FIGALT[slug] = !FIGALT[slug];
+  document.querySelectorAll('.figturn').forEach(b => {
+    if (b.dataset.s !== slug) return;
+    const sv = b.previousElementSibling; if (sv && sv.tagName.toLowerCase() === 'svg') sv.outerHTML = figSvg(e, figSpec(e, true), true);
+    b.outerHTML = turnBtn(e);
+  });
 }
 function diagram(e, anim) {
-  if (window.FIGDATA && e.slug && window.FIGDATA[e.slug]) return figSvg(e, window.FIGDATA[e.slug], anim);
+  if (window.FIGDATA && e.slug && window.FIGDATA[e.slug]) { const fd = window.FIGDATA[e.slug]; return figSvg(e, figSpec(e, anim), anim) + (anim && fd.alt ? turnBtn(e) : ''); }
   const g = e.diagram; if (!g) return '';
   const ghost = `${pl(g.q,'var(--m)')}${pl(g.a,'var(--m)',1)}`, hd = `<circle cx="${g.h[0]}" cy="${g.h[1]}" r="5" fill="none" stroke="var(--m)" stroke-width="2" stroke-dasharray="3 3"/>`;
   if (!anim || REDUCED || !g.a || !g.b) return `<svg viewBox="0 0 100 64" role="img" aria-label="Schéma ${esc(e.name)}">${ghost}${pl(g.b,'var(--a)')}${hd}<circle cx="${g.h[2]}" cy="${g.h[3]}" r="5" fill="var(--a)"/></svg>`;

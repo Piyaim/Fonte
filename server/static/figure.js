@@ -223,7 +223,13 @@
       var o = {}, lim1 = l1 * sc, lim2 = l2 * sc, th1, th2, e, w, tgt;
       if (spec.ik) {
         tgt = spec.ik === 'bar' ? p.bar : spec.ik;
-        var r = ik2(root, tgt, lim1, lim2, spec.bend == null ? 1 : spec.bend, f); o.mid = r.mid; o.end = r.end;
+        if (spec.fore != null && kind === 'arm') {
+          // fore : direction absolue de l'avant-bras (0 = vers le bas, 90 = vers l'avant, 180 = vers le haut).
+          // Le coude se place d'après la main ; le bras se dessine en raccourci (coude écarté vers l'extérieur, hors du plan du profil).
+          o.end = tgt; o.mid = sub(tgt, mul(dirFK(spec.fore, f), lim2));
+        } else {
+          var r = ik2(root, tgt, lim1, lim2, spec.bend == null ? 1 : spec.bend, f); o.mid = r.mid; o.end = r.end;
+        }
       } else {
         th1 = spec.a[0]; th2 = kind === 'leg' ? th1 - spec.a[1] : th1 + spec.a[1];
         o.mid = add(root, mul(dirFK(th1, f), lim1)); o.end = add(o.mid, mul(dirFK(th2, f), lim2));
@@ -627,6 +633,8 @@
     var t = pr.t, a, b;
     function hand(A) { var d = unit(sub(A.end, A.mid)); return add(A.end, mul(d, 2.4)); }
     if (t === 'db') { return [g.armL, g.armR].map(function (A) { var h = hand(A); return '<g class="fdb"><rect x="' + n1(h[0] - 2.2) + '" y="' + n1(h[1] - 3.4) + '" width="4.4" height="6.8" rx="1.2"/><path d="M' + n1(h[0] - 2.2) + ',' + n1(h[1]) + 'H' + n1(h[0] + 2.2) + '"/></g>'; }).join(''); }
+    if (t === 'dbH') {   // haltère tenu paumes vers l'avant (développé) : vu de face, poignée horizontale et disques aux deux bouts
+      return [g.armL, g.armR].map(function (A) { var h = hand(A); return '<path class="fcab2" d="M' + n1(h[0] - 4.6) + ',' + n1(h[1]) + 'H' + n1(h[0] + 4.6) + '"/><g class="fdb"><rect x="' + n1(h[0] - 6.2) + '" y="' + n1(h[1] - 3.4) + '" width="2.6" height="6.8" rx="1"/><rect x="' + n1(h[0] + 3.6) + '" y="' + n1(h[1] - 3.4) + '" width="2.6" height="6.8" rx="1"/></g>'; }).join(''); }
     if (t === 'barH') { a = hand(g.armL); b = hand(g.armR); var ext = pr.ext == null ? 12 : pr.ext, y = (a[1] + b[1]) / 2, x0 = Math.min(a[0], b[0]) - ext, x1 = Math.max(a[0], b[0]) + ext;
       return '<path class="fcab2" d="M' + n1(x0) + ',' + n1(y) + 'H' + n1(x1) + '"/><rect class="fpl2" x="' + n1(x0 + 1.4) + '" y="' + n1(y - 6.5) + '" width="2.6" height="13" rx="1"/><rect class="fpl2" x="' + n1(x1 - 4) + '" y="' + n1(y - 6.5) + '" width="2.6" height="13" rx="1"/>'; }
     if (t === 'cable') { var tgt = pr.to === 'handL' ? hand(g.armL) : hand(g.armR); return '<path class="fcab" d="M' + P(pr.from) + 'L' + P(tgt) + '"/>'; }
@@ -703,6 +711,7 @@
     var list = document.querySelectorAll('svg[data-fig]:not([data-on])'), i, el, spec;
     for (i = 0; i < list.length; i++) {
       el = list[i]; el.setAttribute('data-on', '1'); spec = window.FIGDATA && window.FIGDATA[el.getAttribute('data-fig')];
+      if (spec && spec.alt && el.getAttribute('data-alt') === '1') spec = spec.alt;   // seconde vue (bouton « Tourner »)
       if (spec) live(el, spec, function () { return { g: window.FIG_GENDER || 'm' }; });
     }
   }
