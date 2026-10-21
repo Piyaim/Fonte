@@ -33,7 +33,7 @@ with sync_playwright() as p:
 
     # aucune requête sortante, sur tous les écrans : onglets, sous-onglets des Esprits, fiche et démonstration d'un exercice,
     # puis le questionnaire de départ (appareil neuf, sans profil)
-    for v in ["accueil", "seance", "zones", "progres", "historique", "exercices", "programmes", "jeu", "profil", "donnees"]:
+    for v in ["accueil", "seance", "zones", "progres", "historique", "exercices", "programmes", "jeu", "profil", "notifications", "donnees"]:
         pg.evaluate(f"go('{v}')"); time.sleep(.3)
     for k in ["tirage", "collection", "garde", "boutique", "regles"]:
         pg.evaluate(f"go('jeu'); JEU.sub('{k}')"); time.sleep(.2)
@@ -42,7 +42,7 @@ with sync_playwright() as p:
     pg2 = ctx2.new_page(); pg2.on("pageerror", lambda e: errs.append(str(e))); pg2.goto(f"https://{HOST}/"); pg2.wait_for_selector("button:has-text('Commencer')", timeout=8000)
     pg2.click("button:has-text('Commencer')"); time.sleep(.3)
     vus = len(served)
-    ok(not blocked, f"aucune requête vers un autre domaine sur les 10 onglets, les 5 sous-onglets des Esprits, une fiche d'exercice et le questionnaire ({vus} fichiers servis) : {blocked}")
+    ok(not blocked, f"aucune requête vers un autre domaine sur les 11 onglets (Notifications compris), les 5 sous-onglets des Esprits, une fiche d'exercice et le questionnaire ({vus} fichiers servis) : {blocked}")
     pg2.evaluate("fetch('https://example.org/x').catch(() => 0)"); time.sleep(.5)
     ok(blocked == ["https://example.org/x"], f"(témoin : une requête sortante ajoutée exprès est bien détectée et bloquée) {blocked}")
     ok(not errs, f"erreurs JavaScript (tous les écrans) : {errs}")

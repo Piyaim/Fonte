@@ -938,6 +938,7 @@
   window.PROFIL = {
     init, enter, title, view, phaseLine, imposed: () => !profile(), filled: () => filled(profile()), afterImport,
     schedule, coach, offers, homeCards, accept, later,
+    cycleKey: () => { const o = profile(); return o ? cycleStart(o) : null; },   // début du cycle en cours (notifications : une seule « semaine légère » par cycle)
     start, typed, typedOther, pick, tog, yn, togEv, next, back, edit, setDetail, generate, apply, keep, regen, redo, quit, dropDraft,
     cancel: () => { P.plan = null; to('resume'); }, home: () => { P.mode = 'home'; },
     exportState: () => profile(),

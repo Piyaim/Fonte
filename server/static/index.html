@@ -13,6 +13,7 @@
 <script src="/static/creatures.js"></script>
 <script src="/static/jeu.js"></script>
 <script src="/static/profil.js"></script>
+<script src="/static/notif.js"></script>
 <script>
 var ACC = [['orange','Orange','#ff7a1a'],['blue','Bleu','#4dabf7'],['green','Vert','#51cf66'],['violet','Violet','#9775fa'],['red','Rouge','#ff6b6b'],['mono','Noir et blanc','linear-gradient(135deg,#111 50%,#fff 50%)']];
 var ACC_TC = {orange:'#e8590c', blue:'#1971c2', green:'#2b8a3e', violet:'#7048e8', red:'#e03131', mono:'#111111'};
@@ -344,6 +345,21 @@ details.card.det>summary{color:var(--t);font-size:17px;font-weight:700}
 .offb{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:12px}
 .offb .go{margin:0}.offb .sm{min-height:48px}
 .li .mv{min-width:44px;min-height:44px;padding:0;font-size:18px;flex:none}
+/* ---- notifications (notif.js) : interrupteurs, jours, heures ---- */
+.ntg{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px}
+.ntg>div{min-width:0}.ntg h2{margin:0}.ntg p{margin:2px 0 0}
+.sw2{flex:none;position:relative;width:56px;height:44px;border:0;background:none;padding:0}
+.sw2::before{content:"";position:absolute;left:2px;top:9px;width:52px;height:26px;border-radius:13px;background:var(--l);transition:background .15s}
+.sw2::after{content:"";position:absolute;left:5px;top:12px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:left .15s}
+.sw2[aria-checked="true"]::before{background:var(--a)}.sw2[aria-checked="true"]::after{left:31px;background:var(--on)}
+@media (prefers-reduced-motion:reduce){.sw2::before,.sw2::after{transition:none}}
+.card.off{opacity:.5}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin:10px -8px 6px}
+.days .chip{padding:0;min-width:0;min-height:44px;font-weight:700}
+.trow{display:flex;align-items:center;gap:10px;margin-top:8px}.trow input{width:auto;min-height:44px;font-size:18px;padding:6px 10px}
+.trow span{color:var(--m)}
+.nwarn{border-left:5px solid var(--warn)}
+.nfull{width:100%;margin-top:8px}
 </style>
 </head>
 <body>
@@ -376,7 +392,7 @@ let EX = {}, WO = [], SESS = [], BW = [];
 let view = 'accueil', curW = null, F = null;          // F = formulaire de séance en cours
 let catQ = '', catArch = false, editEx = null;       // catalogue
 let progW = null, progDraft = null;                  // éditeur de programmes
-const VIEWS = [['accueil','Accueil'],['seance','Séance'],['zones','Zones'],['progres','Progrès'],['historique','Historique'],['exercices','Exercices'],['programmes','Programmes'],['jeu','Esprits'],['profil','Mon profil'],['donnees','Données']];
+const VIEWS = [['accueil','Accueil'],['seance','Séance'],['zones','Zones'],['progres','Progrès'],['historique','Historique'],['exercices','Exercices'],['programmes','Programmes'],['jeu','Esprits'],['profil','Mon profil'],['notifications','Notifications'],['donnees','Données']];
 const KIND_LABEL = {weight:'Charge × reps', reps:'Reps (lest facultatif)', time:'Durée en secondes', cardio:'Cardio (minutes)'};
 const GROUP_ORDER = ['Jambes','Pectoraux','Dos','Épaules','Bras','Abdos et gainage','Cardio'];
 
@@ -662,7 +678,8 @@ function go(v) { viewEx = null; view = v; store('muscu-view', v); if (v === 'pro
 function R() {
   if (window.PROFIL && PROFIL.imposed() && view !== 'profil' && view !== 'donnees') view = 'profil';   // questionnaire imposé tant que le profil n'existe pas
   nav();
-  $('app').innerHTML = {accueil: vAccueil, seance: vSeance, zones: vZones, progres: vProgres, historique: vHisto, exercices: vCat, programmes: vProg, jeu: () => window.JEU ? JEU.view() : '', profil: () => window.PROFIL ? PROFIL.view() : '', donnees: vData}[view]();
+  $('app').innerHTML = {accueil: vAccueil, seance: vSeance, zones: vZones, progres: vProgres, historique: vHisto, exercices: vCat, programmes: vProg, jeu: () => window.JEU ? JEU.view() : '', profil: () => window.PROFIL ? PROFIL.view() : '', notifications: () => window.NOTIF ? NOTIF.view() : '', donnees: vData}[view]();
+  if (window.NOTIF) NOTIF.sync();   // plan des notifications recalculé après chaque changement (appli Android seulement)
 }
 
 /* ------------------------------------------------------------------ accueil */
@@ -1031,7 +1048,7 @@ function exitFocus() { syncForm(); FOC = null; R(); }
 function focMove(d) { syncForm(); FOC = Math.max(0, Math.min(F.ids.filter(i => EX[i]).length - 1, FOC + d)); R(); window.scrollTo(0, 0); }
 function togDone(id, i) {
   syncForm(); F.dn = F.dn || {}; const a = F.dn[id] = F.dn[id] || []; a[i] = !a[i]; F.dirty = true; syncForm();
-  const e = exF(id); if (a[i] && e.rest && e.kind !== 'cardio') TM(e.rest);
+  const e = exF(id); if (a[i] && e.rest && e.kind !== 'cardio') TM(e.rest, id);
   R();
 }
 function vFocus() {
@@ -1054,7 +1071,7 @@ function vFocus() {
   h += effBox(e);
   h += '<div class="acts">';
   if (e.kind !== 'cardio') h += `<button class="sm" onclick="addRow(${e.id})">+ série</button><button class="sm" onclick="delRow(${e.id})">− série</button>`;
-  if (e.rest) h += `<button class="sm" onclick="TM(${e.rest})">Repos · ${e.rest} s</button>`;
+  if (e.rest) h += `<button class="sm" onclick="TM(${e.rest}, ${e.id})">Repos · ${e.rest} s</button>`;
   h += `</div><div class="fnav"><button class="sm" onclick="focMove(-1)" ${FOC === 0 ? 'disabled' : ''}>‹ Précédent</button>`
     + (FOC < ids.length - 1 ? `<button class="go" style="margin:0" onclick="focMove(1)">Suivant ›</button>` : `<button class="go" style="margin:0" onclick="saveSession()">Terminer et enregistrer</button>`) + '</div></div>';
   return h;
@@ -1155,7 +1172,7 @@ function exCard(e) {
   h += effBox(e);
   h += `<div class="acts">`;
   if (e.kind !== 'cardio') h += `<button class="sm" onclick="addRow(${e.id})">+ série</button><button class="sm" onclick="delRow(${e.id})">− série</button>`;
-  if (e.rest) h += `<button class="sm" onclick="TM(${e.rest})">Repos · ${e.rest} s</button>`;
+  if (e.rest) h += `<button class="sm" onclick="TM(${e.rest}, ${e.id})">Repos · ${e.rest} s</button>`;
   h += `<button class="sm" onclick="removeFromForm(${e.id})">Retirer aujourd'hui</button></div></div>`;
   return h;
 }
@@ -1579,9 +1596,19 @@ function tkNow() {   // le temps restant se calcule sur l'heure réelle : il res
     if (late < 20000) ring();
   }
 }
-function TM(s) {
+function TM(s, id) {
   clearInterval(TI); TEND = Date.now() + s * 1000; store('muscu-timer', TEND); tkNow();
   TI = setInterval(tkNow, 250);
+  if (window.NOTIF) NOTIF.rest(s, nextSet(id));   // fin du repos, écran verrouillé (appli Android, si activée)
+}
+function nextSet(id) {   // « Prochaine série : Développé couché, série 3 sur 4. » : première série non validée, à partir de l'exercice en cours
+  if (!F) return null;
+  const ids = F.ids.filter(i => EX[i]), st = id != null ? Math.max(0, ids.indexOf(id)) : FOC != null ? FOC : 0;
+  for (const i of ids.slice(st)) {
+    const rows = F.vals[i] || rowsFor(exF(i)), d = (F.dn && F.dn[i]) || [], k = rows.findIndex((_, j) => !d[j]);
+    if (k >= 0) return `Prochaine série\u00a0: ${EX[i].name}, série ${k + 1} sur ${rows.length}.`;
+  }
+  return null;
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) tkNow(); });
 (function () {   // minuteur en cours quand la page a été rechargée ou fermée par le système
@@ -1651,7 +1678,7 @@ function forgetWorkouts(ids) {
   curW = null; progW = null; progDraft = null; FOC = null;
 }
 function pendingDraft() { const d = recall(draftKey()); return XS.length > 0 || !!(d && d.dirty) || !!(F && F.mode === 'new' && F.dirty); }
-window.APPX = {SESS: () => SESS, EX: () => EX, WO: () => WO, zonesOf, mondayOf, today, get WGOAL() { return WGOAL; }, computePRs, figSvg, toast, R, go, nav, api, load, forgetWorkouts, pendingDraft};
+window.APPX = {SESS: () => SESS, EX: () => EX, WO: () => WO, zonesOf, mondayOf, today, get WGOAL() { return WGOAL; }, computePRs, figSvg, toast, R, go, nav, api, load, forgetWorkouts, pendingDraft, nextWorkout, view: () => view};
 
 /* ------------------------------------------------------------------ démarrage */
 if (!window.FONTE_LOCAL && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});

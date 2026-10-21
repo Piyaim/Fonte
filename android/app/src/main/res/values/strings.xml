@@ -3,4 +3,7 @@
     <string name="app_name">Fonte</string>
     <string name="saved">Saved</string>
     <string name="save_failed">Could not save the file</string>
+    <string name="ch_rappels">Workout reminders</string>
+    <string name="ch_repos">End of rest</string>
+    <string name="ch_programme">Program and summary</string>
 </resources>

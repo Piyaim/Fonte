@@ -3,4 +3,7 @@
     <string name="app_name">Fonte</string>
     <string name="saved">Fichier enregistré</string>
     <string name="save_failed">Impossible d\'enregistrer le fichier</string>
+    <string name="ch_rappels">Rappels de séance</string>
+    <string name="ch_repos">Fin du repos</string>
+    <string name="ch_programme">Programme et bilan</string>
 </resources>

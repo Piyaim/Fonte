@@ -7,7 +7,9 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
@@ -39,6 +41,7 @@ public class MainActivity extends Activity {
     private static final String START_URL = "https://" + HOST + "/";
     private static final int REQ_FILE = 1;
     private static final int REQ_SAVE = 2;
+    private static final int REQ_NOTIF = 3;
 
     private WebView web;
     private ValueCallback<Uri[]> fileCallback;
@@ -100,6 +103,7 @@ public class MainActivity extends Activity {
         });
 
         web.addJavascriptInterface(new Bridge(), "FonteApp");
+        Notifs.channels(this);
     }
 
     private static WebResourceResponse answer(int code, String reason, String mime, byte[] data) {
@@ -159,6 +163,70 @@ public class MainActivity extends Activity {
             });
         }
 
+        /* ---------------------------------------------------------- notifications (voir Notifs et server/static/notif.js) */
+
+        /** État pour la page : autorisation (granted, ask = Android peut encore afficher sa demande, settings = refus définitif),
+         *  « Alarmes et rappels », canaux réglables (Android 8 et plus), événements déjà notifiés. */
+        @JavascriptInterface
+        public String notifStatus() {
+            StringBuilder sent = new StringBuilder();
+            for (String k : Notifs.sent(MainActivity.this)) sent.append(sent.length() == 0 ? "" : ",").append(org.json.JSONObject.quote(k));
+            return "{\"sdk\":" + Build.VERSION.SDK_INT + ",\"perm\":\"" + permState() + "\",\"exact\":" + Notifs.exactAllowed(MainActivity.this)
+                + ",\"exactNeeded\":" + Notifs.exactNeeded() + ",\"channels\":" + (Build.VERSION.SDK_INT >= 26) + ",\"sent\":[" + sent + "]}";
+        }
+
+        /** Demande système, une seule fois dans la vie de l'appli (Android 13 et plus) ; ensuite, seulement depuis la page Notifications. */
+        @JavascriptInterface
+        public void notifAskOnce() {
+            runOnUiThread(() -> {
+                if (Build.VERSION.SDK_INT < 33 || hasNotifPermission() || Notifs.prefs(MainActivity.this).getBoolean("asked", false)) return;
+                askNotif();
+            });
+        }
+
+        /** Bouton « Activer les notifications » : la demande système si Android peut encore l'afficher, sinon les réglages de l'appli. */
+        @JavascriptInterface
+        public void notifRequest() {
+            runOnUiThread(() -> {
+                if ("ask".equals(permState())) { askNotif(); return; }
+                Intent i;
+                if (Build.VERSION.SDK_INT >= 26) i = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+                else i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", getPackageName(), null));
+                open(i);
+            });
+        }
+
+        @JavascriptInterface
+        public void notifPlan(String plan) { Notifs.setPlan(MainActivity.this, plan); }
+
+        @JavascriptInterface
+        public void notifTest(String title, String text) { Notifs.test(MainActivity.this, title, text); }
+
+        @JavascriptInterface
+        public boolean restStart(int seconds, String title, String text) {
+            return Notifs.restStart(MainActivity.this, System.currentTimeMillis() + seconds * 1000L, title, text);
+        }
+
+        @JavascriptInterface
+        public void restCancel() { Notifs.restCancel(MainActivity.this); }
+
+        /** Bouton « Son et vibration » : le réglage Android du canal (Android 8 et plus). */
+        @JavascriptInterface
+        public void openChannel(final String id) {
+            if (Build.VERSION.SDK_INT < 26) return;
+            runOnUiThread(() -> {
+                Notifs.channels(MainActivity.this);
+                open(new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName()).putExtra(Settings.EXTRA_CHANNEL_ID, id));
+            });
+        }
+
+        /** Écran « Alarmes et rappels » de l'appli (Android 12 et plus), demandé seulement quand on active la fin du repos. */
+        @JavascriptInterface
+        public void exactRequest() {
+            if (!Notifs.exactNeeded()) return;
+            runOnUiThread(() -> open(new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.fromParts("package", getPackageName(), null))));
+        }
+
         /** Change l'icône de l'écran d'accueil : active l'entrée de lanceur de la couleur choisie, désactive les autres. */
         @JavascriptInterface
         public void setIcon(final String key) {
@@ -185,6 +253,46 @@ public class MainActivity extends Activity {
         private ComponentName alias(String key) {
             return new ComponentName(MainActivity.this.getPackageName(), "app.fonte.Icon" + Character.toUpperCase(key.charAt(0)) + key.substring(1));
         }
+    }
+
+    private boolean hasNotifPermission() {
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED) return false;
+        return Notifs.enabled(this);
+    }
+
+    /** granted ; ask : Android peut afficher sa demande ; settings : refusée deux fois (Android ne l'affiche plus) ou coupée dans les réglages. */
+    private String permState() {
+        if (hasNotifPermission()) return "granted";
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED
+            && (!Notifs.prefs(this).getBoolean("asked", false) || shouldShowRequestPermissionRationale("android.permission.POST_NOTIFICATIONS"))) return "ask";
+        return "settings";
+    }
+
+    private void askNotif() {
+        Notifs.prefs(this).edit().putBoolean("asked", true).apply();
+        requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, REQ_NOTIF);
+    }
+
+    private void open(Intent i) {
+        try {
+            startActivity(i);
+        } catch (ActivityNotFoundException e) {
+            try {
+                startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", getPackageName(), null)));
+            } catch (ActivityNotFoundException ignored) {
+                // réglages introuvables sur ce téléphone
+            }
+        }
+    }
+
+    /** Prévient la page qu'une autorisation a pu changer (retour des réglages Android, réponse à la demande). */
+    private void notifChanged() {
+        if (web != null) web.evaluateJavascript("window.NOTIF && NOTIF.onStatus()", null);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == REQ_NOTIF) notifChanged();
     }
 
     @Override
@@ -216,11 +324,15 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        Notifs.visible = true;
+        Notifs.cancelRestNotification(this);
         web.onResume();
+        notifChanged();
     }
 
     @Override
     protected void onPause() {
+        Notifs.visible = false;
         web.onPause();
         super.onPause();
     }
