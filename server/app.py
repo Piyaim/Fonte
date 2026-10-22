@@ -62,7 +62,9 @@ CREATE TABLE IF NOT EXISTS session(
   ts INTEGER NOT NULL,
   workout_id INTEGER REFERENCES workout(id) ON DELETE SET NULL,
   workout_name TEXT NOT NULL DEFAULT '',
-  notes TEXT NOT NULL DEFAULT ''
+  notes TEXT NOT NULL DEFAULT '',
+  start_ts INTEGER,
+  end_ts INTEGER
 );
 CREATE TABLE IF NOT EXISTS entry(
   id INTEGER PRIMARY KEY,
@@ -150,11 +152,16 @@ def insert_exercise(c, d, slug=None):
 
 
 def migrate(c):
-    """Bases créées avant le lot 2A : ajoute les réglages par séance (colonnes vides = valeurs de l'exercice)."""
+    """Bases créées avant le lot 2A : ajoute les réglages par séance (colonnes vides = valeurs de l'exercice).
+    Bases créées avant la 0.7.0 : ajoute le début et la fin de séance (vides pour les séances déjà enregistrées)."""
     have = {r["name"] for r in c.execute("PRAGMA table_info(workout_item)")}
     for f in ITEM_FIELDS:
         if f not in have:
             c.execute(f"ALTER TABLE workout_item ADD COLUMN {f} INTEGER")
+    have = {r["name"] for r in c.execute("PRAGMA table_info(session)")}
+    for f in SESSION_TIMES:
+        if f not in have:
+            c.execute(f"ALTER TABLE session ADD COLUMN {f} INTEGER")
 
 
 def init_db():
@@ -317,6 +324,7 @@ def sessions_list(c, where="", args=()):
            for f in c.execute(f"SELECT * FROM effort WHERE session_id IN ({q})", ids)}
     return [dict(id=r["id"], day=r["day"], ts=r["ts"], workout_id=r["workout_id"],
                  workout_name=r["workout_name"], notes=r["notes"],
+                 start_ts=r["start_ts"], end_ts=r["end_ts"],
                  entries=[dict(exercise_id=k, sets=v, effort=eff.get((r["id"], k)))
                       for k, v in ent.get(r["id"], {}).items()])
             for r in rows]
@@ -490,14 +498,30 @@ def session_payload(c, d):
     return wid, wname or "Séance libre", clean_day(d.get("day")), str(d.get("notes", ""))[:4000]
 
 
+SESSION_TIMES = ("start_ts", "end_ts")   # début et fin de la séance (ms depuis 1970, horloge du téléphone), facultatifs
+
+
+def clean_ts(v):
+    """Heure de début ou de fin : un nombre de millisecondes plausible (2001 à 2286), sinon rien. Jamais d'erreur :
+    une heure illisible ne doit pas empêcher d'enregistrer la séance."""
+    if v in (None, "") or isinstance(v, bool):
+        return None
+    try:
+        v = int(float(v))
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return v if 10**12 <= v < 10**13 else None
+
+
 @app.post("/api/sessions")
 def sess_create():
     d = body()
     c = db()
     wid, wname, day, notes = session_payload(c, d)
     with c:
-        sid = c.execute("INSERT INTO session(day,ts,workout_id,workout_name,notes) VALUES(?,?,?,?,?)",
-                        (day, now_ms(), wid, wname, notes)).lastrowid
+        sid = c.execute("INSERT INTO session(day,ts,workout_id,workout_name,notes,start_ts,end_ts) VALUES(?,?,?,?,?,?,?)",
+                        (day, now_ms(), wid, wname, notes, clean_ts(d.get("start_ts")),
+                         clean_ts(d.get("end_ts")))).lastrowid
         if not write_entries(c, sid, d.get("entries")):
             raise Bad("Aucune série saisie")
     return jsonify(id=sid), 201
@@ -512,6 +536,9 @@ def sess_update(sid):
         if not c.execute("UPDATE session SET day=?, workout_id=?, workout_name=?, notes=? WHERE id=?",
                          (day, wid, wname, notes, sid)).rowcount:
             return jsonify(error="Séance introuvable"), 404
+        for f in SESSION_TIMES:   # absent du corps (modification depuis l'Historique, ancienne interface) : on garde
+            if f in d:
+                c.execute(f"UPDATE session SET {f}=? WHERE id=?", (clean_ts(d.get(f)), sid))
         c.execute("DELETE FROM entry WHERE session_id=?", (sid,))
         c.execute("DELETE FROM effort WHERE session_id=?", (sid,))
         if not write_entries(c, sid, d.get("entries")):
@@ -735,9 +762,9 @@ def import_full(c, o):
                   (w["id"], w["name"], w.get("position", 0)))
         write_items(c, w["id"], w.get("items") or [], clean_settings(w.get("settings")))   # export d'avant le lot 2A : pas de « settings »
     for s in o.get("sessions") or []:
-        c.execute("INSERT INTO session(id,day,ts,workout_id,workout_name,notes) VALUES(?,?,?,?,?,?)",
+        c.execute("INSERT INTO session(id,day,ts,workout_id,workout_name,notes,start_ts,end_ts) VALUES(?,?,?,?,?,?,?,?)",
                   (s["id"], s["day"], s["ts"], s.get("workout_id"), s.get("workout_name", ""),
-                   s.get("notes", "")))
+                   s.get("notes", ""), clean_ts(s.get("start_ts")), clean_ts(s.get("end_ts"))))   # export d'avant la 0.7.0 : rien
         write_entries(c, s["id"], s.get("entries") or [])
     for b in o.get("bodyweight") or []:
         c.execute("INSERT INTO bodyweight(id,day,ts,kg) VALUES(?,?,?,?)",

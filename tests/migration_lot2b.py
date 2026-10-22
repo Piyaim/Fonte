@@ -50,6 +50,8 @@ MODES = {"local": "/?local=1", "serveur": "/"}
 NOUVEAUX = {"ids", "start", "phase_start", "history"}
 
 from playwright.sync_api import sync_playwright
+import sans_duree   # séances relues sans start_ts ni end_ts (ajoutés vides par le code actuel), vérifiés à la fin
+sans_duree.brancher(globals())
 try:
     with sync_playwright() as p:
         def navigateur(dossier=PROFIL_NAV):
@@ -127,5 +129,6 @@ try:
 finally:
     for pr in PROCS: pr.kill()
     shutil.rmtree(TMP, ignore_errors=True)
+sans_duree.bilan(ok)
 print("\nRÉSULTAT :", "tout est bon" if not fails else f"{len(fails)} échec(s)")
 sys.exit(1 if fails else 0)

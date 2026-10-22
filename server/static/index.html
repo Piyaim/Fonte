@@ -406,6 +406,7 @@ details.card.det>summary{color:var(--t);font-size:17px;font-weight:700}
   <div class="dstyle" id="daccent"></div>
   <div class="dstyle" id="dgender"></div>
   <div class="dstyle" id="dscreen"></div>
+  <div class="dstyle" id="dvib"></div>
   <div class="dstyle" id="dtabs"></div>
 </aside>
 <script>
@@ -739,7 +740,7 @@ function genderPick() {
 }
 function setGender(k) { GENDER = k; window.FIG_GENDER = k; store('muscu-gender', k); genderPick(); R(); }
 function openMenu() {
-  accentPick(); genderPick(); screenPick(); tabsPick();
+  accentPick(); genderPick(); screenPick(); vibPick(); tabsPick();
   $('drawer').classList.add('open'); $('scrim').classList.add('open');
   $('drawer').setAttribute('aria-hidden', 'false'); $('menu-btn').setAttribute('aria-expanded', 'true');
 }
@@ -770,7 +771,15 @@ function todayZones() {   // les 3 zones travaillées le moins récemment (jamai
   return ZONES.map(([k], i) => ({k, i, d: daysSince(k, st)})).filter(x => zCount(x.k) > 0)
     .sort((a, b) => ((b.d ?? 999) - (a.d ?? 999)) || (a.i - b.i)).slice(0, 3);
 }
-function startFromHome(wid) { pickWorkout(wid); if (F) F.ap = false; FOC = null; go('seance'); }
+/* Durée d'une séance en minutes, ou null : seulement si début et fin sont connus, si la séance a fini le jour indiqué
+   (pas de saisie après coup) et si elle a duré de 5 min à 3 h. Jamais de reproche sur la durée ; elle ne rapporte rien au jeu. */
+function dureeMin(s) {
+  if (!s || !s.start_ts || !s.end_ts || s.end_ts <= s.start_ts) return null;
+  const e = new Date(s.end_ts), d = e.getFullYear() + '-' + String(e.getMonth() + 1).padStart(2, '0') + '-' + String(e.getDate()).padStart(2, '0');
+  const m = (s.end_ts - s.start_ts) / 60000;
+  return d === s.day && m >= 5 && m <= 180 ? Math.round(m) : null;
+}
+function startFromHome(wid) { pickWorkout(wid); if (F) { F.ap = false; F.t0 = Date.now(); store(draftKey(), F); } FOC = null; go('seance'); }   // t0 : début de la séance (durée)
 function dayWord(iso) {   // « demain », sinon le jour de la semaine
   const d = Math.round((dayDate(iso) - dayDate(today())) / 864e5);
   return d === 1 ? 'demain' : d < 7 ? dayDate(iso).toLocaleDateString('fr-FR', {weekday: 'long'}) : 'le ' + dayDate(iso).toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long'});
@@ -993,6 +1002,7 @@ function celebrate(list) {
   const o = document.createElement('div'); o.className = 'pr-overlay'; o.onclick = () => o.remove();
   o.innerHTML = `<div class="pr-card" onclick="event.stopPropagation()"><h2>${list.length > 1 ? 'Nouveaux records !' : 'Nouveau record !'}</h2>${list.map(r => `<p><b>${esc(r.ex.name)}</b><br><span class="m">${esc(prText(r))}</span></p>`).join('')}<button class="go" onclick="this.closest('.pr-overlay').remove()">Super</button></div>`;
   document.body.appendChild(o);
+  vib([80, 60, 80]);   // seul l'interrupteur « Vibrations » décide ; le mouvement réduit ne coupe que les confettis
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const cv = document.createElement('canvas'); cv.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:21';
   cv.width = innerWidth; cv.height = innerHeight; document.body.appendChild(cv);
@@ -1004,7 +1014,6 @@ function celebrate(list) {
     ps.forEach(p => { p.x += p.vx; p.y += p.vy; p.r += .15; g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = p.c; g.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); g.restore(); });
     if (t - t0 < 2600) requestAnimationFrame(frame); else cv.remove();
   })(t0);
-  try { navigator.vibrate && navigator.vibrate([80, 60, 80]); } catch (e) {}
 }
 
 // calendrier
@@ -1118,6 +1127,10 @@ function heatLegend() { return `<p class="m">Plus une zone est orange, plus tu l
    F.ap = l'utilisateur a choisi l'Aperçu (toute la séance en liste). Une séance passée se modifie toujours en liste. */
 let FOC = null;
 let SCREEN = recall('muscu-ecran') !== false, SCRON = null, WAKE = null;   // écran allumé pendant la séance (voir screenSync)
+// vibrations : un seul réglage pour toute l'appli (✓ de série, record, fin du repos, tirage), clé muscu-vibration, hors de l'export.
+// Première ouverture : on reprend l'ancien réglage du tirage (opts.haptic de muscu-jeu) ; coupé là-bas = coupé partout.
+let VIB = (() => { const v = recall('muscu-vibration'); if (v !== null) return v !== false; const j = recall('muscu-jeu'), on = !(j && j.opts && j.opts.haptic === false); store('muscu-vibration', on); return on; })();
+function vib(p) { if (!VIB) return; try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
 const inFocus = () => view === 'seance' && !!F && F.mode === 'new' && !F.ap && F.ids.some(i => EX[i]);
 function firstUndone() {
   const ids = F.ids.filter(i => EX[i]);
@@ -1147,10 +1160,12 @@ function focReveal() {
 }
 function focMove(d) { syncForm(); FOC = Math.max(0, Math.min(F.ids.filter(i => EX[i]).length - 1, FOC + d)); R(); window.scrollTo(0, 0); }
 function togDone(id, i) {
-  syncForm(); F.dn = F.dn || {}; const a = F.dn[id] = F.dn[id] || []; a[i] = !a[i]; F.dirty = true; syncForm();
+  syncForm(); F.dn = F.dn || {}; const a = F.dn[id] = F.dn[id] || []; a[i] = !a[i]; F.dirty = true;
+  if (a[i] && !F.t0) F.t0 = Date.now();   // séance saisie depuis l'Aperçu sans « Démarrer la séance » : elle commence à la première série validée
+  syncForm();
   const e = exF(id);
   if (a[i]) {
-    try { navigator.vibrate && navigator.vibrate(15); } catch (er) {}   // confirme le geste sans regarder l'écran
+    vib(15);   // confirme le geste sans regarder l'écran
     if (e.rest && e.kind !== 'cardio') TM(e.rest, id);
   }
   R();
@@ -1355,6 +1370,7 @@ async function saveSession() {
   if (!entries.length) return toast('Aucune série saisie');
   const payload = {workout_id: F.wid, workout_name: F.wname, day: F.day, notes: F.notes, entries};
   const editing = F.mode === 'edit';
+  if (!editing) { const live = F.t0 && F.day === today(); payload.start_ts = live ? F.t0 : null; payload.end_ts = live ? Date.now() : null; }   // saisie après coup (autre date) : pas de durée
   const nBefore = SESS.length;
   await act(async () => {
     if (editing) await api('PUT', `/api/sessions/${F.sid}`, payload);
@@ -1728,7 +1744,8 @@ function tk() {
   if (p) p.style.width = (TDUR ? Math.min(100, s * 1000 / TDUR * 100) : 0) + '%';
 }
 function ring() {
-  try { navigator.vibrate && navigator.vibrate([300, 100, 300]); const c = new AudioContext(), o = c.createOscillator(); c.resume && c.resume(); o.connect(c.destination); o.start(); o.stop(c.currentTime + .4); } catch (e) {}
+  vib([300, 100, 300]);
+  try { const c = new AudioContext(), o = c.createOscillator(); c.resume && c.resume(); o.connect(c.destination); o.start(); o.stop(c.currentTime + .4); } catch (e) {}
 }
 function tmStore() { store('muscu-timer', TEND || undefined); store('muscu-timer-i', TEND ? {d: TDUR, id: TMID} : undefined); }
 function tkNow() {   // le temps restant se calcule sur l'heure réelle : il reste juste si le téléphone se verrouille ou si on change d'appli
@@ -1828,6 +1845,11 @@ function tabsPick() {   // l'onglet Esprits dans la barre du bas : l'interrupteu
   const on = jeuOn();
   el.innerHTML = `<div class="ntg"><div><p class="m">Onglets</p><b>Afficher l’onglet Esprits dans la barre du bas</b></div><button class="sw2" role="switch" aria-checked="${on}" aria-label="Afficher l’onglet Esprits dans la barre du bas" onclick="JEU.setHidden(${on});tabsPick()"></button></div>`;
 }
+function setVib(on) { VIB = on; store('muscu-vibration', on); vibPick(); }
+function vibPick() {
+  const el = $('dvib'); if (!el) return;
+  el.innerHTML = `<div class="ntg"><div><p class="m">Toute l’appli</p><b>Vibrations</b></div><button class="sw2" role="switch" aria-checked="${VIB}" aria-label="Vibrations" onclick="setVib(${!VIB})"></button></div>`;
+}
 function setScreen(on) { SCREEN = on; store('muscu-ecran', on); SCRON = null; screenSync(); screenPick(); }
 function screenPick() {
   const el = $('dscreen'); if (!el) return;
@@ -1896,7 +1918,7 @@ function forgetWorkouts(ids) {
   curW = null; progW = null; progDraft = null; FOC = null;
 }
 function pendingDraft() { const d = recall(draftKey()); return XS.length > 0 || !!(d && d.dirty) || !!(F && F.mode === 'new' && F.dirty); }
-window.APPX = {SESS: () => SESS, EX: () => EX, WO: () => WO, zonesOf, mondayOf, today, get WGOAL() { return WGOAL; }, computePRs, figSvg, toast, R, go, nav, api, load, forgetWorkouts, pendingDraft, nextWorkout, view: () => view};
+window.APPX = {vib, dureeMin, SESS: () => SESS, EX: () => EX, WO: () => WO, zonesOf, mondayOf, today, get WGOAL() { return WGOAL; }, computePRs, figSvg, toast, R, go, nav, api, load, forgetWorkouts, pendingDraft, nextWorkout, view: () => view};
 
 /* ------------------------------------------------------------------ démarrage */
 if (!window.FONTE_LOCAL && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});

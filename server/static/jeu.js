@@ -321,7 +321,7 @@
     return '<section class="card"><h2>Taux de tirage</h2><p class="m">Affichés tels qu\'ils sont codés.</p><table>' + RK.slice().reverse().map(function (k) { return '<tr><td>' + tag(k) + '</td><td style="text-align:right">' + pct(k) + '</td></tr>'; }).join('') + '</table>'
       + '<p class="m">Garantie : Épique ou mieux tous les ' + PITY_E + ' tirages au plus, Légendaire tous les ' + PITY_L + ' au plus (compteurs actuels : ' + s.pe + ' et ' + s.pl + '). Chaque tirage donne 65\u00a0% d\'esprit et 35\u00a0% d\'objet de garde-robe, quand il en reste de cette rareté.</p></section>'
       + '<section class="card"><h2>Garde-fous</h2><ul class="j-rule" style="padding-left:18px"><li>Aucun achat, aucun argent réel, aucune publicité.</li><li>Les jetons ne s\'obtiennent qu\'en s\'entraînant. Maximum ' + DAY_CAP + ' par jour : s\'entraîner plus ne rapporte pas plus.</li><li>Aucune série à perdre : si tu pauses, tu ne perds rien, tes jetons n\'expirent jamais.</li><li>Le niveau d\'un esprit vient des séries réellement faites sur sa zone.</li><li>Tout est stocké sur ton téléphone, rien n\'est envoyé.</li><li>Les jeux de tirage peuvent donner envie d\'en refaire : si tu le sens, tu peux masquer l\'onglet de la barre du bas ci-dessous ; il reste dans le menu ☰.</li></ul></section>'
-      + '<section class="card"><h2>Réglages</h2><div class="chips"><button class="chip ' + (s.opts.sound ? 'on' : '') + '" onclick="JEU.opt(\'sound\')">Sons</button><button class="chip ' + (s.opts.haptic ? 'on' : '') + '" onclick="JEU.opt(\'haptic\')">Vibrations</button><button class="chip ' + (s.opts.hide ? 'on' : '') + '" onclick="JEU.opt(\'hide\')" aria-pressed="' + !!s.opts.hide + '">Masquer de la barre du bas</button></div></section>';
+      + '<section class="card"><h2>Réglages</h2><div class="chips"><button class="chip ' + (s.opts.sound ? 'on' : '') + '" onclick="JEU.opt(\'sound\')">Sons</button><button class="chip ' + (s.opts.hide ? 'on' : '') + '" onclick="JEU.opt(\'hide\')" aria-pressed="' + !!s.opts.hide + '">Masquer de la barre du bas</button></div></section>';
   }
   function view() {
     init(); css(); var q = quests(true); if (q.done.length) { save(); var n = q.done.reduce(function (a, d) { return a + d.r; }, 0); toast2('+' + n + ' jeton' + (n > 1 ? 's' : '') + '\u00a0: ' + (q.done.length > 1 ? 'quêtes accomplies' : 'quête accomplie')); }
@@ -344,7 +344,7 @@
     if (!st().opts.sound) return;
     try { var A = window.AudioContext || window.webkitAudioContext, c = new A(), n = { C: 1, U: 2, R: 3, E: 4, L: 6 }[r], i; for (i = 0; i < n; i++) { var o = c.createOscillator(), gn = c.createGain(); o.frequency.value = 440 * Math.pow(1.26, i); gn.gain.value = 0.06; o.connect(gn); gn.connect(c.destination); o.start(c.currentTime + i * 0.09); o.stop(c.currentTime + i * 0.09 + 0.12); } } catch (e) {}
   }
-  function buzz(r) { if (st().opts.haptic && navigator.vibrate) { try { navigator.vibrate(r === 'L' ? [60, 40, 60, 40, 120] : r === 'E' ? [50, 30, 80] : 20); } catch (e) {} } }
+  function buzz(r) { var v = g('vib'); if (v) v(r === 'L' ? [60, 40, 60, 40, 120] : r === 'E' ? [50, 30, 80] : 20); }   // réglage général du menu (opts.haptic n'est plus lu que pour la migration)
   function resultCard(res, i, total) {
     var r = CREA.RAR[res.rar], zs = null, inner, name, line;
     if (res.kind === 'crea') { var c = CRE[res.id]; inner = art(res.id, 1); name = c.name; line = res.isNew ? '<b style="color:#ffd45e">Nouveau !</b>' : 'Doublon : +' + res.shards + ' éclats'; }

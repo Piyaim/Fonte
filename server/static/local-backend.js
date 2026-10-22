@@ -135,10 +135,20 @@
       w.workout_item.push(row);
     });
   }
-  function migrate(w) {   // données créées avant le lot 2A : ajoute les réglages vides ; vrai si quelque chose a changé
+  function migrate(w) {   // données créées avant le lot 2A (réglages vides) ou avant la 0.7.0 (début et fin de séance vides) ; vrai si quelque chose a changé
     let changed = false;
     for (const i of w.workout_item) for (const f of ITEM_FIELDS) if (!(f in i)) { i[f] = null; changed = true; }
+    for (const s of w.session) for (const f of SESSION_TIMES) if (!(f in s)) { s[f] = null; changed = true; }
     return changed;
+  }
+  // début et fin de la séance (ms depuis 1970, horloge du téléphone), facultatifs ; mêmes règles que clean_ts dans app.py
+  const SESSION_TIMES = ['start_ts', 'end_ts'];
+  function cleanTs(v) {
+    if (isNone(v) || typeof v === 'boolean') return null;
+    const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v.trim()) : NaN;
+    if (!isFinite(n)) return null;
+    const t = Math.trunc(n);
+    return t >= 1e12 && t < 1e13 ? t : null;
   }
   const exRow = (w, r) => Object.assign({}, r, {diagram: r.diagram ? JSON.parse(r.diagram) : null, used: w.entry.some(e => e.exercise_id === r.id)});
   function workoutsList(w) {
@@ -160,6 +170,7 @@
     const eff = new Map(w.effort.map(f => [f.session_id + ':' + f.exercise_id, f.level]));
     return rows.map(r => ({
       id: r.id, day: r.day, ts: r.ts, workout_id: r.workout_id, workout_name: r.workout_name, notes: r.notes,
+      start_ts: r.start_ts === undefined ? null : r.start_ts, end_ts: r.end_ts === undefined ? null : r.end_ts,
       entries: [...(ent.get(r.id) || new Map()).entries()].map(([k, v]) => ({exercise_id: k, sets: v, effort: eff.has(r.id + ':' + k) ? eff.get(r.id + ':' + k) : null}))
     }));
   }
@@ -344,7 +355,7 @@
 
   route('POST', '/api/sessions', async (b) => mutate(w => {
     const d = asBody(b()), [wid, wname, day, notes] = sessionPayload(w, d);
-    const sid = ins(w, 'session', {day, ts: nowMs(), workout_id: wid, workout_name: wname, notes});
+    const sid = ins(w, 'session', {day, ts: nowMs(), workout_id: wid, workout_name: wname, notes, start_ts: cleanTs(d.start_ts), end_ts: cleanTs(d.end_ts)});
     if (!writeEntries(w, sid, d.entries)) throw new Bad('Aucune série saisie');
     return ok({id: sid}, 201);
   }));
@@ -352,6 +363,7 @@
     const d = asBody(b()), [wid, wname, day, notes] = sessionPayload(w, d), s = w.session.find(x => x.id === +id);
     if (!s) return ok({error: 'Séance introuvable'}, 404);
     Object.assign(s, {day, workout_id: wid, workout_name: wname, notes});
+    for (const f of SESSION_TIMES) if (f in d) s[f] = cleanTs(d[f]);   // absent du corps (modification depuis l'Historique, ancienne interface) : on garde
     w.entry = w.entry.filter(e => e.session_id !== +id); w.effort = w.effort.filter(f => f.session_id !== +id);
     if (!writeEntries(w, +id, d.entries)) throw new Bad('Aucune série saisie');
     return ok({ok: true});
@@ -412,7 +424,7 @@
         const slug = LEGACY_CARDIO[cardio[1]];
         if (slug && slug2id.has(slug)) entries.push({exercise_id: slug2id.get(slug), sets: [[null, cardio[0]]]});
       }
-      const sid = ins(w, 'session', {day: frToIso(s.d), ts: ts || nowMs(), workout_id: wname2id.has(wname) ? wname2id.get(wname) : null, workout_name: wname, notes: String(s.n || '')});
+      const sid = ins(w, 'session', {day: frToIso(s.d), ts: ts || nowMs(), workout_id: wname2id.has(wname) ? wname2id.get(wname) : null, workout_name: wname, notes: String(s.n || ''), start_ts: null, end_ts: null});
       writeEntries(w, sid, entries); added++;
     }
     let bw = 0;
@@ -436,7 +448,8 @@
     }
     for (const s of o.sessions || []) {
       need(s, ['id', 'day', 'ts']);
-      w.session.push({id: s.id, day: s.day, ts: s.ts, workout_id: s.workout_id === undefined ? null : s.workout_id, workout_name: s.workout_name || '', notes: s.notes || ''});
+      w.session.push({id: s.id, day: s.day, ts: s.ts, workout_id: s.workout_id === undefined ? null : s.workout_id, workout_name: s.workout_name || '', notes: s.notes || '',
+        start_ts: cleanTs(s.start_ts), end_ts: cleanTs(s.end_ts)});   // export d'avant la 0.7.0 : rien
       writeEntries(w, s.id, s.entries || []);
     }
     for (const x of o.bodyweight || []) { need(x, ['id', 'day', 'ts', 'kg']); w.bodyweight.push({id: x.id, day: x.day, ts: x.ts, kg: x.kg}); }
