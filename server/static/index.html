@@ -406,6 +406,7 @@ details.card.det>summary{color:var(--t);font-size:17px;font-weight:700}
   <div class="dstyle" id="daccent"></div>
   <div class="dstyle" id="dgender"></div>
   <div class="dstyle" id="dscreen"></div>
+  <div class="dstyle" id="dtabs"></div>
 </aside>
 <script>
 'use strict';
@@ -728,17 +729,17 @@ function nav() {
   $('ttl').textContent = view === 'accueil' ? 'Fonte' : view === 'profil' && window.PROFIL ? PROFIL.title() : VL[view];
   document.body.classList.toggle('onb', !!(window.PROFIL && PROFIL.imposed()));
   $('tabs').innerHTML = tabsNow().map(k => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}')" ${k === view ? 'aria-current="page"' : ''}><span class="ic">${IC[k]}</span>${VL[k]}</button>`).join('');
-  $('dnav').innerHTML = VIEWS.filter(([k]) => k !== 'jeu' || jeuOn()).map(([k, t]) => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}');closeMenu()">${t}</button>`).join('');
+  $('dnav').innerHTML = VIEWS.filter(([k]) => k !== 'jeu' || window.JEU).map(([k, t]) => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}');closeMenu()">${t}</button>`).join('');
   document.body.dataset.view = view;
   document.body.classList.toggle('foc', inFocus());
-  barRender(); screenSync();
+  barRender(); screenSync(); tabsPick();
 }
 function genderPick() {
   $('dgender').innerHTML = '<p class="m">Personnage des animations</p><div class="chips">' + [['m', 'Homme'], ['f', 'Femme']].map(([k, t]) => `<button class="chip ${GENDER === k ? 'on' : ''}" onclick="setGender('${k}')" aria-pressed="${GENDER === k}">${t}</button>`).join('') + '</div>';
 }
 function setGender(k) { GENDER = k; window.FIG_GENDER = k; store('muscu-gender', k); genderPick(); R(); }
 function openMenu() {
-  accentPick(); genderPick(); screenPick();
+  accentPick(); genderPick(); screenPick(); tabsPick();
   $('drawer').classList.add('open'); $('scrim').classList.add('open');
   $('drawer').setAttribute('aria-hidden', 'false'); $('menu-btn').setAttribute('aria-expanded', 'true');
 }
@@ -1820,6 +1821,12 @@ function screenSync() {
     if (on && navigator.wakeLock) navigator.wakeLock.request('screen').then(l => { if (SCRON) WAKE = l; else l.release(); }).catch(() => {});
     else if (!on && WAKE) { WAKE.release(); WAKE = null; }
   } catch (e) {}
+}
+function tabsPick() {   // l'onglet Esprits dans la barre du bas : l'interrupteur lit toujours l'état du jeu
+  const el = $('dtabs'); if (!el) return;
+  if (!window.JEU) { el.innerHTML = ''; return; }
+  const on = jeuOn();
+  el.innerHTML = `<div class="ntg"><div><p class="m">Onglets</p><b>Afficher l’onglet Esprits dans la barre du bas</b></div><button class="sw2" role="switch" aria-checked="${on}" aria-label="Afficher l’onglet Esprits dans la barre du bas" onclick="JEU.setHidden(${on});tabsPick()"></button></div>`;
 }
 function setScreen(on) { SCREEN = on; store('muscu-ecran', on); SCRON = null; screenSync(); screenPick(); }
 function screenPick() {

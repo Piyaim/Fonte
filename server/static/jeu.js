@@ -320,8 +320,8 @@
     var s = st(), pct = function (k) { return Math.round(RATES[k] * 100) + '\u00a0%'; };
     return '<section class="card"><h2>Taux de tirage</h2><p class="m">Affichés tels qu\'ils sont codés.</p><table>' + RK.slice().reverse().map(function (k) { return '<tr><td>' + tag(k) + '</td><td style="text-align:right">' + pct(k) + '</td></tr>'; }).join('') + '</table>'
       + '<p class="m">Garantie : Épique ou mieux tous les ' + PITY_E + ' tirages au plus, Légendaire tous les ' + PITY_L + ' au plus (compteurs actuels : ' + s.pe + ' et ' + s.pl + '). Chaque tirage donne 65\u00a0% d\'esprit et 35\u00a0% d\'objet de garde-robe, quand il en reste de cette rareté.</p></section>'
-      + '<section class="card"><h2>Garde-fous</h2><ul class="j-rule" style="padding-left:18px"><li>Aucun achat, aucun argent réel, aucune publicité.</li><li>Les jetons ne s\'obtiennent qu\'en s\'entraînant. Maximum ' + DAY_CAP + ' par jour : s\'entraîner plus ne rapporte pas plus.</li><li>Aucune série à perdre : si tu pauses, tu ne perds rien, tes jetons n\'expirent jamais.</li><li>Le niveau d\'un esprit vient des séries réellement faites sur sa zone.</li><li>Tout est stocké sur ton téléphone, rien n\'est envoyé.</li><li>Les jeux de tirage peuvent donner envie d\'en refaire : si tu le sens, tu peux masquer l\'onglet ci-dessous.</li></ul></section>'
-      + '<section class="card"><h2>Réglages</h2><div class="chips"><button class="chip ' + (s.opts.sound ? 'on' : '') + '" onclick="JEU.opt(\'sound\')">Sons</button><button class="chip ' + (s.opts.haptic ? 'on' : '') + '" onclick="JEU.opt(\'haptic\')">Vibrations</button><button class="chip ' + (s.opts.hide ? 'on' : '') + '" onclick="JEU.opt(\'hide\')">Masquer l\'onglet Esprits</button></div></section>';
+      + '<section class="card"><h2>Garde-fous</h2><ul class="j-rule" style="padding-left:18px"><li>Aucun achat, aucun argent réel, aucune publicité.</li><li>Les jetons ne s\'obtiennent qu\'en s\'entraînant. Maximum ' + DAY_CAP + ' par jour : s\'entraîner plus ne rapporte pas plus.</li><li>Aucune série à perdre : si tu pauses, tu ne perds rien, tes jetons n\'expirent jamais.</li><li>Le niveau d\'un esprit vient des séries réellement faites sur sa zone.</li><li>Tout est stocké sur ton téléphone, rien n\'est envoyé.</li><li>Les jeux de tirage peuvent donner envie d\'en refaire : si tu le sens, tu peux masquer l\'onglet de la barre du bas ci-dessous ; il reste dans le menu ☰.</li></ul></section>'
+      + '<section class="card"><h2>Réglages</h2><div class="chips"><button class="chip ' + (s.opts.sound ? 'on' : '') + '" onclick="JEU.opt(\'sound\')">Sons</button><button class="chip ' + (s.opts.haptic ? 'on' : '') + '" onclick="JEU.opt(\'haptic\')">Vibrations</button><button class="chip ' + (s.opts.hide ? 'on' : '') + '" onclick="JEU.opt(\'hide\')" aria-pressed="' + !!s.opts.hide + '">Masquer de la barre du bas</button></div></section>';
   }
   function view() {
     init(); css(); var q = quests(true); if (q.done.length) { save(); var n = q.done.reduce(function (a, d) { return a + d.r; }, 0); toast2('+' + n + ' jeton' + (n > 1 ? 's' : '') + '\u00a0: ' + (q.done.length > 1 ? 'quêtes accomplies' : 'quête accomplie')); }
@@ -423,7 +423,9 @@
     buy: function (kind, id) { if (buy(kind, id)) { toast2('Débloqué'); rer(); } },
     equip: function (sl, id) { equip(sl, id); rer(); },
     show: showCrea, preview: preview,
-    opt: function (k) { var s = st(); s.opts[k] = !s.opts[k]; save(); if (k === 'hide' && s.opts.hide) { try { g('go')('accueil'); } catch (e) {} } else rer(); try { g('nav')(); } catch (e) {} },
+    // « hide » retire seulement l'onglet de la barre du bas (et la carte de l'accueil, l'écran de récompense) : le menu garde « Esprits »
+    opt: function (k) { var s = st(); s.opts[k] = !s.opts[k]; save(); rer(); },
+    setHidden: function (on) { if (!!st().opts.hide !== !!on) JEU.opt('hide'); },
     exportState: function () { var s = st(); return s.init ? JSON.parse(JSON.stringify(s)) : null; },
     importState: function (o) { if (o && o.v === 1) { S = Object.assign(blank(), o); save(); applyWardrobe(); } },
     // pour les tests
