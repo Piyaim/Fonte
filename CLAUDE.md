@@ -245,6 +245,7 @@ Version actuelle : voir `android/gradle.properties` (0.5.3, VERSION_CODE 13, pr�
   - **Pas du matériel** (décision de Georgio) : le conseil arrondit au pas déduit des charges des 10 dernières séances de référence (`kgStep` : 2,5 kg si toutes en sont multiples, sinon 2, 1,25, 1, 0,5 ; aucun → arrondi à 0,5 kg d'avant). Montée d'au moins un pas, baisse et semaine légère au moins un pas sous la charge. Exemple : 3 × 12 à 52,5 kg → 55 kg (54 avant). Les boutons − et + gardent leur pas de 0,5 kg.
   - Ouverture d'un exercice en focus : la ligne active défile juste au-dessus de la barre de repos (`focReveal`). ✓ pâle dans le rond d'une série non validée. Hors de l'onglet Séance, minuteur d'une ligne (temps, Passer) agrandi au toucher (`BARX`, bouton « Réduire »).
   - Ressenti : sous chaque bouton, le conseil de la prochaine séance du programme (`feelNext` : `loadTip` sur l'historique plus la séance en cours) ; rien pendant une semaine légère ou une reprise.
+  - Contrastes ≥ 4,5:1 : `--at` = couleur d'accent réservée au texte (orange `#a83a0a` en clair), `--a` reste celle des boutons ; vert `#277c38` ; dégradé de l'accueil foncé côté clair pour chaque couleur.
 - Progrès : la flamme est remplacée par un haltère (`IC_TOTAL`, `totalBar`). Style d'apparence : le style « Dynamique », seul restant, est fusionné (règles en `:root`, même priorité, 0 pixel de différence sur 24 captures) ; sélecteur et style « Cartes » supprimés.
 
 ## 8 ter. Notifications (version 0.5.0, décisions de Georgio du 20/10/2026)
@@ -261,7 +262,7 @@ Version actuelle : voir `android/gradle.properties` (0.5.3, VERSION_CODE 13, pr�
 - **Non vérifié** : vrai Android 7 à 12 ; chemin exact des menus de batterie de MagicOS 9 (donné dans les notes comme précaution, d'après des guides d'anciennes versions) ; on ne sait pas si Georgio a dû changer un réglage de batterie sur son Honor.
 
 ## 9. À faire ensuite
-- Lot « Séance » (22/10/2026) : APK de test à essayer par Georgio (écran allumé, − et + à l'appui long, vibration du ✓), puis version. Contrastes restants : texte blanc du bandeau de l'accueil sur le dégradé orange (2,3:1 au début), orange en texte fin sur fond clair (3,2 à 3,6:1 : ligne de cible, étiquettes « record »), blanc sur le vert `#2b8a3e` (4,4:1).
+- Lot « Séance » (22/10/2026) : APK de test corrigée (retours du 22/10) à essayer par Georgio, puis version.
 - Version 0.5.0 (notifications) : préparée ; commit, push, puis release `v0.5.0` créée par Georgio lui-même après le push.
 - Questionnaire : ensuite bouton « J'ai mal » et circuit d'endurance.
 - Esprits : avis de Georgio sur Gloumi (première passe pixel art), puis les autres espèces du bestiaire v3 une par une, puis intégration dans l'appli (sprites PNG, halo, stade jamais en recul). Puis démonstrations d'exercice (`figure.js`).
