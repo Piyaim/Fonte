@@ -241,6 +241,9 @@ Version actuelle : voir `android/gradle.properties` (0.5.3, VERSION_CODE 13, pr�
 - **Minuteur** : barre du bas, compte à rebours de 44 px, −15 s, +15 s, Passer, Autre durée (60 s, 90 s, 2 min), « Ensuite : … » ; visible sur tous les onglets pendant un repos (classe `rest-on`), sur l'onglet Séance seulement sinon. À zéro par −15 s, le repos s'arrête sans sonner.
 - **Écran allumé** : en mode focus et pendant un repos, réglage « Garder l’écran allumé » dans le menu (clé `muscu-ecran`, activé par défaut). Coque : `FonteApp.keepScreenOn(bool)` pose ou retire `FLAG_KEEP_SCREEN_ON` ; navigateur : Screen Wake Lock s'il existe. **Non vérifié sur téléphone.**
 - **Couleurs du thème clair** : texte des boutons orange `#1b1005` (5,2:1 sur `#e8590c`), gris `--m` `#56636e` (5,4:1 sur le fond). Conseil en texte foncé avec un trait orange à gauche (l'orange en texte fin fait 3,2 à 3,6:1). Tailles : conseil 18 px gras dans le focus, « Dernière » 15 px, étiquettes des courbes 12 unités (au moins 11 px à 360 px).
+- **Retours sur l'APK de test (22/10/2026)** : écran allumé, appui long, vibration du ✓ et virgule confirmés sur téléphone.
+  - Ouverture d'un exercice en focus : la ligne active défile juste au-dessus de la barre de repos (`focReveal`). ✓ pâle dans le rond d'une série non validée. Hors de l'onglet Séance, minuteur d'une ligne (temps, Passer) agrandi au toucher (`BARX`, bouton « Réduire »).
+  - Ressenti : sous chaque bouton, le conseil de la prochaine séance du programme (`feelNext` : `loadTip` sur l'historique plus la séance en cours) ; rien pendant une semaine légère ou une reprise.
 - Progrès : la flamme est remplacée par un haltère (`IC_TOTAL`, `totalBar`). Style d'apparence : le style « Dynamique », seul restant, est fusionné (règles en `:root`, même priorité, 0 pixel de différence sur 24 captures) ; sélecteur et style « Cartes » supprimés.
 
 ## 8 ter. Notifications (version 0.5.0, décisions de Georgio du 20/10/2026)

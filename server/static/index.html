@@ -152,6 +152,7 @@ details{margin:8px 0}summary{font-weight:700;cursor:pointer;min-height:44px;padd
 .pm:active{background:var(--l)}
 .feel{margin-top:12px;padding:12px;border-radius:16px;background:var(--c);border:2px solid var(--a)}
 .feelb{display:grid;gap:8px;margin-top:8px}
+.feelb small{display:block;font-size:14px;font-weight:600;color:var(--m);margin-top:2px}.feelb button.on small{color:inherit}
 .feelb button{min-height:52px;border:2px solid var(--l);border-radius:12px;background:var(--bg);color:var(--t);font:inherit;font-size:17px;font-weight:700}
 .feelb button.on{background:var(--a);border-color:var(--a);color:var(--on)}
 .feel1{display:flex;align-items:center;gap:10px;margin-top:10px}.feel1 .sm{margin-left:auto}
@@ -160,6 +161,7 @@ details{margin:8px 0}summary{font-weight:700;cursor:pointer;min-height:44px;padd
 .last{font-size:15px}
 .tick{width:52px;height:52px;border-radius:50%;border:2px solid var(--l);background:var(--bg);color:var(--on);font-size:24px;font-weight:700;padding:0}
 .frow.ok .tick{background:var(--a);border-color:var(--a)}
+.tick .tk0{color:var(--m);opacity:.45}   /* ✓ pâle : la série reste à valider d'un toucher */
 .fnav{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:16px}
 .fnav .sm{padding:14px}
 .pr-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:20;padding:16px}
@@ -219,6 +221,15 @@ body:not([data-view="seance"]):not(.rest-on) .bar,body.onb .bar{display:none}
 .toast{bottom:calc(var(--tb) + 70px)}
 .rest-on .toast{bottom:calc(var(--tb) + 200px)}.foc.rest-on .toast{bottom:200px}
 body.rest-on main{padding-bottom:calc(var(--tb) + 210px)}
+/* minuteur compact (hors de l'onglet Séance) : une ligne, agrandie au toucher */
+.rb-c{display:flex;align-items:center;gap:8px}
+.rb-cx{flex:1;display:flex;align-items:center;gap:10px;min-height:44px;border:0;background:none;color:var(--t);font:inherit;padding:0 4px;text-align:left}
+.rb-cx b{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}
+.rb-cx svg{width:22px;height:22px;margin-left:auto;fill:none;stroke:var(--m);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.rb-c .sm{min-height:44px;font-weight:700}
+.rb-top .rb-red{min-width:0;font-size:14px;font-weight:600}
+body.barc main{padding-bottom:calc(var(--tb) + 92px)}
+.barc .toast{bottom:calc(var(--tb) + 84px)}
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .2s;z-index:29}
 .scrim.open{opacity:1;pointer-events:auto}
 .drawer{position:fixed;top:0;bottom:0;left:0;width:min(84vw,330px);background:var(--c);z-index:30;transform:translateX(-102%);visibility:hidden;transition:transform .22s ease,visibility 0s .22s;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 18px;overflow:auto;box-shadow:0 0 34px rgba(0,0,0,.45)}
@@ -474,7 +485,20 @@ function effBox(e) {   // une fois, juste après la dernière série validée (t
   const v = (F.eff && F.eff[e.id]) || 0, rows = F.vals[e.id] || [], d = (F.dn && F.dn[e.id]) || [];
   if (v && F.effOpen !== e.id) return `<p class="feel1">Ressenti\u00a0: <b>${effLabel(v)}</b><button class="sm" onclick="F.effOpen=${e.id};R()">Changer</button></p>`;
   if (F.mode !== 'edit' && F.effOpen !== e.id && !(rows.length && rows.every((_, k) => d[k]))) return '';
-  return `<div class="feel" role="group" aria-label="Ressenti"><p><b>Comment c’était\u00a0?</b></p><div class="feelb">${FEEL.map(([n, t]) => `<button class="${v === n ? 'on' : ''}" aria-pressed="${v === n}" onclick="setEff(${e.id},${n})">${t}</button>`).join('')}</div></div>`;
+  const nx = F.mode === 'new' ? feelNext(e) : null;
+  return `<div class="feel" role="group" aria-label="Ressenti"><p><b>Comment c’était\u00a0?</b></p><div class="feelb">${FEEL.map(([n, t]) => `<button class="${v === n ? 'on' : ''}" aria-pressed="${v === n}" onclick="setEff(${e.id},${n})">${t}${nx ? `<small>→ ${esc(nx[n])}</small>` : ''}</button>`).join('')}</div></div>`;
+}
+/* conséquence de chaque choix sur le conseil de la prochaine séance de ce programme : loadTip appliqué à l'historique
+   complété par la séance en cours (séries saisies, ressenti essayé). Rien ne change le conseil d'ici là sans une action de l'utilisateur
+   (semaine légère, reprise et phase demandent « Accepter ») ; null pendant une semaine légère ou une reprise, qui peut finir avant. */
+function feelNext(e) {
+  const cs = window.PROFIL && PROFIL.coach ? PROFIL.coach() : {};
+  if (cs.light) return null;
+  const sets = (F.vals[e.id] || []).map(a => [num(a[0]), num(a[1])].map(x => x == null || isNaN(x) ? null : x)).filter(a => a[0] != null || a[1] != null);
+  if (!sets.length) return null;
+  let ref = refSessions(e.id, F.wid, F.sid);
+  if (F.wid && ref.length && ref[0].workout_id !== F.wid) ref = [];   // la prochaine fois, la référence sera cette séance du programme
+  return Object.fromEntries(FEEL.map(([n]) => [n, loadTip(e, [{id: 0, day: F.day, workout_id: F.wid, entries: [{exercise_id: e.id, sets, effort: n}]}, ...ref], cs, n)[0]]));
 }
 function setEff(id, n) { syncForm(); F.eff = F.eff || {}; F.eff[id] = n; F.effOpen = null; F.dirty = true; syncForm(); R(); }
 function sessionVolume(s) {
@@ -712,13 +736,14 @@ function closeMenu() {
   $('drawer').setAttribute('aria-hidden', 'true'); $('menu-btn').setAttribute('aria-expanded', 'false');
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
-function go(v) { viewEx = null; view = v; store('muscu-view', v); if (v === 'profil' && window.PROFIL) PROFIL.enter(); R(); window.scrollTo(0, 0); }
+function go(v) { viewEx = null; view = v; BARX = false; store('muscu-view', v); if (v === 'profil' && window.PROFIL) PROFIL.enter(); R(); window.scrollTo(0, 0); }
 function R() {
   if (window.PROFIL && PROFIL.imposed() && view !== 'profil' && view !== 'donnees') view = 'profil';   // questionnaire imposé tant que le profil n'existe pas
   if (view === 'seance') ensureForm();
   nav();
   $('app').innerHTML = {accueil: vAccueil, seance: vSeance, zones: vZones, progres: vProgres, historique: vHisto, exercices: vCat, programmes: vProg, jeu: () => window.JEU ? JEU.view() : '', profil: () => window.PROFIL ? PROFIL.view() : '', notifications: () => window.NOTIF ? NOTIF.view() : '', donnees: vData}[view]();
   if (window.NOTIF) NOTIF.sync();   // plan des notifications recalculé après chaque changement (appli Android seulement)
+  focReveal();
 }
 
 /* ------------------------------------------------------------------ accueil */
@@ -1095,6 +1120,19 @@ function startFocus() {
 function focusAt(id) { syncForm(); F.ap = false; FOC = Math.max(0, F.ids.filter(i => EX[i]).indexOf(id)); syncForm(); R(); window.scrollTo(0, 0); }
 function exitFocus() { syncForm(); F.ap = true; syncForm(); R(); window.scrollTo(0, 0); }   // vers l'Aperçu
 function resumeSession() { ensureForm(); F.ap = false; FOC = null; go('seance'); }
+/* à l'ouverture d'un exercice (et seulement là) : la ligne active défile juste au-dessus de la barre de repos, ouverte ou fermée,
+   sans passer sous la barre du haut. Après le scrollTo(0, 0) des fonctions qui ouvrent un exercice, d'où requestAnimationFrame. */
+let FOCKEY = null;
+function focReveal() {
+  const k = inFocus() ? `${F.xid || ''}:${FOC}:${F.ids.filter(i => EX[i])[FOC]}` : null;
+  if (k === FOCKEY) return; FOCKEY = k; if (!k) return;
+  requestAnimationFrame(() => {
+    const r = document.querySelector('.focus .frow.act'), b = document.querySelector('.bar'), tb = document.querySelector('.topbar'); if (!r) return;
+    const rr = r.getBoundingClientRect(), lim = (b && getComputedStyle(b).display !== 'none' ? b.getBoundingClientRect().top : innerHeight) - 8;
+    const dy = Math.min(rr.bottom - lim, rr.top - (tb ? tb.getBoundingClientRect().bottom : 0) - 8);
+    if (dy > 0) window.scrollBy(0, dy);
+  });
+}
 function focMove(d) { syncForm(); FOC = Math.max(0, Math.min(F.ids.filter(i => EX[i]).length - 1, FOC + d)); R(); window.scrollTo(0, 0); }
 function togDone(id, i) {
   syncForm(); F.dn = F.dn || {}; const a = F.dn[id] = F.dn[id] || []; a[i] = !a[i]; F.dirty = true; syncForm();
@@ -1141,7 +1179,7 @@ function setRows(e, rows, steppers) {
   return rows.map((a, i) => {
     const lab = e.kind === 'cardio' ? '' : 'S' + (i + 1), sn = e.kind === 'cardio' ? '' : `, série ${i + 1}`;
     const inp = (k, ph, v) => `<input id="v${e.id}_${i}${k}" type="text" inputmode="decimal" autocomplete="off" placeholder="${ph}" value="${esc(inVal(v))}" oninput="touched()" aria-label="${ph}${sn}">`;
-    const tick = ticks ? `<button class="tick" onclick="togDone(${e.id},${i})" aria-label="Valider la série ${i + 1}" aria-pressed="${!!dn[i]}">${dn[i] ? '✓' : ''}</button>` : '';
+    const tick = ticks ? `<button class="tick" onclick="togDone(${e.id},${i})" aria-label="Valider la série ${i + 1}" aria-pressed="${!!dn[i]}">${dn[i] ? '✓' : '<span class="tk0" aria-hidden="true">✓</span>'}</button>` : '';
     if (i !== act) return `<div class="frow${dn[i] ? ' ok' : ''}${ticks ? '' : ' nt'}"><span>${lab}</span>${inp('l', l1, a[0])}${inp('v', l2, a[1])}${tick}</div>`;
     const st = (k, ph, v, d) => `<div class="stp"><b class="u">${ph}</b><div class="stpr"><button class="pm" data-in="v${e.id}_${i}${k}" data-d="${-d}" aria-label="Moins ${fmt(d)}, ${ph}${sn}">−</button>${inp(k, ph, v)}<button class="pm" data-in="v${e.id}_${i}${k}" data-d="${d}" aria-label="Plus ${fmt(d)}, ${ph}${sn}">+</button></div></div>`;
     const [d1, d2] = STEP[e.kind] || [0.5, 1];
@@ -1670,7 +1708,7 @@ function doImport() {
 /* ------------------------------------------------------------------ minuteur */
 /* Le minuteur est une barre en bas de l'écran, visible sur tous les onglets pendant un repos :
    grand compte à rebours, −15 s, +15 s, Passer, autre durée, et la série suivante. Hors repos, sur l'onglet Séance seulement. */
-let T = 0, TI, TEND = 0, TDUR = 0, TMID = null, TMO = false;
+let T = 0, TI, TEND = 0, TDUR = 0, TMID = null, TMO = false, BARX = false;   // BARX : minuteur agrandi d'un toucher hors de l'onglet Séance
 const mmss = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 function tk() {
   const s = Math.max(T, 0), m = $('tm'), p = $('tmp');
@@ -1724,11 +1762,17 @@ function nextInfo(id) {   // « Presse à cuisses · série 2 sur 3 · 47,5 kg �
 }
 function barRender() {
   const b = document.querySelector('.bar'); if (!b) return;
-  document.body.classList.toggle('rest-on', !!TEND);
+  if (!TEND) BARX = false;
+  const away = view !== 'seance', compact = !!TEND && away && !BARX;   // hors de l'onglet Séance : une ligne (temps restant, Passer), agrandie au toucher
+  document.body.classList.toggle('rest-on', !!TEND); document.body.classList.toggle('barc', compact);
+  if (compact) {
+    b.innerHTML = `<div class="rb-c"><button class="rb-cx" onclick="BARX=true;barRender()" aria-expanded="false" aria-label="Agrandir le minuteur de repos"><span class="m">Repos</span><b id="tm" role="timer" aria-live="off">${mmss(Math.max(T, 0))}</b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button><button class="sm" onclick="TMskip()">Passer</button></div>`;
+    return tk();
+  }
   const more = TMO ? `<div class="rb-more">${[60, 90, 120].map(x => `<button class="sm" onclick="TM(${x}, TMID)">${x < 120 ? x + ' s' : '2 min'}</button>`).join('')}</div>` : '';
   if (TEND) {
     const nx = nextInfo(TMID);
-    b.innerHTML = `<div class="rb-top"><span class="m">Repos</span><b id="tm" role="timer" aria-live="off">${mmss(Math.max(T, 0))}</b><button class="sm" onclick="TMskip()">Passer</button></div>`
+    b.innerHTML = `<div class="rb-top">${away ? '<button class="sm rb-red" onclick="BARX=false;barRender()" aria-expanded="true" aria-label="Réduire le minuteur de repos">Réduire</button>' : '<span class="m">Repos</span>'}<b id="tm" role="timer" aria-live="off">${mmss(Math.max(T, 0))}</b><button class="sm" onclick="TMskip()">Passer</button></div>`
       + `<div class="pbar"><i id="tmp"></i></div>`
       + `<div class="rb-btn"><button class="sm" onclick="TMadd(-15)" aria-label="Moins 15 secondes">−15 s</button><button class="sm" onclick="TMadd(15)" aria-label="Plus 15 secondes">+15 s</button><button class="sm" onclick="TMmore()" aria-expanded="${TMO}">Autre durée</button></div>`
       + more + (nx ? `<p class="rb-next">Ensuite\u00a0: ${esc(nx)}</p>` : '');

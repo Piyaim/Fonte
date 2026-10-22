@@ -140,7 +140,8 @@ try:
             pg.click(".frow.act .tick"); pg.click(".frow.act .tick"); time.sleep(.2)
             ok(pg.locator(".feel").count() == 0, f"{M} · ressenti absent après 2 séries sur 3")
             pg.click(".frow.act .tick"); time.sleep(.2)
-            ok(pg.locator(".feelb button").all_inner_texts() == ["Facile", "Juste bien", "Dur"], f"{M} · après la dernière série : Facile, Juste bien, Dur {pg.locator('.feelb button').all_inner_texts()}")
+            fb = [t.splitlines()[0] for t in pg.locator(".feelb button").all_inner_texts()]
+            ok(fb == ["Facile", "Juste bien", "Dur"], f"{M} · après la dernière série : Facile, Juste bien, Dur {fb}")
             hb = min(pg.locator(".feelb button").evaluate_all("l => l.map(b => b.getBoundingClientRect().height)"))
             ok(hb >= 48, f"{M} · boutons du ressenti : {hb:.0f} px de haut (48 au moins)")
             pg.click(".feelb button:has-text('Dur')"); time.sleep(.2)
