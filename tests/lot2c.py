@@ -139,7 +139,7 @@ try:
         h = visible(pg, "#app .hero")
         ok("6 exercices · prévue aujourd’hui" in h and "Dernière : il y a 2 j" in h and "Démarrer la séance" in h, f"accueil, jour de séance : carte courte {h!r}")
         ok(pg.evaluate("document.getElementById('app').firstElementChild.classList.contains('hero')"), "accueil : « Démarrer la séance » en tête")
-        le(pg, J(28), "seance"); pg.evaluate(f"pickWorkout({wa})"); time.sleep(.3)
+        le(pg, J(28), "seance"); pg.evaluate(f"pickWorkout({wa}); exitFocus()"); time.sleep(.3)   # Aperçu : toute la séance en liste
         r = bloc_exercice(pg, "Séance, phase 1")
         ok(any(l == ["Conseil\u00a0: 50 kg × 12"] for _, _, l in r), f"Séance : conseil chiffré sur une ligne {r[:1]}")
         ok("jamais jusqu’à l’échec" in pg.text_content("#app") and "jamais jusqu’à l’échec" not in visible(pg), "Séance : rappel de phase 1 présent, mais dans « Détails »")
@@ -171,7 +171,7 @@ try:
             petits += pg.evaluate("v => [...document.querySelectorAll('#app button, #app summary')].filter(e => e.offsetParent && e.getBoundingClientRect().height < 44).map(e => v + ' : ' + e.innerText.trim().slice(0, 20) + ' (' + Math.round(e.getBoundingClientRect().height) + ' px)')", v)
         ok(not vus, f"aucun « % » précédé d'une espace sécable (accueil, Séance, Progrès, Esprits > Règles, Mon profil, replis ouverts) {vus[:3]}")
         ok(not petits, f"tous les boutons visibles font au moins 44 px de haut (accueil, Séance, Progrès, Esprits > Règles, Mon profil) {petits[:4]}")
-        le(pg, J(35), "seance"); pg.evaluate(f"pickWorkout({wa})"); time.sleep(.3)
+        le(pg, J(35), "seance"); pg.evaluate(f"pickWorkout({wa}); exitFocus()"); time.sleep(.3)
         r = bloc_exercice(pg, "Séance, semaine légère")
         ok(any(l == ["Conseil\u00a0: 40 kg × 10 (semaine légère)"] for _, _, l in r), f"Séance, semaine légère : « Conseil : 40 kg × 10 (semaine légère) » {r[:1]}")
         ok(not errs, f"aucune erreur JavaScript (accueil, Séance) {errs[:2]}"); ctx.close()

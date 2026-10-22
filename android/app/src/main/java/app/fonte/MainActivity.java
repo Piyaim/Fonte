@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -225,6 +226,15 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void restCancel() { Notifs.restCancel(MainActivity.this); }
+
+        /** Écran allumé pendant la séance (un exercice à la fois, ou repos en cours) ; la page l'enlève ensuite, et le réglage du menu peut le couper. */
+        @JavascriptInterface
+        public void keepScreenOn(final boolean on) {
+            runOnUiThread(() -> {
+                if (on) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            });
+        }
 
         /** Bouton « Son et vibration » : le réglage Android du canal (Android 8 et plus). */
         @JavascriptInterface

@@ -291,7 +291,9 @@ try:
         c = cas_(rate, light=rep_); ok(c.splitlines()[1].startswith("Conseil\u00a0: 32 kg") and "(reprise)" in c, f"priorité 1 : la reprise passe avant la baisse {c.splitlines()[1]!r}")
         c = cas_(rate, light=all_); ok(c.splitlines()[1].startswith("Conseil\u00a0: 32 kg") and "(semaine légère)" in c, f"priorité 2 : la semaine allégée passe avant la baisse {c.splitlines()[1]!r}")
         c = cas_(rate); ok(c.splitlines()[1].startswith("Conseil\u00a0: 36-38 kg"), f"priorité 3 : la baisse passe avant le ressenti 5 {c.splitlines()[1]!r}")
-        c = cas_([(J(18), wa, T(3, 12), 5)]); ok(c.splitlines()[1] == "Conseil\u00a0: garde 40 kg" and "« à fond »" in c, f"priorité 4 : ressenti 5 passe avant la montée {c.splitlines()[1]!r}")
+        c = cas_([(J(18), wa, T(3, 12), 5)]); ok(c.splitlines()[1] == "Conseil\u00a0: garde 40 kg" and "« dur »" in c, f"priorité 4 : ancien ressenti 5 (« à fond », lu « dur ») passe avant la montée {c.splitlines()[1]!r}")
+        c = cas_([(J(18), wa, T(3, 12), 4)]); ok(c.splitlines()[1] == "Conseil\u00a0: garde 40 kg" and "« dur »" in c, f"priorité 4 : ressenti « Dur » (4) passe avant la montée (règle du 22/10/2026) {c.splitlines()[1]!r}")
+        c = cas_([(J(18), wa, T(3, 12), 3)]); ok(c.splitlines()[1] == "Conseil\u00a0: 41 kg × 10", f"(témoin : ressenti « Juste bien » au haut de la fourchette → montée) {c.splitlines()[1]!r}")
         c = cas_([(J(18), wa, T(3, 10), 2)]); ok(c.splitlines()[1].startswith("Conseil\u00a0: 41 kg") and "Ressenti facile" in c, f"priorité 5 : ressenti 2, toutes les séries au minimum → montée {c.splitlines()[1]!r}")
         c = cas_([(J(18), wa, T(3, 9), 2)]); ok("on monte" not in c, "(témoin : ressenti 2 mais une série sous le minimum → pas de montée)")
         # « dernière fois » du même programme

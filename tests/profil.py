@@ -213,9 +213,9 @@ try:
         ok(pg.locator(".tabbar").is_visible(), "après validation : navigation de retour")
         pg.reload(); pg.wait_for_selector(".tabbar button"); time.sleep(.3)
         ok("Bienvenue" not in pg.inner_text("#app") and pg.locator(".tabbar").is_visible(), "au lancement suivant : plus de questionnaire")
-        pg.evaluate("go('seance')"); time.sleep(.3)
+        pg.evaluate("go('seance'); exitFocus()"); time.sleep(.3)   # Aperçu : toute la séance, notes comprises
         ok(pg.input_value("#f-notes") == "brouillon témoin", "onglet Séance : le brouillon s'affiche avec ses valeurs")
-        pg.evaluate("go('seance')"); pg.evaluate(f"pickWorkout({hc['id']})"); time.sleep(.3)
+        pg.evaluate("go('seance')"); pg.evaluate(f"pickWorkout({hc['id']}); exitFocus()"); time.sleep(.3)
         pg.evaluate(OUVRIR); crd = pg.locator(".card", has_text="Développé incliné haltères").first.inner_text()
         ok("4 × 4-6" in crd and "propre à ce programme" in crd and "150 s" in crd, f"écran Séance : le développé incliné affiche le réglage de la séance ({crd[:60]!r})")
         pg.evaluate("go('accueil')"); time.sleep(.2)

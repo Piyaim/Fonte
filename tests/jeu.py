@@ -60,8 +60,11 @@ try:
         ok(r["tokens"] == 1, f"séance facile de 4 séries : 1 jeton ({r['tokens']})")
         r2 = ev("JEU.award(%d)" % sid)
         ok(r2 is None and ev("JEU.state().tokens") == t0 + 1, "créditer deux fois la même séance : impossible")
-        sid = mk(today, 6, 3); r = ev("JEU.award(%d)" % sid)   # 6 séries, ressenti juste : +1 +1 (effort) = 2
-        ok(r["tokens"] >= 2, f"séance de 6 séries, ressenti juste : {r['tokens']} jetons")
+        # le ressenti ne rapporte rien (22/10/2026) : même séance, ressenti « Juste bien », « Dur » ou absent → même score
+        sc_ = [ev("JEU._.scoreSession({id: -1, day: today(), entries: [{exercise_id: %s, sets: Array.from({length: 6}, () => [40, 10]), effort: %s}]})" % (ex0, e))["total"] for e in ("3", "4", "null")]
+        ok(sc_ == [1, 1, 1], f"ressenti « Juste bien », « Dur » ou absent : même nombre de jetons, 1 pour 6 séries {sc_}")
+        sid = mk(today, 6, 3); r = ev("JEU.award(%d)" % sid)
+        ok(all("essenti" not in l[0] and "ffort" not in l[0] for l in r["lines"]), f"compte rendu de séance : aucune ligne de ressenti {[l[0] for l in r['lines']]}")
         for i in range(5):
             sid = mk(today, 8, 3); ev("JEU.award(%d)" % sid)
         used = ev("JEU.state().days[today()]")
@@ -72,9 +75,6 @@ try:
         ok(all(v == 0 for v in ev("Object.values(JEU.state().awarded)")), "l'historique existant ne rapporte aucun jeton")
         sc = ev("JEU._.scoreSession(SESS[SESS.length-1])")
         ok(sc["sets"] <= 24, "les séries comptées sont plafonnées (24 par séance)")
-        # effort « à fond » ne rapporte pas plus
-        sid = mk(ev("(()=>{const d=new Date();d.setDate(d.getDate()-3);return d.toISOString().slice(0,10)})()"), 6, 5); r = ev("JEU.award(%d)" % sid)
-        ok(all("Effort juste" not in l[0] for l in r["lines"]), "ressenti « À fond » : pas de bonus d'effort")
         # niveaux : dépend uniquement des séries réelles
         ok(ev("JEU._.stageOf(1)") == 1 and ev("JEU._.stageOf(6)") == 2 and ev("JEU._.stageOf(14)") == 3, "stades : 1, puis 2 au niveau 6, puis 3 au niveau 14")
         # boutique

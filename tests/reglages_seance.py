@@ -29,8 +29,8 @@ CARTE = "id => [...document.querySelectorAll('#app .card')].find(c => c.querySel
 # lot 2C : explications et réglage « propre à ce programme » dans le repli « Détails » de la carte, ouvert avant lecture
 def carte(pg, id): return pg.evaluate(f"id => {{ const c = ({CARTE})(id); if (c) c.querySelectorAll('details').forEach(d => d.open = true); return c ? c.innerText : ''; }}", id)
 def conseil(t): return next((l for l in t.splitlines() if l.startswith("Conseil")), "")
-def lignes(pg, id): return pg.evaluate(f"id => ({CARTE})(id).querySelectorAll('.row input[id$=\"l\"]').length", id)
-def seance(pg, wid): pg.evaluate(f"go('seance'); pickWorkout({wid})"); time.sleep(.3)
+def lignes(pg, id): return pg.evaluate(f"id => ({CARTE})(id).querySelectorAll('.frow input[id$=\"l\"]').length", id)
+def seance(pg, wid): pg.evaluate(f"go('seance'); pickWorkout({wid}); exitFocus()"); time.sleep(.3)   # Aperçu : toute la séance en liste
 
 try:
     with sync_playwright() as p:
@@ -59,7 +59,7 @@ try:
 
             # ---------------------------------------------------- écran Séance : chaque programme affiche le sien
             seance(pg, d["force"]); t = carte(pg, x["id"])
-            ok("4 × 5" in t and "propre à ce programme" in t and "repos 180 s" in t and "Repos · 180 s" in t, f"{mode} · Séance « Force » : 4 × 5, repos 180 s")
+            ok("4 × 5" in t and "propre à ce programme" in t and "repos 180 s" in t, f"{mode} · Séance « Force » : 4 × 5, repos 180 s")
             ok(conseil(t) == "Conseil\u00a0: 61,5 kg × 5", f"{mode} · Séance « Force » : 4 séries de 5 à 60 kg réussies → le conseil propose 61,5 kg (+2,5 %)")
             ok(lignes(pg, x["id"]) == 4, f"{mode} · Séance « Force » : 4 lignes de série")
             seance(pg, d["volume"]); t = carte(pg, x["id"])
@@ -71,6 +71,7 @@ try:
             # mode focus et minuteur de repos
             seance(pg, d["force"]); pg.evaluate("startFocus()"); time.sleep(.3); pg.evaluate("document.querySelectorAll('.focus details').forEach(d => d.open = true)")
             ok("4 × 5" in pg.inner_text(".focus") and "propre à ce programme" in pg.inner_text(".focus"), f"{mode} · mode focus : 4 × 5")
+            ok("Lancer · 3 min" in pg.inner_text(".bar"), f"{mode} · mode focus : le minuteur propose le repos de « Force » (3 min) {pg.inner_text('.bar')!r}")
             pg.click(".frow .tick >> nth=0"); time.sleep(.4); tm = pg.inner_text("#tm")
             ok(tm in ("3:00", "2:59"), f"{mode} · série validée en mode focus : minuteur de 180 s ({tm})")
             pg.evaluate("exitFocus(); TM(0)")

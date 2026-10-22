@@ -109,17 +109,15 @@
 
   /* ------------------------------------------------------------------ gains : uniquement via l'effort réel */
   function scoreSession(s) {
-    var n = 0, ef = [], pr = 0, prs = g('computePRs');
-    s.entries.forEach(function (en) { n += Math.min(6, en.sets.length); if (en.effort) ef.push(en.effort); });
+    var n = 0, pr = 0, prs = g('computePRs');   // le ressenti ne rapporte rien : il sert seulement au conseil de charge
+    s.entries.forEach(function (en) { n += Math.min(6, en.sets.length); });
     n = Math.min(24, n);
     try { var p = prs ? prs().bySession[s.id] : null; pr = p && p.length ? 1 : 0; } catch (e) {}
-    var avg = ef.length ? ef.reduce(function (a, b) { return a + b; }, 0) / ef.length : 0;
     var lines = [];
     if (n >= 3) lines.push(['Séance terminée', 1]);
     if (n >= 10) lines.push(['10 séries ou plus', 1]);
     if (n >= 3 && pr) lines.push(['Record battu', 1]);
-    if (n >= 3 && avg >= 3 && avg <= 4.5) lines.push(['Effort juste (ressenti « Juste bien » ou « Dur »)', 1]);
-    return { sets: n, avg: avg, lines: lines, total: lines.reduce(function (a, l) { return a + l[1]; }, 0) };
+    return { sets: n, lines: lines, total: lines.reduce(function (a, l) { return a + l[1]; }, 0) };
   }
   function init() {
     var s = st();
@@ -277,9 +275,9 @@
       + '<button class="go" ' + (s.tokens >= 1 ? '' : 'disabled style="opacity:.5"') + ' onclick="JEU.pull(1)">Tirer (1 jeton)</button>'
       + '<button class="sm w" ' + (s.tokens >= MULTI ? '' : 'disabled style="opacity:.5"') + ' onclick="JEU.pull(' + MULTI + ')">Tirer ×' + MULTI + ' (' + MULTI + ' jetons)</button>'
       + '<p class="m" style="margin-top:8px">Épique ou mieux garanti dans ' + toE + ' tirage' + (toE > 1 ? 's' : '') + ' au plus, Légendaire dans ' + toL + ' au plus.</p>'
-      + (s.tokens < 1 ? '<p class="m"><b>Plus de jeton ?</b> Termine une séance : tu en gagnes de 1 à ' + DAY_CAP + ' selon ton effort.</p>' : '') + '</section>';
+      + (s.tokens < 1 ? '<p class="m"><b>Plus de jeton ?</b> Termine une séance : tu en gagnes de 1 à 3 selon tes séries et tes records.</p>' : '') + '</section>';
     h += questsHtml();
-    h += '<section class="card"><h2>Comment gagner des jetons</h2><ul class="j-rule" style="padding-left:18px;margin:6px 0"><li>Séance terminée (3 séries ou plus) : +1</li><li>10 séries ou plus : +1</li><li>Record battu : +1</li><li>Ressenti « Juste bien » ou « Dur » : +1</li><li>Maximum ' + DAY_CAP + ' jetons par jour. « À fond » ne rapporte pas plus : mieux vaut récupérer.</li></ul></section>';
+    h += '<section class="card"><h2>Comment gagner des jetons</h2><ul class="j-rule" style="padding-left:18px;margin:6px 0"><li>Séance terminée (3 séries ou plus) : +1</li><li>10 séries ou plus : +1</li><li>Record battu : +1</li><li>Maximum ' + DAY_CAP + ' jetons par jour.</li></ul></section>';
     return h;
   }
   function vCollection() {
@@ -326,7 +324,7 @@
       + '<section class="card"><h2>Réglages</h2><div class="chips"><button class="chip ' + (s.opts.sound ? 'on' : '') + '" onclick="JEU.opt(\'sound\')">Sons</button><button class="chip ' + (s.opts.haptic ? 'on' : '') + '" onclick="JEU.opt(\'haptic\')">Vibrations</button><button class="chip ' + (s.opts.hide ? 'on' : '') + '" onclick="JEU.opt(\'hide\')">Masquer l\'onglet Esprits</button></div></section>';
   }
   function view() {
-    init(); css(); var q = quests(true); if (q.done.length) { save(); toast2('+' + q.done.reduce(function (a, d) { return a + d.r; }, 0) + ' jeton(s) : quête accomplie'); }
+    init(); css(); var q = quests(true); if (q.done.length) { save(); var n = q.done.reduce(function (a, d) { return a + d.r; }, 0); toast2('+' + n + ' jeton' + (n > 1 ? 's' : '') + '\u00a0: ' + (q.done.length > 1 ? 'quêtes accomplies' : 'quête accomplie')); }
     var body = sub === 'collection' ? vCollection() : sub === 'garde' ? vGarde() : sub === 'boutique' ? vBoutique() : sub === 'regles' ? vRegles() : vTirage();
     return head() + subnav() + body;
   }
