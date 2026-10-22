@@ -255,13 +255,14 @@ try:
         s3 = [[nom[x["wid"]] for x in pg.evaluate("([o, m]) => PROFIL._.weekPlan(Object.assign({}, o, {answers: Object.assign({}, o.answers, {seances: 3, jours: ['lun', 'mer', 'ven']})}), o.program, m)", [o, J(84 + 7 * k)])] for k in range(2)]
         s4 = [[nom[x["wid"]] for x in pg.evaluate("([o, m]) => PROFIL._.weekPlan(Object.assign({}, o, {answers: Object.assign({}, o.answers, {seances: 4, jours: ['lun', 'mar', 'jeu', 'ven']})}), o.program, m)", [o, J(84 + 7 * k)])] for k in range(2)]
         ok(s3 == [["A", "B", "C"], ["A", "B", "C"]] and s4 == [["A", "B", "C", "A"], ["B", "C", "A", "B"]], f"rotation avec 3 et 4 séances par semaine {s3} {s4}")
+        # dernière séance faite : B (jour 77) ; le lundi 84 passé sans séance ne compte pas : C, qui suit B (correctif de la 0.6.0)
         le(pg, J(87)); h = pg.inner_text("#app .hero h2")
-        ok(h == "Séance B", f"jeudi de la semaine 13 : l'accueil propose la séance B ({h})")
+        ok(h == "Séance C", f"jeudi de la semaine 13 : l'accueil propose la séance qui suit la dernière faite (B), donc C ({h})")
         # séance C supprimée par l'utilisateur : la rotation revient à A, B ; phase et historique intacts
         pg.evaluate(f"api('DELETE', '/api/workouts/{wc}').then(load)"); pg.wait_for_timeout(400); o = pg.evaluate(PROF)
         sem = [[nom[x["wid"]] for x in pg.evaluate("([o, m]) => PROFIL._.weekPlan(o, Object.assign({}, o.program, {ids: o.program.ids.slice(0, 2)}), m)", [o, J(91 + 7 * k)])] for k in range(2)]
-        ok(pg.evaluate("PROFIL.coach().phase") == 3 and [nom[x["wid"]] for x in pg.evaluate("PROFIL.schedule().week")] in (["A", "B"], ["B", "A"]) and sem == [["A", "B"], ["A", "B"]],
-           f"séance C supprimée : la rotation revient à A, B, phase 3 gardée {sem}")
+        ok(pg.evaluate("PROFIL.coach().phase") == 3 and [nom[x["wid"]] for x in pg.evaluate("PROFIL.schedule().week")] == ["A", "A"] and sem == [["A", "B"], ["A", "B"]],
+           f"séance C supprimée : la rotation revient à A, B (jeudi : A, qui suit B, la dernière faite), phase 3 gardée {sem}")
         ok(not errs, f"aucune erreur JavaScript (séance C) {errs[:2]}"); ctx.close()
 
         # « Plus tard » : rien ne change

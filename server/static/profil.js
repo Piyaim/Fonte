@@ -571,7 +571,16 @@
     const o = profile(), p = managed(o); if (!p || !Array.isArray(o.answers.jours)) return null;
     const mon = monday(t), slots = [...weekPlan(o, p, mon), ...weekPlan(o, p, addD(mon, 7))];
     if (!slots.length) return null;
-    const td = slots.find(s => s.day === t), done = td && A().SESS().some(s => s.day === t && s.workout_id === td.wid);
+    // les jours restent ceux du calendrier, mais la séance suit la dernière faite du programme (A faite un jour imprévu : B ensuite) ;
+    // un jour prévu passé sans séance ne fait pas avancer la rotation (rien n’est compté comme non fait)
+    const last = A().SESS().filter(s => s.day <= t && p.ids.includes(s.workout_id))
+      .sort((a, b) => a.day < b.day ? -1 : a.day > b.day ? 1 : (a.ts || 0) - (b.ts || 0) || a.id - b.id).pop();
+    if (last) {
+      const now = todayIso(), base = now < t ? now : t, from = addD(last.day, 1) > base ? addD(last.day, 1) : base;
+      let j = p.ids.indexOf(last.workout_id);
+      slots.forEach(s => { if (s.day >= from) s.wid = p.ids[j = (j + 1) % p.ids.length]; });
+    }
+    const td = slots.find(s => s.day === t), done = td && (last ? last.day === t : false);
     return {today: td && !done ? td : null, planned: !!td, next: slots.find(s => s.day > t), week: slots.filter(s => s.day < addD(mon, 7))};
   }
   function coach(t) {   // ce qu'il faut au conseil de charge
