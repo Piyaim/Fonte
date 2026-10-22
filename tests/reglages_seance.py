@@ -60,7 +60,7 @@ try:
             # ---------------------------------------------------- écran Séance : chaque programme affiche le sien
             seance(pg, d["force"]); t = carte(pg, x["id"])
             ok("4 × 5" in t and "propre à ce programme" in t and "repos 180 s" in t, f"{mode} · Séance « Force » : 4 × 5, repos 180 s")
-            ok(conseil(t) == "Conseil\u00a0: 61,5 kg × 5", f"{mode} · Séance « Force » : 4 séries de 5 à 60 kg réussies → le conseil propose 61,5 kg (+2,5 %)")
+            ok(conseil(t) == "Conseil\u00a0: 62,5 kg × 5", f"{mode} · Séance « Force » : 4 séries de 5 à 60 kg réussies → le conseil propose 62,5 kg (un pas de 2,5 kg)")
             ok(lignes(pg, x["id"]) == 4, f"{mode} · Séance « Force » : 4 lignes de série")
             seance(pg, d["volume"]); t = carte(pg, x["id"])
             ok("3 × 12" in t and "repos 60 s" in t and "propre à ce programme" in t, f"{mode} · Séance « Volume » : 3 × 12, repos 60 s")

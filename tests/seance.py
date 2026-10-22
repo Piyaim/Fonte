@@ -123,7 +123,7 @@ try:
             pg.evaluate("exitFocus()"); pg.evaluate(EFFACER)
             pg.evaluate(SEANCES, [serie("2026-10-17", [[40, 8], [40, 8], [40, 10]]), serie("2026-10-20", [[40, 8], [40, 8], [40, 10]])])
             demarrer(); v = [(pg.input_value(f"#v{x}_{i}l"), pg.input_value(f"#v{x}_{i}v")) for i in range(3)]
-            ok("36-38 kg × 10" in pg.inner_text(".focus") and v == [("38", "10")] * 3, f"{M} · baisse (36-38 kg × 10) : lignes à 38 kg × 10 {v}")
+            ok("35-37,5 kg × 10" in pg.inner_text(".focus") and v == [("37,5", "10")] * 3, f"{M} · baisse (35-37,5 kg × 10, pas de 2,5 kg) : lignes à 37,5 kg × 10 {v}")
             pg.evaluate("exitFocus()"); pg.evaluate(EFFACER)
             pg.evaluate(SEANCES, [serie("2026-10-20", [[40, 12], [40, 12], [40, 11]], 4)])
             demarrer(); v = [(pg.input_value(f"#v{x}_{i}l"), pg.input_value(f"#v{x}_{i}v")) for i in range(3)]
@@ -150,10 +150,10 @@ try:
             eff = [e["effort"] for e in entrees() if e["exercise_id"] == x]
             ok(eff == [4], f"{M} · « Dur » enregistré comme 4 {eff}")
             demarrer(); t = pg.inner_text(".focus")
-            ok("garde 41 kg" in t, f"{M} · séance suivante après « Dur » au haut de la fourchette : on garde 41 kg")
+            ok("garde 42,5 kg" in t, f"{M} · séance suivante après « Dur » au haut de la fourchette : on garde 42,5 kg")
             pg.evaluate("exitFocus()"); pg.evaluate(EFFACER)
             pg.evaluate(SEANCES, [serie("2026-10-20", [[40, 12]] * 3, 3)])
-            demarrer(); ok("41 kg × 10" in pg.inner_text(".focus"), f"{M} · (témoin) « Juste bien » au haut de la fourchette : on monte (41 kg)")
+            demarrer(); ok("42,5 kg × 10" in pg.inner_text(".focus"), f"{M} · (témoin) « Juste bien » au haut de la fourchette : on monte (42,5 kg)")
             pg.evaluate("exitFocus()"); pg.evaluate(EFFACER)
 
             # ======================================================= 5. − et +, appui long, ✓ : vibration et repos

@@ -608,6 +608,13 @@ new MutationObserver(() => FIG.scan()).observe(document.documentElement, {childL
    4. ressenti « dur » (4 ou 5 : garder), 5. montée (double progression, ou ressenti « facile » (1-2) avec toutes les séries au moins au minimum).
    Les séances de semaine allégée et de reprise ne comptent pas comme séances sous la fourchette. */
 const r05 = v => Math.round(v * 2) / 2;
+/* pas du matériel, déduit des charges des séances de référence (10 au plus) : 2,5 kg si elles en sont toutes des multiples, sinon 2, 1,25, 1, 0,5 kg ;
+   null si aucun ne convient (47,3 kg par exemple) : le conseil garde alors l'arrondi à 0,5 kg. Les boutons − et + ont leur propre pas (STEP). */
+const KSTEPS = [2.5, 2, 1.25, 1, 0.5];
+function kgStep(ref, exId) {
+  const v = ref.slice(0, 10).flatMap(s => setsOf(s, exId) || []).map(a => a[0]).filter(x => x != null && x > 0);
+  return v.length ? KSTEPS.find(p => v.every(x => Math.abs(x / p - Math.round(x / p)) < 1e-6)) || null : null;
+}
 /* renvoie [conseil d'une ligne, explication pour « Détails », valeurs proposées {l: charge, v: reps, secondes ou minutes}] ;
    une valeur proposée null = celle de la dernière fois, série par série. Les lignes de la séance sont préremplies avec ces valeurs. */
 function loadTip(e, ref, cs, ef) {
@@ -616,12 +623,14 @@ function loadTip(e, ref, cs, ef) {
   const top = (s, k) => { const v = setsOf(s, e.id).map(a => a[k]).filter(x => x != null && x > 0); return v.length ? Math.max(...v) : null; };
   const L = top(ref[0], 0), V = top(ref[0], 1), S = (l, v) => ({l: l ?? null, v: v ?? null});
   const w = e.kind === 'weight' && !e.assisted, as = e.kind === 'weight' && e.assisted;
+  const p = kgStep(ref, e.id), q = p || .5, rs = v => p ? Math.round(v / p) * p : r05(v);   // charge arrondie au pas du matériel
+  const below = (v, b) => b > q ? Math.max(q, Math.min(rs(v), b - q)) : b;                   // au moins un pas sous b (sauf charge minimale)
   if (cs.light) {   // 1 et 2 : base = dernière séance hors semaine légère et reprise
     const b = ref.find(s => !inLight(s.day)) || ref[0], bL = top(b, 0), bV = top(b, 1);
     const tag = cs.light.kind === 'reprise' ? ' (reprise)' : ' (semaine légère)', pre = cs.light.kind === 'reprise' ? 'Reprise en douceur' : 'Semaine légère';
     const why = cs.light.kind === 'reprise' ? '80\u00a0% de' : 'environ 20\u00a0% de moins que';
-    if (w && bL) return [`${fmt(r05(bL * .8))} kg${bV ? ' × ' + bV : ''}${tag}`, `${pre}\u00a0: ${why} ${fmt(bL)} kg, mêmes séries.`, S(r05(bL * .8), bV)];
-    if (as && bL) return [`${fmt(r05(bL * 1.2))} kg d’assistance${tag}`, `${pre}\u00a0: environ 20\u00a0% d’assistance en plus.`, S(r05(bL * 1.2))];
+    if (w && bL) return [`${fmt(below(bL * .8, bL))} kg${bV ? ' × ' + bV : ''}${tag}`, `${pre}\u00a0: ${why} ${fmt(bL)} kg, mêmes séries.`, S(below(bL * .8, bL), bV)];
+    if (as && bL) return [`${fmt(Math.max(rs(bL * 1.2), bL + q))} kg d’assistance${tag}`, `${pre}\u00a0: environ 20\u00a0% d’assistance en plus.`, S(Math.max(rs(bL * 1.2), bL + q))];
     if (e.kind === 'time' && bV) return [`${Math.round(bV * .8)} s par série${tag}`, `${pre}\u00a0: environ 20\u00a0% de moins.`, S(null, Math.round(bV * .8))];
     if (e.kind === 'reps' && bV) return [`${Math.max(1, Math.round(bV * .8))} reps par série${tag}`, `${pre}\u00a0: environ 20\u00a0% de moins.`, S(null, Math.max(1, Math.round(bV * .8)))];
     if (e.kind === 'cardio') { const m = setsOf(b, e.id).reduce((t, a) => t + (a[1] || 0), 0); return [`${m ? Math.round(m * .8) + ' min, ' : ''}allure douce${tag}`, `${pre}\u00a0: durée et allure plus douces.`, S(null, m ? Math.round(m * .8) : null)]; }
@@ -632,8 +641,9 @@ function loadTip(e, ref, cs, ef) {
   const under = s => { const v = setsOf(s, e.id).filter(a => a[1] != null); return v.length > 0 && v.filter(a => a[1] < mn).length * 2 >= v.length; };
   if (counted.length >= 2 && under(counted[0]) && under(counted[1])) {   // 3
     const cL = top(counted[0], 0), why = 'Deux séances de suite sous ta fourchette : on baisse un peu, 5 à 10\u00a0%.';
-    if (w && cL) return [`${fmt(r05(cL * .9))}-${fmt(r05(cL * .95))} kg × ${mn}`, why, S(r05(cL * .95), mn)];
-    if (as) return [`+5 kg d’assistance × ${mn}`, why, S(L != null ? L + 5 : null, mn)];
+    const hi = cL ? below(cL * .95, cL) : 0, lo = cL ? Math.min(below(cL * .9, cL), hi) : 0, a5 = p ? Math.max(p, Math.round(5 / p) * p) : 5;
+    if (w && cL) return [`${lo < hi ? fmt(lo) + '-' : ''}${fmt(hi)} kg × ${mn}`, why, S(hi, mn)];
+    if (as) return [`+${fmt(a5)} kg d’assistance × ${mn}`, why, S(L != null ? L + a5 : null, mn)];
     if (e.kind === 'time') return [`${mn} s par série, sans forcer`, why, S(null, mn)];
     if (e.kind === 'reps') return [`${mn} reps propres, sans forcer`, why, S(null, mn)];
     return [`−5 à 10\u00a0% de charge × ${mn}`, why, S(null, mn)];
@@ -642,9 +652,10 @@ function loadTip(e, ref, cs, ef) {
   const full = l.length >= e.sets, atTop = full && l.every(a => (a[1] || 0) >= mx), atMin = full && l.every(a => (a[1] || 0) >= mn);
   if (atTop || (ef && ef <= 2 && atMin)) {   // 5
     const why = (atTop ? 'Toutes les séries au haut de la fourchette' : `Ressenti ${effLabel(ef).toLowerCase()}`) + '\u00a0: on monte.';
-    if (w && L) return [`${fmt(L + r05(Math.min(2.5, Math.max(1, L * .025))))} kg × ${mn}`, why + ' Ou le cran suivant de la machine.', S(L + r05(Math.min(2.5, Math.max(1, L * .025))), mn)];
+    const up = Math.min(2.5, Math.max(1, (L || 0) * .025)), inc = p ? Math.max(p, Math.round(up / p) * p) : r05(up), a5 = p ? Math.max(p, Math.round(5 / p) * p) : 5;   // +2,5 % borné à 1-2,5 kg, au moins un pas
+    if (w && L) return [`${fmt(L + inc)} kg × ${mn}`, why + ' Ou le cran suivant de la machine.', S(L + inc, mn)];
     if (w) return [`+1 à 2 kg × ${mn}`, why, S(null, mn)];
-    if (as) return ['−5 kg d’assistance', why, S(L != null ? Math.max(0, L - 5) : null)];
+    if (as) return [`−${fmt(a5)} kg d’assistance`, why, S(L != null ? Math.max(0, L - a5) : null)];
     if (e.kind === 'time') return ['+5 à 10 s par série', why + ' Ou une série de plus.', S(null, V != null ? V + 5 : null)];
     return ['+1 à 2 reps par série', why + ' Ou une série de plus.', S(null, V != null ? V + 1 : null)];
   }
