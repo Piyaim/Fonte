@@ -112,11 +112,12 @@
     var n = 0, pr = 0, prs = g('computePRs');   // le ressenti ne rapporte rien : il sert seulement au conseil de charge
     s.entries.forEach(function (en) { n += Math.min(6, en.sets.length); });
     n = Math.min(24, n);
-    try { var p = prs ? prs().bySession[s.id] : null; pr = p && p.length ? 1 : 0; } catch (e) {}
+    // « Progression » : un record (charge, reps ou secondes jamais faites) ou un meilleur score d'Epley (cardio compris) ; 1 jeton au plus
+    try { var p = prs ? prs().progress[s.id] : null; pr = p ? 1 : 0; } catch (e) {}
     var lines = [];
     if (n >= 3) lines.push(['Séance terminée', 1]);
     if (n >= 10) lines.push(['10 séries ou plus', 1]);
-    if (n >= 3 && pr) lines.push(['Record battu', 1]);
+    if (n >= 3 && pr) lines.push(['Progression', 1]);
     return { sets: n, lines: lines, total: lines.reduce(function (a, l) { return a + l[1]; }, 0) };
   }
   function init() {
@@ -275,9 +276,9 @@
       + '<button class="go" ' + (s.tokens >= 1 ? '' : 'disabled style="opacity:.5"') + ' onclick="JEU.pull(1)">Tirer (1 jeton)</button>'
       + '<button class="sm w" ' + (s.tokens >= MULTI ? '' : 'disabled style="opacity:.5"') + ' onclick="JEU.pull(' + MULTI + ')">Tirer ×' + MULTI + ' (' + MULTI + ' jetons)</button>'
       + '<p class="m" style="margin-top:8px">Épique ou mieux garanti dans ' + toE + ' tirage' + (toE > 1 ? 's' : '') + ' au plus, Légendaire dans ' + toL + ' au plus.</p>'
-      + (s.tokens < 1 ? '<p class="m"><b>Plus de jeton ?</b> Termine une séance : tu en gagnes de 1 à 3 selon tes séries et tes records.</p>' : '') + '</section>';
+      + (s.tokens < 1 ? '<p class="m"><b>Plus de jeton ?</b> Termine une séance : tu en gagnes de 1 à 3 selon tes séries et tes progrès.</p>' : '') + '</section>';
     h += questsHtml();
-    h += '<section class="card"><h2>Comment gagner des jetons</h2><ul class="j-rule" style="padding-left:18px;margin:6px 0"><li>Séance terminée (3 séries ou plus) : +1</li><li>10 séries ou plus : +1</li><li>Record battu : +1</li><li>Maximum ' + DAY_CAP + ' jetons par jour.</li></ul></section>';
+    h += '<section class="card"><h2>Comment gagner des jetons</h2><ul class="j-rule" style="padding-left:18px;margin:6px 0"><li>Séance terminée (3 séries ou plus) : +1</li><li>10 séries ou plus : +1</li><li>Progression (charge, reps, secondes ou minutes en plus) : +1</li><li>Maximum ' + DAY_CAP + ' jetons par jour.</li></ul></section>';
     return h;
   }
   function vCollection() {
@@ -336,8 +337,12 @@
     var team = s.team.map(function (cid, i) { var lv = levelOf(cid, zs); return '<span class="' + (i ? '' : 'lead') + '">' + art(cid, stageOf(lv), { bare: true }) + '</span>'; }).join('');
     var act = s.tokens >= 1 ? '<button class="sm" onclick="event.stopPropagation();JEU.pull(1)">Tirer</button>'
       : '<button class="sm" onclick="event.stopPropagation();go(\'jeu\');JEU.sub(\'collection\')">Équipe</button>';
+    // sans jeton : la quête en cours à la place des jetons (« Quête : 3/5 zones »)
+    var cur = q.list.filter(function (i) { return !i.ok; })[0], unitQ = { obj: 'séances', 'var': 'zones', eq: 'esprits' };
+    var txt = s.tokens >= 1 ? '<b>' + s.tokens + ' jeton' + (s.tokens > 1 ? 's' : '') + '</b> <span class="m">· quêtes ' + done + '/' + q.list.length + '</span>'
+      : cur ? '<b>Quête\u00a0: ' + cur.p + ' ' + unitQ[cur.id] + '</b>' : '<b>Quêtes de la semaine faites</b>';
     return '<section class="card spirits" onclick="go(\'jeu\')" style="cursor:pointer"><span class="team" role="img" aria-label="Ton équipe : ' + E(s.team.map(function (c) { return CRE[c].name; }).join(', ')) + '">' + team + '</span>'
-      + '<span class="txt"><b>' + s.tokens + ' jeton' + (s.tokens > 1 ? 's' : '') + '</b> <span class="m">· quêtes ' + done + '/' + q.list.length + '</span></span>' + act + '</section>';
+      + '<span class="txt">' + txt + '</span>' + act + '</section>';
   }
   // partie « Esprits » de l'écran de fin de séance : mêmes lignes que la fenêtre de récompense, tirage en action secondaire
   function rewardHtml(rep) {

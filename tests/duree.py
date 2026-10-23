@@ -62,7 +62,7 @@ try:
 
             # 2. Aperçu, sans « Démarrer » : ouverte à 11:00, première série validée à 11:05, enregistrée à 11:40 → 35 min (et pas 40)
             heure("11:00"); pg.evaluate("go('seance')"); pg.wait_for_timeout(300)
-            if pg.locator(".focus button:has-text('Aperçu')").count(): pg.click(".focus button:has-text('Aperçu')"); pg.wait_for_timeout(300)
+            if pg.locator("#tb-ap").is_visible(): pg.click("#tb-ap"); pg.wait_for_timeout(300)
             for i in pg.locator("#app input[inputmode=decimal]").all(): i.fill("22")
             heure("11:05"); pg.locator("#app .tick").first.click(); pg.wait_for_timeout(100)
             heure("11:40"); pg.click("#app button:has-text('Enregistrer la séance')"); pg.wait_for_timeout(800); clean(); s2 = derniere()
@@ -71,7 +71,7 @@ try:
 
             # 3. saisie après coup : date changée pour la veille → ni début ni fin
             heure("12:00"); pg.evaluate("go('seance')"); pg.wait_for_timeout(300)
-            if pg.locator(".focus button:has-text('Aperçu')").count(): pg.click(".focus button:has-text('Aperçu')"); pg.wait_for_timeout(300)
+            if pg.locator("#tb-ap").is_visible(): pg.click("#tb-ap"); pg.wait_for_timeout(300)
             pg.fill("#f-day", "2026-11-03"); pg.dispatch_event("#f-day", "change")
             for i in pg.locator("#app input[inputmode=decimal]").all(): i.fill("24")
             pg.locator("#app .tick").first.click(); heure("12:30"); pg.click("#app button:has-text('Enregistrer la séance')"); pg.wait_for_timeout(800); clean(); s3 = derniere()

@@ -8,7 +8,7 @@
 # 4. ✓ pâle dans le rond d'une série non validée ;
 # 5. hors de l'onglet Séance, minuteur d'une ligne (temps restant, Passer), agrandi au toucher ; version complète sur l'onglet Séance ;
 # 6. sous chaque bouton du ressenti, la conséquence pour la prochaine séance : c'est bien le conseil affiché la fois suivante ;
-# 7. contrastes : texte en couleur d'accent, texte des boutons, texte blanc du dégradé de l'accueil, au moins 4,5:1 (6 couleurs, clair et sombre).
+# 7. contrastes : texte en couleur d'accent, texte des boutons, au moins 4,5:1 (6 couleurs, clair et sombre).
 #   FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/retours_seance.py
 import os, re, subprocess, sys, time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5163
@@ -45,13 +45,6 @@ def hexrgb(h):
     return [int(h[i:i + 2], 16) for i in (0, 2, 4)]
 def ctr(a, b):
     x, y = sorted([lum(hexrgb(a)), lum(hexrgb(b))], reverse=True); return (x + 0.05) / (y + 0.05)
-def degrade(g1, g2, g3, n=60):   # pire contraste du blanc le long du dégradé de l'accueil (arrêts 0, 55 %, 100 %)
-    a, b, c = hexrgb(g1), hexrgb(g2), hexrgb(g3); pire = 99
-    for k in range(n + 1):
-        t = k / n; p, q, u = (a, b, t / .55) if t <= .55 else (b, c, (t - .55) / .45)
-        pire = min(pire, ctr('#fff', '#%02x%02x%02x' % tuple(round(p[i] + (q[i] - p[i]) * u) for i in range(3))))
-    return pire
-
 try:
     with sync_playwright() as pw:
         b = pw.chromium.launch()
@@ -152,7 +145,7 @@ try:
         ok(ck is not None and rk >= 3 and ck[2] == 1, f"série non validée : coche grise dans le rond, {rk:.2f}:1 contre son fond")
         pg.click(".frow.act .tick"); time.sleep(.3)
         ok(pg.locator(".frow.ok .tick .tk0").count() == 0 and pg.locator(".frow.ok .tick svg").count() >= 1, "série validée : coche pleine, sans la coche grise")
-        # pendant le repos qui suit, « Suivant › » reste accessible (dans la page, au-dessus de la barre de repos)
+        # pendant le repos qui suit, « Exercice suivant › » reste accessible (dans la page, au-dessus de la barre de repos)
         sv = pg.locator(".focus button:has-text('Suivant ›')")
         ok(pg.locator(".bar #tm").count() == 1 and sv.count() == 1 and sv.is_visible() and sv.is_enabled(), "pendant un repos : « Suivant › » toujours accessible")
 
@@ -187,21 +180,21 @@ try:
             prevu = {t.splitlines()[0]: (t.splitlines()[1] if len(t.splitlines()) > 1 else "") for t in pg.locator(".feelb button").all_inner_texts()}
             pg.click(f".feelb button:has-text('{choix}')"); time.sleep(.2)
             pg.evaluate("TMskip(); saveSession()"); time.sleep(1); pg.evaluate("document.querySelectorAll('.pr-overlay,.j-ov').forEach(o => o.remove())")
-            demarrer(); c = pg.evaluate(CONSEIL).replace("Conseil : ", "ensuite : ")   # lot 1 : « ensuite : … » sous chaque choix (avant : « → … »)
+            demarrer(); c = re.sub(r"^Conseil[ \u00a0]: ", "", pg.evaluate(CONSEIL)); c = ("on " if c.startswith("garde ") else "ensuite ") + c   # maquette : « ensuite 50 kg × 10 », « on garde 47,5 kg »
             ok(prevu.get(choix) == c, f"« {choix} » : annoncé {prevu.get(choix)!r}, conseil de la séance suivante {c!r} (tous : {prevu})")
             pg.evaluate("exitFocus()"); pg.evaluate(EFFACER)
         ok(len(set(prevu.values())) == 3, f"(témoin) les trois choix annoncent trois conséquences différentes {prevu}")
 
         # ======================================================= 7. contrastes (au moins 4,5:1)
-        VARS = "() => { const s = getComputedStyle(document.documentElement), v = k => s.getPropertyValue(k).trim(); return ['--a', '--at', '--on', '--bg', '--c', '--g1', '--g2', '--g3'].map(v); }"
+        VARS = "() => { const s = getComputedStyle(document.documentElement), v = k => s.getPropertyValue(k).trim(); return ['--a', '--at', '--on', '--bg', '--c'].map(v); }"
         pire = []
         for scheme in ("light", "dark"):
             pg.emulate_media(color_scheme=scheme)
             for acc in ("orange", "blue", "green", "violet", "red", "mono"):
                 pg.evaluate(f"setAccent('{acc}')"); time.sleep(.05)
-                a, at, on, bg, c, g1, g2, g3 = pg.evaluate(VARS)
+                a, at, on, bg, c = pg.evaluate(VARS)   # l'ancien dégradé de l'accueil n'existe plus (lot 1) : mesures complètes dans contrastes.py
                 at = at or a   # avant ce lot, le texte en couleur d'accent utilisait --a
-                mesures = {"texte d'accent sur le fond": ctr(at, bg), "texte d'accent sur une carte": ctr(at, c), "texte des boutons": ctr(on, a), "blanc sur le dégradé": degrade(g1, g2, g3)}
+                mesures = {"texte d'accent sur le fond": ctr(at, bg), "texte d'accent sur une carte": ctr(at, c), "texte des boutons": ctr(on, a)}
                 bas = {k: round(v, 2) for k, v in mesures.items() if v < 4.5}
                 ok(not bas, f"{scheme} · {acc} : contrastes ≥ 4,5:1 (minimum {min(mesures.values()):.2f}) {bas or ''}")
         pg.evaluate("setAccent('orange')")

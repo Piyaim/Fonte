@@ -193,7 +193,7 @@ details{margin:8px 0}summary{font-weight:700;cursor:pointer;min-height:44px;padd
 /* ---- refonte : barre du haut, barre du bas, menu, accueil ---- */
 :root{--tb:calc(62px + env(safe-area-inset-bottom,0px));--sh:0 1px 2px rgba(0,0,0,.14),0 8px 20px rgba(0,0,0,.10)}
 body{padding-top:0}
-main{padding:4px 12px calc(var(--tb) + 92px)}
+main{padding:4px 16px calc(var(--tb) + 92px)}
 .topbar{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:4px;padding:calc(6px + env(safe-area-inset-top,0px)) 8px 6px;background:var(--bg)}
 .topbar h1{flex:1;margin:0 0 0 2px;font-size:21px;font-weight:800;letter-spacing:-.01em}
 .ib{width:46px;height:46px;display:grid;place-items:center;border:0;border-radius:14px;background:transparent;color:var(--t);padding:0}
@@ -250,12 +250,6 @@ body.barc main{padding-bottom:calc(var(--tb) + 92px)}
 .hero h2{font-size:27px;font-weight:800;line-height:1.1;margin:6px 0 4px;letter-spacing:-.02em}
 .hero .sub{margin:2px 0;font-size:15px}
 .hero .go{margin-top:16px;font-size:17px}
-.ring{position:absolute;right:14px;top:14px;width:100px;height:100px}
-.ring text{font-weight:800;fill:#fff;text-anchor:middle}
-.ring .tr{fill:none;stroke:rgba(255,255,255,.3);stroke-width:9}
-.ring .pg{fill:none;stroke:#fff;stroke-width:9;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;animation:ringin .9s ease-out}
-@keyframes ringin{from{stroke-dasharray:0 251.3}}
-@media (prefers-reduced-motion:reduce){.ring .pg{animation:none}}
 .wkm{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 2px}
 .wkbig b{font-size:38px;line-height:1;font-weight:800;font-variant-numeric:tabular-nums}
 .wkbig span{color:var(--m);font-size:15px;margin-left:6px}
@@ -270,11 +264,6 @@ body.barc main{padding-bottom:calc(var(--tb) + 92px)}
 /* apparence de l'accueil et des cartes (ancien style « Dynamique », le seul restant) : « :root » garde la priorité qu'avaient ces règles */
 :root h2{font-weight:800}
 :root .card{box-shadow:none;border-color:transparent}
-:root .hero{background:linear-gradient(135deg,var(--g1) 0%,var(--g2) 55%,var(--g3) 100%);border:0;color:#fff;box-shadow:0 10px 28px rgba(var(--gs),.28)}
-:root .hero .dt,:root .hero .sub{color:rgba(255,255,255,.92)}
-:root .hero h2{font-size:33px;font-weight:900}
-:root .hero .go{background:#10151a;color:#fff}
-:root .hero h2,:root .hero .sub{max-width:calc(100% - 114px)}
 :root .wkbig b{font-size:46px;font-weight:900}
 :root .tiles div{background:transparent;border:2px solid var(--l)}
 :root .tiles b{font-size:26px;font-weight:900;color:var(--at)}
@@ -298,29 +287,31 @@ svg.fig{width:100%;display:block}
 .top:not(.topf) svg.fig{width:120px}
 
 /* ---- couleur de l'appli (patch F) ---- */
-:root{--g1:#c25008;--g2:#b5470a;--g3:#8f3306;--gs:232,89,12}   /* dégradé de l'accueil : texte blanc à 4,5:1 au moins partout */
+:root{--g1:#c25008;--g2:#b5470a}   /* --g1, --g2 : couleurs des confettis du record (celebrate) ; l'ancien dégradé de l'accueil (--g3, --gs) n'existe plus */
 .lg{width:36px;height:36px;border-radius:9px;margin-left:2px}
 .sws{display:flex;gap:12px;margin:10px 2px 8px}
 .sw{width:42px;height:42px;border-radius:50%;border:3px solid var(--c);box-shadow:0 0 0 2px var(--l);padding:0}
 .sw.on{box-shadow:0 0 0 3px var(--t)}
-:root[data-accent="blue"]{--a:#1971c2;--at:#1864ab;--on:#fff;--g1:#1a73c4;--g2:#1864ab;--g3:#0b4f94;--gs:28,126,214}
+:root[data-accent="blue"]{--a:#1971c2;--at:#1864ab;--on:#fff;--g1:#1a73c4;--g2:#1864ab;--cta-b:#135a9c}
 @media(prefers-color-scheme:dark){:root[data-accent="blue"]:not([data-theme="light"]){--a:#4dabf7;--at:#4dabf7;--on:#06131f}}
 :root[data-accent="blue"][data-theme="dark"]{--a:#4dabf7;--at:#4dabf7;--on:#06131f}
-:root[data-accent="green"]{--a:#277c38;--at:#226f32;--on:#fff;--g1:#22803a;--g2:#1f7432;--g3:#1b6b2b;--gs:47,158,68}
+:root[data-accent="green"]{--a:#277c38;--at:#226f32;--on:#fff;--g1:#22803a;--g2:#1f7432;--cta-b:#1b5e28}
 @media(prefers-color-scheme:dark){:root[data-accent="green"]:not([data-theme="light"]){--a:#51cf66;--at:#51cf66;--on:#07170c}}
 :root[data-accent="green"][data-theme="dark"]{--a:#51cf66;--at:#51cf66;--on:#07170c}
-:root[data-accent="violet"]{--a:#7048e8;--at:#6741d9;--on:#fff;--g1:#7a52f0;--g2:#6741d9;--g3:#4527a0;--gs:112,72,232}
+:root[data-accent="violet"]{--a:#7048e8;--at:#6741d9;--on:#fff;--g1:#7a52f0;--g2:#6741d9;--cta-b:#5a35c9}
 @media(prefers-color-scheme:dark){:root[data-accent="violet"]:not([data-theme="light"]){--a:#9775fa;--at:#9775fa;--on:#120a26}}
 :root[data-accent="violet"][data-theme="dark"]{--a:#9775fa;--at:#9775fa;--on:#120a26}
-:root[data-accent="red"]{--a:#e03131;--at:#c92a2a;--on:#fff;--g1:#d63030;--g2:#c92a2a;--g3:#9c1c1c;--gs:224,49,49}
+:root[data-accent="red"]{--a:#e03131;--at:#c92a2a;--on:#fff;--g1:#d63030;--g2:#c92a2a;--cta-b:#a81e1e}
 @media(prefers-color-scheme:dark){:root[data-accent="red"]:not([data-theme="light"]){--a:#ff6b6b;--at:#ff6b6b;--on:#240808}}
 :root[data-accent="red"][data-theme="dark"]{--a:#ff6b6b;--at:#ff6b6b;--on:#240808}
 /* noir et blanc : noir sur fond clair, blanc sur fond sombre ; logo noir sur fond blanc */
-:root[data-accent="mono"]{--a:#111;--at:#111;--on:#fff;--g1:#4b5157;--g2:#262b30;--g3:#0a0c0e;--gs:0,0,0}
+:root[data-accent="mono"]{--a:#111;--at:#111;--on:#fff;--g1:#4b5157;--g2:#262b30;--cta-b:#111}
 @media(prefers-color-scheme:dark){:root[data-accent="mono"]:not([data-theme="light"]){--a:#f1f3f5;--at:#f1f3f5;--on:#111}}
 :root[data-accent="mono"][data-theme="dark"]{--a:#f1f3f5;--at:#f1f3f5;--on:#111}
 [data-accent="mono"] .lg{box-shadow:0 0 0 1px var(--l)}
-:root[data-accent="mono"] .hero .go{background:#fff;color:#10151a}
+/* bord du bouton principal (--cta-b) : une teinte plus foncée de l'accent en clair, l'accent lui-même en sombre (aucun bord visible) */
+@media(prefers-color-scheme:dark){:root[data-accent]:not([data-theme="light"]){--cta-b:var(--a)}}
+:root[data-accent][data-theme="dark"]{--cta-b:var(--a)}
 
 /* ---- questionnaire de départ et profil (profil.js) ---- */
 body.onb .tabbar,body.onb #menu-btn{display:none}
@@ -361,7 +352,6 @@ body.onb main{padding-bottom:40px}
 .go:disabled,.sm:disabled{opacity:.55}
 /* ---- progression (lot 2B) : cartes de proposition sous le bouton de séance, ligne de jour de repos ---- */
 .hero .rest{margin:12px 0 0;font-size:15px;font-weight:600}
-:root .hero .rest{color:rgba(255,255,255,.95)}
 .offer{border-left:5px solid var(--a)}
 details.det{margin:6px 0}details.det>summary{color:var(--m);font-size:14px}
 details.card.det>summary{color:var(--t);font-size:17px;font-weight:700}
@@ -379,7 +369,7 @@ details.card.det>summary{color:var(--t);font-size:17px;font-weight:700}
 .sw2[aria-checked="true"]::before{background:var(--a)}.sw2[aria-checked="true"]::after{left:31px;background:var(--on)}
 @media (prefers-reduced-motion:reduce){.sw2::before,.sw2::after{transition:none}}
 .card.off{opacity:.5}
-.days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin:10px -8px 6px}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin:10px -12px 6px}   /* 7 jours de 44 px à 360 px */
 .days .chip{padding:0;min-width:0;min-height:44px;font-weight:700}
 .trow{display:flex;align-items:center;gap:10px;margin-top:8px}.trow input{width:auto;min-height:44px;font-size:18px;padding:6px 10px}
 .trow span{color:var(--m)}
@@ -396,7 +386,7 @@ h3{text-transform:none;letter-spacing:0;font-size:16px;font-weight:700;color:var
 .num,.st b,.tiles b,.wkbig b,.toti b,#tm{font-family:var(--ff-title);font-stretch:85%;font-variant-numeric:tabular-nums lining-nums}
 :focus-visible{outline:2px solid var(--t);outline-offset:2px}
 :root .card,.card{border-radius:var(--r-card);border:1px solid var(--l);box-shadow:none;padding:16px}
-:root .go,.go{border-radius:var(--r-btn);min-height:56px;font-size:18px;font-weight:800;box-shadow:inset 0 0 0 2px rgba(0,0,0,.2);transition:transform var(--t-fast)}
+:root .go,.go{border-radius:var(--r-btn);min-height:56px;font-size:18px;font-weight:800;border:2px solid var(--cta-b);box-shadow:none;transition:transform var(--t-fast)}
 .sm{border:0;background:var(--f);color:var(--t);border-radius:var(--r-btn);font-weight:700;transition:transform var(--t-fast)}
 .go:active,.sm:active,.pm:active,.tick:not([aria-pressed="true"]):active{transform:translateY(var(--press))}
 .sm.danger,.danger{background:none;color:var(--danger);text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:3px}
@@ -405,7 +395,9 @@ h3{text-transform:none;letter-spacing:0;font-size:16px;font-weight:700;color:var
 input,select,textarea{border-color:var(--l);background:var(--bg)}
 .tabbar button{font-size:13px}
 :root .tabbar button.on{color:var(--t);font-weight:700}
-:root .tabbar button.on .ic{background:none;color:var(--t);box-shadow:inset 0 3px 0 var(--a);border-radius:0}
+:root .tabbar button.on .ic{background:none;color:var(--t);box-shadow:none;border-radius:0}
+.tabbar button{position:relative}
+.tabbar button.on::before{content:"";position:absolute;top:0;left:50%;width:28px;height:3px;margin-left:-14px;border-radius:0 0 3px 3px;background:var(--a)}   /* onglet actif : trait court en haut de la barre */
 .tag.rec{color:var(--at);border-color:var(--a)}
 @media (prefers-reduced-motion:reduce){.go,.sm,.pm,.tick{transition:none}.go:active,.sm:active,.pm:active,.tick:active{transform:none}}
 
@@ -418,14 +410,14 @@ input,select,textarea{border-color:var(--l);background:var(--bg)}
 .zchip i{width:14px;height:14px;border-radius:50%;background:var(--pat)}
 
 /* accueil */
-:root .hero{background:none;border:0;box-shadow:none;color:var(--t);padding:4px 4px 8px;margin:0 0 8px;border-radius:0;overflow:visible}
+:root .hero{background:none;border:0;box-shadow:none;color:var(--t);padding:4px 0 8px;margin:0 0 8px;border-radius:0;overflow:visible}
 :root .hero .dt{color:var(--m);font-size:15px}
 :root .hero h2{font-size:40px;font-weight:800;font-stretch:88%;line-height:1.05;letter-spacing:-.02em;margin:4px 0 0;max-width:none}
 :root .hero .sub{color:var(--t);font-size:17px;max-width:none;margin:12px 0 0}
 :root .hero .sub+.sub{color:var(--m);font-size:15px;margin-top:0}
 :root .hero .go{background:var(--a);color:var(--on);margin-top:16px}
 :root .hero .sm.big{width:100%;min-height:56px;font-size:18px;font-weight:800;margin-top:16px}
-:root .hero .rest{color:var(--m);font-size:15px;margin-top:12px}
+:root .hero .rest{color:var(--m);font-size:15px;font-weight:400;margin-top:12px}
 .card.wk{display:flex;align-items:center;gap:12px}
 .wk .wkbig b{font-size:40px;font-weight:800}
 .wk .wkl{flex:1;line-height:1.3}
@@ -464,14 +456,14 @@ input,select,textarea{border-color:var(--l);background:var(--bg)}
 .tick .tk0{color:var(--ck);opacity:1}
 .frow.ok .tick{background:var(--a);color:var(--on)}
 .facts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.facts .sm{min-height:44px;font-size:15px}
+.facts .sm{min-height:44px;font-size:16px}
 .fnavb{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;gap:8px;padding:8px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--l)}
 .fnavb button{margin:0;min-height:52px}
 .fnavb .prev{width:52px;flex:none;padding:0;font-size:22px}
 .fnavb .next{flex:1}
 .fnavb .go{font-size:17px}
 body.foc main{padding-bottom:110px}
-body.foc.rest-on .fnavb{position:static;background:none;border:0;padding:12px 0 0}   /* pendant un repos : « Suivant › » reste accessible, sous l'exercice, au-dessus de la barre de repos */
+body.foc.rest-on .fnavb{position:static;background:none;border:0;padding:12px 0 0}   /* pendant un repos : « Exercice suivant › » reste accessible (en secondaire), sous l'exercice, au-dessus de la barre de repos */
 .feel .feelb{display:grid;gap:8px}
 .feel .feelb button{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:52px;padding:0 16px;border:0;border-radius:var(--r-btn);background:var(--f);color:var(--t);font:inherit;font-weight:700;font-size:17px}
 .feel .feelb button small{display:inline;font-weight:400;font-size:15px;color:var(--t);margin:0}
@@ -527,7 +519,7 @@ body.fin-on main{padding-bottom:110px}
 .spirits .txt{font-size:15px}
 :root .offb{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 /* séance : la série en cours (kg puis reps, entre − et +), rond de validation et « Série n sur N » dessous */
-.focus .fcard{padding:12px 12px 16px;margin-top:4px}
+.focus .fcard{padding:12px 16px 16px;margin-top:4px}
 .focus .frow.act{grid-template-columns:56px 1fr;grid-template-areas:"st st" "tk lb";row-gap:8px}
 .focus .frow.act>span:first-child{display:none}
 .focus .frow.act .stps{grid-area:st}
@@ -551,12 +543,70 @@ body.fin-on main{padding-bottom:110px}
 
 .focus .feel{border:0;background:none;padding:0;margin-top:12px}
 .focus .feel p b{font-family:var(--ff-title);font-size:19px;font-weight:700}
+
+/* ---- refonte, lot 1 : corrections après relecture (23/10/2026) ---- */
+/* tailles : rien sous 13 px ; boutons secondaires à 17 px ; « séances au total » et « quêtes » à 15 px */
+.spirits .sm,.idea .sm,.offb .sm,.fnavb .sm,.bar .sm,.reward .sm,.feel1 .sm{font-size:17px}
+:root .wk .tiles span{font-size:15px;line-height:1.25;margin-top:2px}
+.spirits .txt .m{font-size:15px}
+/* séance : « Aperçu » dans la barre du haut ; échauffement en repli fermé sous la ligne de progression */
+.topbar .btn-t{flex:none;margin-right:4px}
+.warmp{background:none;padding:0;margin:0 0 4px;border-radius:var(--r-tile)}
+.warmp[open]{background:var(--s2);padding:0 12px 8px}
+.warmp>summary,.focus .adv details.det>summary,.offb details.det>summary{list-style:none;color:var(--t);font-size:15px;font-weight:700;text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:3px}
+.warmp>summary::-webkit-details-marker,.focus .adv details.det>summary::-webkit-details-marker,.offb details.det>summary::-webkit-details-marker{display:none}
+.warmp>summary::marker,.focus .adv details.det>summary::marker,.offb details.det>summary::marker{content:""}
+.focus .warmp summary{padding:12px 0;min-height:44px}
+.focus .adv details.det>summary{padding:12px 0 12px 8px;text-align:right}
+/* carte de proposition : « Accepter », « Plus tard » et « Détails » sur une même ligne ; Détails ouvert : le texte passe dessous */
+.offb details.det{margin:0 0 0 auto}
+.offb details.det>summary{padding:12px 4px}
+.offb details.det[open]{flex-basis:100%;margin:0}
+/* série en cours : unité sous chaque grand chiffre ; lignes compactes avec leur unité */
+.focus .stp .u{display:block;text-align:center;font-size:13px;font-weight:400;color:var(--m);margin:-4px 0 0;line-height:1.2}
+.focus .stp+.stp{margin-top:2px}
+.iu{display:flex;align-items:baseline;justify-content:center;gap:4px;min-width:0}
+.iu input{flex:0 1 auto;width:auto;min-width:1.2em;max-width:4.6em;text-align:right;field-sizing:content}
+@supports not (field-sizing:content){.iu input{width:3em}}   /* WebView sans field-sizing : largeur fixe */
+.iu small{flex:none;font-size:13px;color:var(--m)}
+/* place gagnée pour que « + série / − série / Repos » reste au-dessus de la barre du bas à 360 × 780, échauffement fermé */
+.focus .fprog{min-height:0;padding:2px 0}
+.focus .fcard{padding-top:8px}
+.focus .sug{margin-top:8px}
+.focus .frow:not(.act){min-height:48px;margin-top:4px}
+.focus .facts{margin-top:8px}
+.focus .adv:not(:has(.last)) .sug{grid-column:1}   /* première fois (pas de « Dernière ») : « Détails » sur la ligne du conseil */
+.focus .adv:not(:has(.last)) details:not([open]){align-self:start;margin-top:4px}
+.facts[hidden],.topbar [hidden]{display:none}
+/* rebond de validation : 300 ms, échelle 1,12, coupé en mouvement réduit */
+@keyframes pop{50%{transform:scale(1.12)}}
+.tick.pop{animation:pop .3s ease-out}
+@media (prefers-reduced-motion:reduce){.tick.pop{animation:none}}
+/* barre du bas : grand chevron */
+.fnavb .prev svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;display:block;margin:auto}
+/* barre de repos : temps à gauche après « Repos » ; −15 s, +15 s, « Autre durée » en lien ; « Ensuite » sur deux lignes */
+.rb-top b{flex:1;text-align:left}
+.rb-btn{display:flex;align-items:center;gap:8px;margin-top:8px}
+.rb-btn .sm{flex:none;min-width:72px;font-size:17px}
+.rb-btn .btn-t{margin-left:auto}
+.rb-next{margin:8px 0 0;font-size:15px}
+.rb-next b{font-weight:700;font-size:17px}
+.rb-next span{display:block;color:var(--m);font-size:15px}
+/* écran de fin : pas de barre du haut (le titre dit déjà « Séance A faite ») ; gains de reps en gris */
+body.fin-on .topbar{display:none}
+body.fin-on main{padding-top:calc(4px + env(safe-area-inset-top,0px))}
+.fin .gain{padding:8px 0 8px 16px;border-top:1px solid var(--l)}
+.fin .rec+.gain,.fin h2+.gain{border-top:0}
+.tag.gain{color:var(--m);font-size:13px}
+.topbar h1{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* nom de séance long (séance par zones) : une ligne, coupée par « … » */
+.cd{min-height:44px}   /* calendrier de Progrès : 44 px au moins malgré la marge de 16 px (écran refait au lot 2) */
 </style>
 </head>
 <body>
 <header class="topbar">
   <button class="ib" id="menu-btn" onclick="openMenu()" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="drawer"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   <h1 id="ttl">Fonte</h1>
+  <button class="btn-t" id="tb-ap" hidden onclick="exitFocus()">Aperçu</button>
 </header>
 <main>
   <div id="app"><p class="empty">Chargement…</p></div>
@@ -652,7 +702,7 @@ function effBox(e) {   // une fois, juste après la dernière série validée (t
   if (v && F.effOpen !== e.id) return `<p class="feel1">Ressenti\u00a0: <b>${effLabel(v)}</b><button class="sm" onclick="F.effOpen=${e.id};R()">Changer</button></p>`;
   if (F.mode !== 'edit' && F.effOpen !== e.id && !(rows.length && rows.every((_, k) => d[k]))) return '';
   const nx = F.mode === 'new' ? feelNext(e) : null;
-  return `<div class="feel" role="group" aria-label="Ressenti"><p><b>Comment c’était\u00a0?</b></p><div class="feelb">${FEEL.map(([n, t]) => `<button class="${v === n ? 'on' : ''}" aria-pressed="${v === n}" onclick="setEff(${e.id},${n})">${t}${nx ? `<small>ensuite\u00a0: ${esc(nx[n])}</small>` : ''}</button>`).join('')}</div></div>`;
+  return `<div class="feel" role="group" aria-label="Ressenti"><p><b>Comment c’était\u00a0?</b></p><div class="feelb">${FEEL.map(([n, t]) => `<button class="${v === n ? 'on' : ''}" aria-pressed="${v === n}" onclick="setEff(${e.id},${n})">${t}${nx ? `<small>${esc(feelTxt(nx[n]))}</small>` : ''}</button>`).join('')}</div></div>`;
 }
 /* conséquence de chaque choix sur le conseil de la prochaine séance de ce programme : loadTip appliqué à l'historique
    complété par la séance en cours (séries saisies, ressenti essayé). Rien ne change le conseil d'ici là sans une action de l'utilisateur
@@ -666,6 +716,7 @@ function feelNext(e) {
   if (F.wid && ref.length && ref[0].workout_id !== F.wid) ref = [];   // la prochaine fois, la référence sera cette séance du programme
   return Object.fromEntries(FEEL.map(([n]) => [n, loadTip(e, [{id: 0, day: F.day, workout_id: F.wid, entries: [{exercise_id: e.id, sets, effort: n}]}, ...ref], cs, n)[0]]));
 }
+const feelTxt = t => /^garde /.test(t) ? 'on ' + t : 'ensuite ' + t;   // « ensuite 50 kg × 10 », « on garde 47,5 kg »
 function setEff(id, n) { syncForm(); F.eff = F.eff || {}; F.eff[id] = n; F.effOpen = null; F.dirty = true; syncForm(); R(); }
 function sessionVolume(s) {
   let v = 0;
@@ -891,7 +942,8 @@ const IC = {
 const IC_MENU = '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
 const IC_CLOSE = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 function nav() {
-  $('ttl').textContent = view === 'accueil' ? 'Fonte' : view === 'fin' ? 'Séance faite' : view === 'profil' && window.PROFIL ? PROFIL.title() : VL[view];
+  $('ttl').textContent = view === 'accueil' ? 'Fonte' : inFocus() ? F.wname : view === 'profil' && window.PROFIL ? PROFIL.title() : VL[view];
+  $('tb-ap').hidden = !inFocus();   // « Aperçu » : toute la séance en liste
   document.body.classList.toggle('onb', !!(window.PROFIL && PROFIL.imposed()));
   $('tabs').innerHTML = tabsNow().map(k => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}')" ${k === view ? 'aria-current="page"' : ''}><span class="ic">${IC[k]}</span>${VL[k]}</button>`).join('');
   $('dnav').innerHTML = VIEWS.filter(([k]) => k !== 'jeu' || window.JEU).map(([k, t]) => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}');closeMenu()">${t}</button>`).join('');
@@ -958,10 +1010,12 @@ function vFin() {
   const nSets = s.entries.reduce((a, en) => a + en.sets.length, 0), kg = Math.round(sessionVolume(s)), dur = dureeMin(s);
   const d0 = dayDate(s.day).toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long'});
   const tiles = [dur ? [`${dur} min`, 'durée'] : null, [nSets, nSets > 1 ? 'séries' : 'série'], kg ? [kg.toLocaleString('fr-FR'), 'kg soulevés'] : [s.entries.length, s.entries.length > 1 ? 'exercices' : 'exercice']].filter(Boolean);
-  const prev = r => r.ex.kind === 'time' ? `${fmt(r.prev)} s` : r.ex.kind === 'cardio' ? `${fmt(r.prev)} min` : r.ex.kind === 'reps' ? `${fmt(r.prev)} reps` : r.ex.assisted ? `assistance ${fmt(-r.prev)} kg` : null;
   let h = `<div class="fin"><p class="dt">${esc(d0.charAt(0).toUpperCase() + d0.slice(1))}</p><h2 class="big">${esc(s.workout_name)} faite</h2><svg class="scrib" style="width:190px" viewBox="0 0 150 12" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" aria-hidden="true"><path d="M3 8C26 4 52 3 79 5s48 3 68-1"/></svg>`
     + `<div class="sum" style="grid-template-columns:repeat(${tiles.length},1fr)">${tiles.map(([b, t]) => `<div><b>${esc(String(b))}</b><span>${t}</span></div>`).join('')}</div>`;
-  if (FIN.pr.length) h += `<section class="card"><h2>${FIN.pr.length > 1 ? FIN.pr.length + ' records battus' : 'Record battu'}</h2>${FIN.pr.map(r => `<div class="rec"><i></i><div><b>${esc(r.ex.name)}</b><div class="v">${esc(setText(r.ex, r.set))}</div>${prev(r) ? `<span class="m">Avant : ${esc(prev(r))}</span>` : ''}</div></div>`).join('')}</section>`;
+  const gs = FIN.gains || [];   // gains de reps à charge égale : en gris, sans l'étiquette « record »
+  if (FIN.pr.length || gs.length) h += `<section class="card recs"><h2>${FIN.pr.length > 1 ? FIN.pr.length + ' records battus' : FIN.pr.length ? 'Record battu' : 'Progrès'}</h2>`
+    + FIN.pr.map(r => `<div class="rec"><i></i><div><b>${esc(r.ex.name)}</b><div class="v">${esc(recTxt(r.ex, r.set))}</div>${r.prev ? `<span class="m">${esc(recAvant(r))}</span>` : ''}</div></div>`).join('')
+    + gs.map(g => `<div class="gain"><b>${esc(g.ex.name)}</b> <span class="m">· ${esc(recTxt(g.ex, g.set))} · ${esc(gainTxt(g))}</span></div>`).join('') + '</section>';
   if (FIN.rep && window.JEU && JEU.rewardHtml) h += JEU.rewardHtml(FIN.rep);
   h += `<p><button class="btn-t" id="fin-hist" onclick="FIN=null;go('historique')">Voir la séance dans l’historique</button></p>`
     + `<div class="fnavb"><button class="go next" onclick="FIN=null;go('accueil')">Terminer</button></div></div>`;
@@ -980,7 +1034,10 @@ function vAccueil() {
   // « 6 exercices · prévue aujourd'hui », puis « Dernière : il y a 2 j »
   const when = !sch || !slot ? '' : sch.today ? ' · prévue aujourd’hui' : ` · prévue ${dayWord(slot.day)}`;
   const sub = pending ? 'Tu as une séance commencée.' : nw ? `${nEx} exercice${nEx > 1 ? 's' : ''}${when}` : 'Compose ta séance depuis l’onglet Séance.';
-  const sub2 = ls ? `Dernière : ${ago === 0 ? 'aujourd’hui' : ago === 1 ? 'hier' : 'il y a ' + ago + ' j'}` : 'Aucune séance pour l’instant';
+  const pf = pending ? (F && F.mode === 'new' && F.dirty ? F : XS[XS.length - 1]) : null, pids = pf ? pf.ids.filter(i => EX[i]) : [];
+  const pk = pids.findIndex(id => { const r = (pf.vals && pf.vals[id]) || [], d = (pf.dn && pf.dn[id]) || []; return !(r.length && r.every((_, k) => d[k])); });
+  const sub2 = pf && pids.length ? `Exercice ${(pk < 0 ? pids.length - 1 : pk) + 1} sur ${pids.length}`   // séance commencée : où on en est
+    : ls ? `Dernière : ${ago === 0 ? 'aujourd’hui' : ago === 1 ? 'hier' : 'il y a ' + ago + ' j'}` : 'Aucune séance pour l’instant';
   const restDay = !!(sch && !sch.planned) && !pending;   // jour de repos : aucun bouton orange, « Démarrer la séance » en secondaire, toujours en tête
   const scrib = `<svg class="scrib" viewBox="0 0 150 12" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" aria-hidden="true"><path d="M3 8C26 4 52 3 79 5s48 3 68-1"/></svg>`;
   const cta = (cls, t) => `<button class="${cls}" onclick="${pending ? 'resumeSession()' : nw ? `startFromHome(${nw.id})` : "go('seance')"}">${t}</button>`;
@@ -993,7 +1050,7 @@ function vAccueil() {
     <div class="tiles"><div><b>${total}</b><span>séance${total > 1 ? 's' : ''} au total</span></div></div></section>`;
   if (jeuOn()) h += JEU.homeCard();
   const tz = todayZones();
-  h += `<section class="card idea"><h2>Autre idée</h2><p class="zl">${tz.map(x => ZL[x.k]).join(' · ')}</p>
+  if (!pending) h += `<section class="card idea"><h2>Autre idée</h2><p class="zl">${tz.map(x => ZL[x.k]).join(' · ')}</p>
     <div class="row2"><button class="sm" onclick="acceptZones()">Séance avec ces zones</button><button class="btn-t" onclick="go('zones')">Choisir</button></div></section>`;
   return h;
 }
@@ -1145,8 +1202,14 @@ function totalBar() {
   return `<div class="tot"><div class="toti">${IC_TOTAL}<b>${total}</b></div><div style="flex:1"><b>${total} séance${total > 1 ? 's' : ''} au total</b><div class="pbar"><i style="width:${pct}%"></i></div><div class="m">${thisWeek}/${WGOAL} séances cette semaine${thisWeek >= WGOAL ? ' : objectif atteint' : ''}${vol ? ` · ${vol.toLocaleString('fr-FR')} kg soulevés` : ''}</div></div></div>`;
 }
 
-// records : une série « bat » le record si son score dépasse tout ce qui a été fait avant sur le même exercice
-function setScore(e, a) {
+/* Records (règle du 23/10/2026), pour l'affichage seulement :
+   - charge : une charge jamais faite sur l'exercice, quel que soit le nombre de reps ; assistance : plus faible que toutes les précédentes ;
+   - poids du corps et secondes : les séries lestées se comparent au lest jamais porté (le premier lest est un record), les autres
+     aux reps (ou secondes) jamais faites sans lest ; le cardio n'a pas de record ; la première fois sur un exercice n'est pas un record.
+   Plus de reps (ou de secondes) à charge, lest ou assistance égale n'est pas un record : un gain, affiché en gris (« +2 reps »).
+   progress[id de séance] : un record, ou un meilleur score d'Epley que tout ce qui précède (ancienne règle, cardio compris) ;
+   c'est lui qui donne le jeton « Progression » (jeu.js). Rien n'est stocké : tout est recalculé depuis les séries. */
+function setScore(e, a) {   // ancienne règle (score d'Epley), gardée pour le jeton « Progression »
   const l = a[0], v = a[1];
   if (e.kind === 'weight') { if (e.assisted) return l == null ? null : -l; return (l != null && v) ? l * (1 + v / 30) : null; }
   return v == null ? null : v;
@@ -1157,27 +1220,53 @@ function bestOf(e, sets) {
   return bs == null ? null : {score: bs, set: b};
 }
 function computePRs() {
-  const best = {}, bySession = {}, list = [];
+  const H = {}, bySession = {}, gains = {}, progress = {}, list = [];
+  const push = (o, sid, r) => (o[sid] = o[sid] || []).push(r);
   SESS.forEach(s => s.entries.forEach(en => {
     const e = EX[en.exercise_id]; if (!e) return;
-    const b = bestOf(e, en.sets); if (!b) return;
-    const prev = best[e.id];
-    if (prev != null && b.score > prev + 1e-9) {
-      const r = {day: s.day, sid: s.id, ex: e, set: b.set, prev, score: b.score};
-      (bySession[s.id] = bySession[s.id] || []).push(r); list.push(r);
+    const h = H[e.id] = H[e.id] || {seen: false, score: null, top: null, topSet: null, lest: 0, lestSet: null, free: null, freeSet: null, at: {}};
+    const sets = en.sets.filter(a => a[1] != null && a[1] > 0);
+    // ancienne règle : meilleur score d'Epley (jeton)
+    const b = bestOf(e, en.sets);
+    if (b && h.score != null && b.score > h.score + 1e-9) progress[s.id] = true;
+    if (b && (h.score == null || b.score > h.score)) h.score = b.score;
+    if (e.kind === 'cardio' || !sets.length) { h.seen = h.seen || !!en.sets.length; return; }
+    const lw = e.kind === 'weight', asst = lw && e.assisted;
+    const keyed = sets.filter(a => lw ? a[0] != null : a[0] > 0);   // séries avec charge (ou lest, ou assistance)
+    const free = lw ? [] : sets.filter(a => !(a[0] > 0));           // poids du corps sans lest, ou secondes sans lest
+    const better = (x, y) => asst ? x < y : x > y;
+    const pick = arr => arr.reduce((m, a) => !m || better(a[0], m[0]) || (a[0] === m[0] && a[1] > m[1]) ? a : m, null);
+    let rec = null;
+    const k = pick(keyed);
+    if (k && h.seen && (lw ? h.top != null && better(k[0], h.top) : k[0] > h.lest)) rec = {set: k, prev: lw ? h.topSet : (h.lestSet || h.freeSet)};
+    const f = free.reduce((m, a) => !m || a[1] > m[1] ? a : m, null);
+    if (!rec && f && h.free != null && f[1] > h.free) rec = {set: f, prev: h.freeSet};
+    if (rec) { const r = Object.assign({day: s.day, sid: s.id, ex: e}, rec); push(bySession, s.id, r); list.push(r); progress[s.id] = true; }
+    else {   // gain de reps (ou de secondes) à charge, lest ou assistance égale : le plus grand
+      let g = null;
+      keyed.forEach(a => { const p = h.at[a[0]]; if (p != null && a[1] > p && (!g || a[1] - p > g.delta)) g = {set: a, delta: a[1] - p}; });
+      if (g) push(gains, s.id, Object.assign({day: s.day, sid: s.id, ex: e}, g));
     }
-    if (prev == null || b.score > prev) best[e.id] = b.score;
+    keyed.forEach(a => { h.at[a[0]] = Math.max(h.at[a[0]] ?? 0, a[1]); });
+    if (k && (h.top == null || better(k[0], h.top) || (k[0] === h.top && k[1] > h.topSet[1]))) { h.top = k[0]; h.topSet = k; }
+    if (!lw && k && (k[0] > h.lest || (k[0] === h.lest && h.lestSet && k[1] > h.lestSet[1]))) { h.lest = k[0]; h.lestSet = k; }
+    if (f && (h.free == null || f[1] > h.free)) { h.free = f[1]; h.freeSet = f; }
+    h.seen = true;
   }));
-  return {bySession, list};
+  return {bySession, list, gains, progress};
 }
-function prText(r) {
-  const e = r.ex, a = r.set;
-  if (e.kind === 'weight' && e.assisted) return `assistance ${fmt(a[0])} kg (avant ${fmt(-r.prev)})`;
-  if (e.kind === 'weight') return `${fmt(a[0])} kg × ${fmt(a[1])} · 1RM estimé ${Math.round(r.score)} kg (+${fmt(Math.round((r.score - r.prev) * 10) / 10)})`;
-  if (e.kind === 'time') return `${fmt(a[1])} s (avant ${fmt(r.prev)} s)`;
-  if (e.kind === 'cardio') return `${fmt(a[1])} min (avant ${fmt(r.prev)} min)`;
-  return `${fmt(a[1])} reps (avant ${fmt(r.prev)})`;
+/* une série telle qu'on l'affiche dans un record (« 47,5 kg × 12 », « assistance 25 kg × 6 », « lest 5 kg × 6 », « 11 reps ») */
+function recTxt(e, a) {
+  if (e.kind === 'weight' && e.assisted) return `assistance ${fmt(a[0])} kg × ${fmt(a[1])}`;
+  if (e.kind !== 'weight' && a[0] > 0) return `lest ${fmt(a[0])} kg × ${fmt(a[1])}${e.kind === 'time' ? ' s' : ''}`;
+  if (e.kind === 'weight') return setText(e, a);
+  return `${fmt(a[1])} ${e.kind === 'time' ? 's' : 'reps'}`;
 }
+/* « Avant : 47,5 kg × 10 » : la meilleure série d'avant, pour tous les records (écran de fin, Progrès, détail de séance) */
+const recAvant = r => r.prev ? `Avant\u00a0: ${recTxt(r.ex, r.prev)}` : '';
+/* gain en gris : « +2 reps », « +5 s » */
+const gainTxt = g => `+${fmt(g.delta)} ${g.ex.kind === 'time' ? 's' : g.delta > 1 ? 'reps' : 'rep'}`;
+function prText(r) { return recTxt(r.ex, r.set) + (r.prev ? ' · ' + recAvant(r) : ''); }
 function celebrate(list) {   // records battus : vibration (réglage « Vibrations ») et confettis (coupés en mouvement réduit) ; le détail est sur l'écran de fin
   vib([80, 60, 80]);   // seul l'interrupteur « Vibrations » décide ; le mouvement réduit ne coupe que les confettis
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -1252,7 +1341,7 @@ function vProgres() {
   let h = totalBar() + vCalendar();
   h += '<div class="card"><h2>Derniers records</h2>' + (P.list.length
     ? P.list.slice(-6).reverse().map(r => `<p><b>${esc(r.ex.name)}</b> · ${esc(prText(r))} <span class="m">${frDate(r.day)}</span></p>`).join('')
-    : '<p class="m">Pas encore de record battu. Ils apparaissent dès que tu dépasses ta meilleure performance sur un exercice déjà fait.</p>') + '</div>';
+    : '<p class="m">Pas encore de record. Un record, c’est une charge jamais faite sur un exercice déjà fait.</p>') + '</div>';
   const done = Object.values(EX).filter(e => SESS.some(s => setsOf(s, e.id))).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
   if (done.length) {
     if (!PGEX || !EX[PGEX] || !done.includes(EX[PGEX])) { const last = [...SESS].reverse().find(s => s.entries.length); PGEX = last ? last.entries[0].exercise_id : done[0].id; if (!EX[PGEX] || !done.includes(EX[PGEX])) PGEX = done[0].id; }
@@ -1352,6 +1441,7 @@ function togDone(id, i) {
     if (e.rest && e.kind !== 'cardio') TM(e.rest, id);
   }
   R();
+  if (a[i]) { const tb = document.querySelector(`.tick[onclick="togDone(${id},${i})"]`); if (tb) tb.classList.add('pop'); }   // rebond de 300 ms (coupé en mouvement réduit)
   // mode « un exercice à la fois » : la série suivante (ou le ressenti) remonte en haut, au-dessus du minuteur
   const t = a[i] && inFocus() ? document.querySelector('.focus .feel') || document.querySelector('.focus .frow.act') : null;
   if (t) window.scrollTo({top: Math.max(0, t.getBoundingClientRect().top + window.scrollY - 70), behavior: REDUCED ? 'auto' : 'smooth'});
@@ -1366,10 +1456,10 @@ function vFocus() {
   const nDone = ids.filter(id => { const r = F.vals[id] || rowsFor(exF(id)), d = (F.dn && F.dn[id]) || []; return r.length && r.every((_, k) => d[k]); }).length;
   const done = (F.dn && F.dn[e.id]) || [], nOk = rows.filter((_, k) => done[k]).length, all = rows.length > 0 && nOk === rows.length;
   const tl = (n, d) => `<span class="tally" aria-hidden="true">${Array.from({length: n}, (_, i) => `<i class="${i < d ? 'd' : ''}"></i>`).join('')}</span>`;
-  let h = `<div class="focus"><div class="fprog"><span>Exercice <b>${FOC + 1}</b> sur ${ids.length}${tl(ids.length, nDone)}</span><button class="btn-t" onclick="exitFocus()">Aperçu</button></div>`;
+  let h = `<div class="focus"><div class="fprog"><span>Exercice <b>${FOC + 1}</b> sur ${ids.length}${tl(ids.length, nDone)}</span></div>`;
   if (FOC === 0) {   // avant le premier exercice : semaine légère ou reprise (toujours visible), puis phase et échauffement dans un repli
     const ph = phaseNow(), m = ph.match(/^((?:Semaine légère|Reprise en douceur)[^.]*\.)\s*(.*)$/);
-    h += `<details class="warmp"><summary>Échauffement · 8-10 min</summary><p class="m">${esc(m ? m[2] : ph)}</p><p class="m">5 min de cardio léger, 10 rotations d'épaules et de hanches, 10 squats au poids du corps, puis 1-2 séries légères du premier exercice.</p></details>`;
+    h += `<details class="warmp"><summary>Échauffement · 8-10 min</summary><p><b>Avant de commencer</b></p><p class="m">${esc(m ? m[2] : ph)}</p><p class="m">5 min de cardio léger, 10 rotations d'épaules et de hanches, 10 squats au poids du corps, puis 1-2 séries légères du premier exercice.</p></details>`;
     if (m) h += `<p class="light1">${esc(m[1])}</p>`;
   }
   const z = e.kind !== 'cardio' ? zonesOf(e).p[0] : null;
@@ -1379,15 +1469,16 @@ function vFocus() {
     <div><h2 class="ft">${esc(e.name)}</h2><p class="fta">${e.kind !== 'cardio' ? tl(rows.length, nOk) : ''}${esc(targetLine(e))}</p>${zc}</div></div>`;
   h += `<div class="adv">${advice(e, F.sid, F.wid)}</div>`;
   h += setRows(e, rows, true);
-  h += effBox(e);
+  const fb = effBox(e); h += fb;
   const rest = e.rest && e.kind !== 'cardio' ? e.rest : 90;
-  h += '<div class="facts">';
+  h += `<div class="facts"${fb.includes('class="feel"') ? ' hidden' : ''}>`;   // pendant la question du ressenti : ni + série ni Repos
   if (e.kind !== 'cardio') h += `<button class="sm" onclick="addRow(${e.id})">+ série</button><button class="sm" onclick="delRow(${e.id})">− série</button>`;
   h += `<button class="sm" onclick="TM(${rest}, ${e.id})">Repos ${rest < 120 || rest % 60 ? rest + ' s' : rest / 60 + ' min'}</button></div></section>`;
   if (FOC === ids.length - 1) h += `<div class="card"><h2>Notes</h2><textarea id="f-notes" placeholder="Forme, sensations, douleurs…" oninput="touched()">${esc(F.notes)}</textarea></div>`;   // dernier exercice : notes de la séance
   // barre du bas : précédent, puis « Suivant › » (ou « Terminer et enregistrer ») ; orange seulement quand l'exercice est fini
-  h += `<div class="fnav fnavb"><button class="sm prev" onclick="focMove(-1)" ${FOC === 0 ? 'disabled' : ''} aria-label="Exercice précédent">‹</button>`
-    + (FOC < ids.length - 1 ? `<button class="${all ? 'go' : 'sm'} next" onclick="focMove(1)">Suivant ›</button>` : `<button class="${all ? 'go' : 'sm'} next" onclick="saveSession()">Terminer et enregistrer</button>`) + '</div></div>';
+  const nc = all && !TEND ? 'go' : 'sm';   // pendant un repos : secondaire (aucune action orange dans la barre de repos)
+  h += `<div class="fnav fnavb"><button class="sm prev" onclick="focMove(-1)" ${FOC === 0 ? 'disabled' : ''} aria-label="Exercice précédent"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4l-8 8 8 8"/></svg></button>`
+    + (FOC < ids.length - 1 ? `<button class="${nc} next"${all ? ' data-all="1"' : ''} onclick="focMove(1)">Exercice suivant ›</button>` : `<button class="${nc} next"${all ? ' data-all="1"' : ''} onclick="saveSession()">Terminer et enregistrer</button>`) + '</div></div>';
   return h;
 }
 
@@ -1399,12 +1490,14 @@ const inVal = v => typeof v === 'number' ? fmt(v) : (v ?? '');
 const TICK = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 13c2 1 4 3 5 5 3-6 7-10 11-12"/></svg>';   // coche tracée à la main (grise à valider, foncée sur l'accent une fois validée)
 function setRows(e, rows, steppers) {
   const dn = (F.dn && F.dn[e.id]) || [], [l1, l2] = inputLabels(e), act = steppers ? rows.findIndex((_, i) => !dn[i]) : -1, ticks = F.mode !== 'edit';
+  const [u1, u2] = {weight: [e.assisted ? 'kg assist.' : 'kg', 'reps'], reps: ['kg lest', 'reps'], time: ['kg lest', 's'], cardio: ['niv.', 'min']}[e.kind];
   return rows.map((a, i) => {
     const lab = e.kind === 'cardio' ? '' : 'S' + (i + 1), sn = e.kind === 'cardio' ? '' : `, série ${i + 1}`;
-    const inp = (k, ph, v) => `<input id="v${e.id}_${i}${k}" type="text" inputmode="decimal" autocomplete="off" placeholder="${ph}" value="${esc(inVal(v))}" oninput="touched()" aria-label="${ph}${sn}">`;
+    const inp = (k, ph, v) => `<input id="v${e.id}_${i}${k}" type="text" inputmode="decimal" autocomplete="off" placeholder="${steppers ? '–' : ph}" value="${esc(inVal(v))}" oninput="touched()" aria-label="${ph}${sn}">`;   // focus : l'unité est déjà écrite à côté
     const tick = ticks ? `<button class="tick" onclick="togDone(${e.id},${i})" aria-label="Valider la série ${i + 1}" aria-pressed="${!!dn[i]}">${dn[i] ? TICK : TICK.replace('<svg', '<svg class="tk0"')}</button>` : '';
-    if (i !== act) return `<div class="frow${dn[i] ? ' ok' : ''}${ticks ? '' : ' nt'}"><span>${lab}</span>${inp('l', l1, a[0])}${inp('v', l2, a[1])}${tick}</div>`;
-    const st = (k, ph, v, d) => `<div class="stp"><b class="u">${ph}</b><div class="stpr"><button class="pm" data-in="v${e.id}_${i}${k}" data-d="${-d}" aria-label="Moins ${fmt(d)}, ${ph}${sn}">−</button>${inp(k, ph, v)}<button class="pm" data-in="v${e.id}_${i}${k}" data-d="${d}" aria-label="Plus ${fmt(d)}, ${ph}${sn}">+</button></div></div>`;
+    const iu = (k, ph, v, u) => steppers ? `<span class="iu">${inp(k, ph, v)}<small aria-hidden="true">${u}</small></span>` : inp(k, ph, v);   // focus : « 47,5 kg », « 10 reps »
+    if (i !== act) return `<div class="frow${dn[i] ? ' ok' : ''}${ticks ? '' : ' nt'}"><span>${lab}</span>${iu('l', l1, a[0], u1)}${iu('v', l2, a[1], u2)}${tick}</div>`;
+    const st = (k, ph, v, d) => `<div class="stp"><div class="stpr"><button class="pm" data-in="v${e.id}_${i}${k}" data-d="${-d}" aria-label="Moins ${fmt(d)}, ${ph}${sn}">−</button>${inp(k, ph, v)}<button class="pm" data-in="v${e.id}_${i}${k}" data-d="${d}" aria-label="Plus ${fmt(d)}, ${ph}${sn}">+</button></div><b class="u" aria-hidden="true">${ph}</b></div>`;   // unité sous le chiffre
     const [d1, d2] = STEP[e.kind] || [0.5, 1];
     return `<div class="frow act"><span>${lab}</span><div class="stps">${st('l', l1, a[0], d1)}${st('v', l2, a[1], d2)}</div>${tick}${ticks && e.kind !== 'cardio' ? `<span class="slab">Série ${i + 1} sur ${rows.length}</span>` : ''}</div>`;
   }).join('');
@@ -1578,9 +1671,9 @@ async function saveSession() {
     if (editing) view = 'historique';
   }, editing ? 'Séance modifiée' : '');
   if (!editing && SESS.length > nBefore) {
-    const ns = SESS.reduce((a, b) => b.ts > a.ts ? b : a), pr = computePRs().bySession[ns.id] || [];
+    const ns = SESS.reduce((a, b) => b.ts > a.ts ? b : a), P = computePRs(), pr = P.bySession[ns.id] || [];
     const rep = window.JEU ? JEU.award(ns.id) : null;   // crédité même si l'onglet Esprits est masqué ; affiché seulement s'il ne l'est pas
-    FIN = {sid: ns.id, pr, rep: rep && !JEU.hidden() ? rep : null}; view = 'fin'; R();
+    FIN = {sid: ns.id, pr, gains: P.gains[ns.id] || [], rep: rep && !JEU.hidden() ? rep : null}; view = 'fin'; R();
     if (pr.length) celebrate(pr);
   }
   window.scrollTo(0, 0);
@@ -1599,7 +1692,7 @@ function cancelEdit() { F = null; go('historique'); }
 /* ------------------------------------------------------------------ vue Historique */
 function vHisto() {
   if (!SESS.length) return '<p class="empty">Aucune séance enregistrée.</p>';
-  const PRH = computePRs().bySession;
+  const P = computePRs(), PRH = P.bySession, GH = P.gains;
   let h = '';
   [...SESS].reverse().forEach(s => {
     const v = sessionVolume(s);
@@ -1607,7 +1700,7 @@ function vHisto() {
     h += `<div class="card"><h2>${frDate(s.day)} · ${esc(s.workout_name)}</h2>${inf ? `<p class="m">${inf}</p>` : ''}<table>`;
     s.entries.forEach(en => {
       const e = EX[en.exercise_id];
-      h += `<tr><td>${e ? esc(e.name) : '?'}${PRH[s.id] && PRH[s.id].some(r => r.ex.id === en.exercise_id) ? '<span class="tag rec">record</span>' : ''}${en.effort ? `<span class="tag">${effLabel(en.effort).toLowerCase()}</span>` : ''}</td><td>${e ? en.sets.map(a => esc(setText(e, a))).join('<br>') : ''}</td></tr>`;
+      h += `<tr><td>${e ? esc(e.name) : '?'}${PRH[s.id] && PRH[s.id].some(r => r.ex.id === en.exercise_id) ? '<span class="tag rec">record</span>' : ''}${(GH[s.id] || []).filter(g => g.ex.id === en.exercise_id).map(g => `<span class="tag gain">${esc(gainTxt(g))}</span>`).join('')}${en.effort ? `<span class="tag">${effLabel(en.effort).toLowerCase()}</span>` : ''}</td><td>${e ? en.sets.map(a => esc(setText(e, a))).join('<br>') : ''}</td></tr>`;
     });
     h += '</table>';
     if (s.notes) h += `<p class="m" style="margin-top:6px">${esc(s.notes)}</p>`;
@@ -1980,22 +2073,23 @@ function TMskip() {
 }
 function TMmore() { TMO = !TMO; barRender(); }
 function curExId() { if (!F || !inFocus()) return null; const ids = F.ids.filter(i => EX[i]); return ids[Math.min(FOC ?? firstUndone(), ids.length - 1)] ?? null; }
-function nextInfo(id) {   // « Presse à cuisses · série 2 sur 3 · 47,5 kg × 10 »
-  if (!F) return '';
+function nextInfo(id) {   // [« Presse à cuisses », « série 2 sur 3 · 47,5 kg × 10 »] ; nom seulement si l'exercice change
+  if (!F) return null;
   const ids = F.ids.filter(i => EX[i]), st = id != null ? Math.max(0, ids.indexOf(id)) : FOC != null ? FOC : 0;
   for (const i of ids.slice(st)) {
     const e = exF(i), rows = F.vals[i] || rowsFor(e), d = (F.dn && F.dn[i]) || [], k = rows.findIndex((_, j) => !d[j]);
     if (k < 0) continue;
     const a = [num(rows[k][0]), num(rows[k][1])].map(x => x == null || isNaN(x) ? null : x);
-    return `${i === id ? '' : e.name + ' · '}série ${k + 1} sur ${rows.length}${a[1] != null ? ' · ' + setText(e, a) : ''}`;   // nom seulement si l'exercice change
+    return [i === id ? '' : e.name, `série ${k + 1} sur ${rows.length}${a[1] != null ? ' · ' + setText(e, a) : ''}`];
   }
-  return '';
+  return null;
 }
 function barRender() {
   const b = document.querySelector('.bar'); if (!b) return;
   if (!TEND) BARX = false;
   const away = view !== 'seance', compact = !!TEND && away && !BARX;   // hors de l'onglet Séance : une ligne (temps restant, Passer), agrandie au toucher
   document.body.classList.toggle('rest-on', !!TEND); document.body.classList.toggle('barc', compact);
+  const nb = document.querySelector('.fnavb .next[data-all]'); if (nb) nb.className = (TEND ? 'sm' : 'go') + ' next';   // exercice fini : orange seulement hors repos
   if (compact) {
     b.innerHTML = `<div class="rb-c"><button class="rb-cx" onclick="BARX=true;barRender()" aria-expanded="false" aria-label="Agrandir le minuteur de repos"><span class="m">Repos</span><b id="tm" role="timer" aria-live="off">${mmss(Math.max(T, 0))}</b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button><button class="sm" onclick="TMskip()">Passer</button></div>`;
     return tk();
@@ -2005,10 +2099,12 @@ function barRender() {
   if (TEND) {
     const nx = nextInfo(TMID), dm = !away && inFocus() ? demoNext(TMID) : null;
     if (dm) document.body.classList.add('demo');
+    // ordre des maquettes : « Repos », temps, Passer ; barre ; (démonstration et « Ensuite » ;) −15 s, +15 s, « Autre durée » en lien
+    const btns = `<div class="rb-btn"><button class="sm" onclick="TMadd(-15)" aria-label="Moins 15 secondes">−15 s</button><button class="sm" onclick="TMadd(15)" aria-label="Plus 15 secondes">+15 s</button><button class="btn-t" onclick="TMmore()" aria-expanded="${TMO}">Autre durée</button></div>` + more;
+    const next = nx ? `<p class="rb-next">Ensuite\u00a0: <b>${esc(nx[0] || nx[1])}</b>${nx[0] ? `<span>${esc(nx[1])}</span>` : ''}</p>` : '';
     b.innerHTML = `<div class="rb-top">${away ? '<button class="sm rb-red" onclick="BARX=false;barRender()" aria-expanded="true" aria-label="Réduire le minuteur de repos">Réduire</button>' : '<span class="m">Repos</span>'}<b id="tm" role="timer" aria-live="off">${mmss(Math.max(T, 0))}</b><button class="sm" onclick="TMskip()">Passer</button></div>`
       + `<div class="pbar"><i id="tmp"></i></div>`
-      + `<div class="rb-btn"><button class="sm" onclick="TMadd(-15)" aria-label="Moins 15 secondes">−15 s</button><button class="sm" onclick="TMadd(15)" aria-label="Plus 15 secondes">+15 s</button><button class="sm" onclick="TMmore()" aria-expanded="${TMO}">Autre durée</button></div>`
-      + more + (dm ? `<div class="rb-demo">${diagram(dm, true)}</div>` : '') + (nx ? `<p class="rb-next">Ensuite\u00a0: ${esc(nx)}</p>` : '');
+      + (dm ? `<div class="rb-demo">${diagram(dm, true)}</div>` + next + btns : btns + next);
     tk();
   } else {
     const id = curExId(), e = id != null ? exF(id) : null, d = e && e.rest && e.kind !== 'cardio' ? e.rest : 90;

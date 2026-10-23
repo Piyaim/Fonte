@@ -56,7 +56,7 @@ try:
                     nom = accueil()[0]
                     pg.click("#app .hero button:has-text('Démarrer la séance')"); time.sleep(.3)
                     if facon == "Aperçu":
-                        pg.click(".focus button:has-text('Aperçu')"); time.sleep(.3)
+                        pg.click("#tb-ap"); time.sleep(.3)
                         for i in pg.locator("#app input[inputmode=decimal]").all(): i.fill("10")
                         pg.click("#app button:has-text('Enregistrer la séance')")
                     else:

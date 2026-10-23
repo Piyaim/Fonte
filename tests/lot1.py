@@ -56,14 +56,21 @@ try:
             # séance : série en cours entière à l'ouverture, au-dessus de la barre du bas, à 360 × 780
             pg.click("#app .hero button:has-text('Démarrer la séance')"); pg.wait_for_selector(".focus"); pg.evaluate("window.scrollTo(0, 0)"); pg.wait_for_timeout(300)
             ok(pg.evaluate(VISIBLE, ".focus .frow.act") is True, f"{M} · ouverture : série en cours visible sans défiler (360 × 780)")
+            ok(pg.evaluate(VISIBLE, ".focus .facts") is True and pg.evaluate("document.querySelector('.focus .warmp').open") is False,
+               f"{M} · ouverture : échauffement fermé, « + série / − série / Repos » au-dessus de la barre du bas (360 × 780)")
+            ok(pg.inner_text("#ttl") == pg.evaluate("F.wname") and pg.locator("#tb-ap").is_visible() and pg.locator(".focus .fprog button").count() == 0,
+               f"{M} · barre du haut : nom de la séance ({pg.inner_text('#ttl')}) et « Aperçu »")
             ok(pg.evaluate(ORANGE) == [], f"{M} · série en cours : aucune action orange ({pg.evaluate(ORANGE)})")
             for i in pg.locator(".focus .frow input").all(): i.fill("42,5")
             while pg.locator(".focus .frow.act .tick").count(): pg.locator(".focus .frow.act .tick").click(); pg.wait_for_timeout(200)
             dm = pg.evaluate("(() => { const s = document.querySelector('.bar .rb-demo svg.fig'); return s ? s.hasAttribute('data-fig') : null; })()")
             ok(dm is (not reduit), f"{M} · repos après la dernière série : exercice suivant en grand dans la barre de repos, {'image fixe' if reduit else 'animé'} ({dm})")
-            ok(pg.locator(".focus button:has-text('Suivant ›')").is_visible(), f"{M} · pendant le repos : « Suivant › » accessible")
+            ok(pg.locator(".focus button:has-text('Exercice suivant ›')").is_visible() and pg.evaluate(ORANGE) == [], f"{M} · pendant le repos : « Exercice suivant › » accessible, en secondaire (aucune action orange : {pg.evaluate(ORANGE)})")
+            fx = [t.split("\n")[-1] for t in pg.locator(".focus .feelb button").all_inner_texts()]
+            ok(len(fx) == 3 and all(re.match(r"^(ensuite \d|on garde \d)", t) for t in fx), f"{M} · ressenti : « ensuite 50 kg × 10 » ou « on garde 47,5 kg », sans deux-points {fx}")
+            ok(pg.locator(".focus .facts").is_hidden(), f"{M} · ressenti : la rangée « + série / − série / Repos » est masquée pendant la question")
             pg.click(".bar button:has-text('Passer')"); pg.wait_for_timeout(300)
-            ok(pg.evaluate("document.querySelector('.bar .rb-demo')") is None and pg.evaluate(ORANGE) == ["Suivant ›"], f"{M} · exercice fini : « Suivant › » devient l'action orange ({pg.evaluate(ORANGE)})")
+            ok(pg.evaluate("document.querySelector('.bar .rb-demo')") is None and pg.evaluate(ORANGE) == ["Exercice suivant ›"], f"{M} · exercice fini, repos terminé : « Exercice suivant › » devient l'action orange ({pg.evaluate(ORANGE)})")
             # fin : un seul écran, records puis Esprits, durée de 52 min, une seule action orange (« Terminer »)
             while True:
                 for i in pg.locator(".focus .frow input").all():
@@ -76,6 +83,9 @@ try:
                       ordre: ss.map(s => s.classList.contains('reward') ? 'esprits' : s.querySelector('.rec') ? 'records' : '?'), confettis: document.querySelectorAll('canvas').length,
                       tabbar: getComputedStyle(document.querySelector('.tabbar')).display}; })()""")
             ok(fin["fenetres"] == 0 and fin["ordre"] == ["records", "esprits"] and fin["tabbar"] == "none", f"{M} · fin : un seul écran, records puis Esprits, plus de fenêtres superposées {fin['ordre']}")
+            av = pg.evaluate("[...document.querySelectorAll('.fin .rec')].map(r => r.innerText.replace(/\\s+/g, ' '))")
+            ok(av and all("Avant : " in r for r in av) and any(" kg × " in r for r in av), f"{M} · fin : « Avant : … » sur chaque record, records en charge compris {av[:2]}")
+            ok(pg.locator(".topbar").is_hidden(), f"{M} · fin : pas de barre du haut (le titre dit déjà « … faite »)")
             ok(fin["tuiles"][0] == "52 min durée" and "séries" in fin["tuiles"][1], f"{M} · fin : durée de la séance, puis séries {fin['tuiles']}")
             ok(pg.evaluate(ORANGE) == ["Terminer"] and pg.locator(".fin .reward button:has-text('Tirer maintenant')").count() == 1, f"{M} · fin : « Terminer » seule action orange, « Tirer maintenant » en secondaire")
             ok(fin["confettis"] == (0 if reduit else 1), f"{M} · confettis du record : {'coupés' if reduit else 'lancés'} ({fin['confettis']})")
