@@ -329,11 +329,26 @@
     return head() + subnav() + body;
   }
   function toast2(m) { try { g('toast')(m); } catch (e) {} }
+  // carte compacte de l'accueil : l'équipe en entier (esprit de tête plus grand), jetons et quêtes, une action utile
   function homeCard() {
     var s = st(); if (s.opts.hide) return ''; init(); css();
     var zs = zoneSetsAll(), q = quests(false), done = q.list.filter(function (i) { return i.ok; }).length;
-    return '<section class="card" onclick="go(\'jeu\')" style="cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:baseline"><h2>Esprits</h2><span class="m">' + s.tokens + ' jeton' + (s.tokens > 1 ? 's' : '') + ' · ' + done + '/' + q.list.length + ' quêtes</span></div>'
-      + '<div class="j-team" style="margin-top:6px">' + s.team.map(function (cid) { var lv = levelOf(cid, zs); return '<div style="flex:1;text-align:center;font-size:12px">' + art(cid, stageOf(lv), { bare: true }) + '<b>' + E(CRE[cid].name) + '</b><br><span class="m">Niv. ' + lv + '</span></div>'; }).join('') + '</div></section>';
+    var team = s.team.map(function (cid, i) { var lv = levelOf(cid, zs); return '<span class="' + (i ? '' : 'lead') + '">' + art(cid, stageOf(lv), { bare: true }) + '</span>'; }).join('');
+    var act = s.tokens >= 1 ? '<button class="sm" onclick="event.stopPropagation();JEU.pull(1)">Tirer</button>'
+      : '<button class="sm" onclick="event.stopPropagation();go(\'jeu\');JEU.sub(\'collection\')">Équipe</button>';
+    return '<section class="card spirits" onclick="go(\'jeu\')" style="cursor:pointer"><span class="team" role="img" aria-label="Ton équipe : ' + E(s.team.map(function (c) { return CRE[c].name; }).join(', ')) + '">' + team + '</span>'
+      + '<span class="txt"><b>' + s.tokens + ' jeton' + (s.tokens > 1 ? 's' : '') + '</b> <span class="m">· quêtes ' + done + '/' + q.list.length + '</span></span>' + act + '</section>';
+  }
+  // partie « Esprits » de l'écran de fin de séance : mêmes lignes que la fenêtre de récompense, tirage en action secondaire
+  function rewardHtml(rep) {
+    css();
+    var lines = rep.lines.filter(function (l) { return l[1] > 0 || /Équipe/.test(l[0]); });
+    return '<section class="card reward"><h2>Esprits</h2>' + (rep.tokens ? '<p class="tok">+' + rep.tokens + ' jeton' + (rep.tokens > 1 ? 's' : '') + '</p>' : '')
+      + (lines.length ? '<ul>' + lines.map(function (l) { return '<li><span>' + E(l[0]) + '</span>' + (l[1] ? '<b>+' + l[1] + '</b>' : '') + '</li>'; }).join('') + '</ul>' : '')
+      + (rep.note ? '<p class="m">' + E(rep.note) + '</p>' : '')
+      + rep.ups.map(function (u) { return '<div class="evo">' + art(u.id, u.stage) + '<span>' + E(CRE[u.id].name) + ' passe au stade ' + u.stage + '</span></div>'; }).join('')
+      + '<div class="bal"><span>Solde : <b>' + rep.balance + '</b> jeton' + (rep.balance > 1 ? 's' : '') + '</span>'
+      + (rep.balance >= 1 ? '<button class="sm" onclick="JEU.pull(1)">Tirer maintenant</button>' : '') + '</div></section>';
   }
 
   /* ------------------------------------------------------------------ overlays */
@@ -417,6 +432,7 @@
   function rer() { try { g('R')(); } catch (e) {} }
   window.JEU = {
     state: st, init: init, award: award, rewardOverlay: rewardOverlay, view: view, homeCard: homeCard, applyWardrobe: applyWardrobe,
+    rewardHtml: rewardHtml, zoneLevel: function (k) { return 1 + Math.floor(Math.sqrt(zoneSetsAll()[k] || 0)); },
     hidden: function () { return !!st().opts.hide; },
     sub: function (k) { sub = k; rer(); },
     pull: function (n) { var r = pull(n); if (!r) return toast2('Pas assez de jetons'); playPull(r); },

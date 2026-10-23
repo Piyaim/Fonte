@@ -210,6 +210,10 @@ try:
         ok(h["titre"] == "Séance A" and "prévue aujourd’hui" in h["texte"] and "Jour de repos" not in h["texte"], "lundi : la séance prévue (Séance A) est proposée")
         le(pg, J(1)); h = bouton_en_tete(pg, "jour de repos")
         ok(h["titre"] == "Séance B" and "prévue demain" in h["texte"] and "Jour de repos : la récupération compte aussi" in h["texte"], "mardi (repos) : séance suivante en tête, ligne sur le repos dessous")
+        # refonte, lot 1 (décision du 22/10/2026) : jour de repos, aucun bouton orange ; « Démarrer la séance » en secondaire, toujours en tête
+        orange = pg.evaluate("() => { const a = getComputedStyle(document.documentElement).getPropertyValue('--a').trim(), d = document.createElement('i'); d.style.color = a; document.body.appendChild(d); const c = getComputedStyle(d).color; d.remove(); return [...document.querySelectorAll('#app button')].filter(b => getComputedStyle(b).backgroundColor === c).map(b => b.textContent.trim()); }")
+        ok(orange == [] and pg.evaluate("document.querySelector('#app .hero button').className") == "sm big", f"mardi (repos) : aucun bouton orange, « Démarrer la séance » en secondaire {orange}")
+        le(pg, J(0)); ok(pg.evaluate("document.querySelector('#app .hero button').className") == "go", "lundi (séance prévue) : « Démarrer la séance » en orange")
         sans_manquee(pg, "jour de repos")
         le(pg, J(2)); pg.evaluate(SEANCES, [{"day": J(2), "workout_id": wb, "entries": [{"exercise_id": slug(s0, "gs")["id"], "sets": [[20, 10]]}]}])
         h = accueil(pg); ok(h["titre"] == "Séance A" and "prévue vendredi" in h["texte"] and h["bouton"] == "Démarrer la séance", "mercredi, séance B faite : la suivante (vendredi, A) est proposée")

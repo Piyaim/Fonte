@@ -33,7 +33,8 @@ PROG = """async () => { const x = Object.values(EX).find(e => e.slug === 'pc').i
 SEANCES = "async l => { for (const s of l) await api('POST', '/api/sessions', s); await load(); R(); }"
 EFFACER = "async () => { TMskip(); for (const s of [...SESS]) await api('DELETE', '/api/sessions/' + s.id); localStorage.removeItem('muscu-draft'); localStorage.removeItem('muscu-extras'); localStorage.removeItem('muscu-xcur'); F = null; FOC = null; await load(); go('accueil'); }"
 CONSEIL = "() => { const l = document.querySelector('.focus .sug'); return l ? l.textContent : ''; }"
-MES = """() => { const r = document.querySelector('.focus .frow.act').getBoundingClientRect(), b = document.querySelector('.bar').getBoundingClientRect(),
+MES = """() => { const r = document.querySelector('.focus .frow.act').getBoundingClientRect(),
+  b = [...document.querySelectorAll('.bar, .fnavb')].filter(x => getComputedStyle(x).display !== 'none' && getComputedStyle(x).position === 'fixed').map(x => x.getBoundingClientRect()).sort((x, y) => x.top - y.top)[0],   // lot 1 : hors repos, barre « ‹ / Suivant › »
   t = document.querySelector('.topbar').getBoundingClientRect(); return {haut: r.top, bas: r.bottom, barre: b.top, barreH: b.height, titre: t.bottom}; }"""
 
 def lum(rgb):
@@ -144,10 +145,16 @@ try:
 
         # ======================================================= 4. ✓ pâle dans le rond d'une série non validée
         demarrer()
-        t0 = pg.locator(".frow.act .tick").inner_text(); op = pg.evaluate("parseFloat(getComputedStyle(document.querySelector('.frow.act .tick .tk0')).opacity)") if pg.locator(".frow.act .tick .tk0").count() else None
-        ok(t0 == "✓" and op is not None and op < 1, f"série non validée : ✓ pâle dans le rond ({t0!r}, opacité {op})")
+        # refonte, lot 1 (boutons V3) : coche grise dessinée, à 3:1 au moins contre le fond du rond (WCAG 1.4.11), au lieu du ✓ pâle
+        ck = pg.evaluate("""() => { const t = document.querySelector('.frow.act .tick'), k = t && t.querySelector('svg.tk0'); if (!k) return null;
+          const c = s => s.match(/[\\d.]+/g).slice(0, 3).map(Number); return [c(getComputedStyle(k).color), c(getComputedStyle(t).backgroundColor), parseFloat(getComputedStyle(k).opacity)]; }""")
+        rk = (max(lum(ck[0]), lum(ck[1])) + .05) / (min(lum(ck[0]), lum(ck[1])) + .05) if ck else 0
+        ok(ck is not None and rk >= 3 and ck[2] == 1, f"série non validée : coche grise dans le rond, {rk:.2f}:1 contre son fond")
         pg.click(".frow.act .tick"); time.sleep(.3)
-        ok(pg.locator(".frow.ok .tick .tk0").count() == 0 and pg.locator(".frow.ok .tick").first.inner_text() == "✓", "série validée : ✓ plein, sans le ✓ pâle")
+        ok(pg.locator(".frow.ok .tick .tk0").count() == 0 and pg.locator(".frow.ok .tick svg").count() >= 1, "série validée : coche pleine, sans la coche grise")
+        # pendant le repos qui suit, « Suivant › » reste accessible (dans la page, au-dessus de la barre de repos)
+        sv = pg.locator(".focus button:has-text('Suivant ›')")
+        ok(pg.locator(".bar #tm").count() == 1 and sv.count() == 1 and sv.is_visible() and sv.is_enabled(), "pendant un repos : « Suivant › » toujours accessible")
 
         # ======================================================= 5. minuteur compact hors de l'onglet Séance
         hS = pg.locator(".bar").bounding_box()["height"]
@@ -180,7 +187,7 @@ try:
             prevu = {t.splitlines()[0]: (t.splitlines()[1] if len(t.splitlines()) > 1 else "") for t in pg.locator(".feelb button").all_inner_texts()}
             pg.click(f".feelb button:has-text('{choix}')"); time.sleep(.2)
             pg.evaluate("TMskip(); saveSession()"); time.sleep(1); pg.evaluate("document.querySelectorAll('.pr-overlay,.j-ov').forEach(o => o.remove())")
-            demarrer(); c = pg.evaluate(CONSEIL).replace("Conseil : ", "→ ")
+            demarrer(); c = pg.evaluate(CONSEIL).replace("Conseil : ", "ensuite : ")   # lot 1 : « ensuite : … » sous chaque choix (avant : « → … »)
             ok(prevu.get(choix) == c, f"« {choix} » : annoncé {prevu.get(choix)!r}, conseil de la séance suivante {c!r} (tous : {prevu})")
             pg.evaluate("exitFocus()"); pg.evaluate(EFFACER)
         ok(len(set(prevu.values())) == 3, f"(témoin) les trois choix annoncent trois conséquences différentes {prevu}")

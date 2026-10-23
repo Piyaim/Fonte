@@ -152,6 +152,7 @@ public class MainActivity extends Activity {
         if (p.endsWith(".png")) return "image/png";
         if (p.endsWith(".svg")) return "image/svg+xml";
         if (p.endsWith(".css")) return "text/css";
+        if (p.endsWith(".woff2")) return "font/woff2";   // polices de l'interface (server/static/polices)
         return "application/octet-stream";
     }
 

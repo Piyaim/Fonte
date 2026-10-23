@@ -42,10 +42,8 @@ applyAccent();
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Fonte">
 <title>Fonte</title>
+<link rel="stylesheet" href="/static/tokens.css">   <!-- jetons de design (couleurs, polices, espacements) : une seule définition -->
 <style>
-:root{--bg:#eef1f4;--c:#fff;--t:#10202b;--m:#56636e;--a:#e8590c;--at:#a83a0a;--on:#1b1005;--l:#d5dce2;--warn:#b4441c;color-scheme:light}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e161c;--c:#17222b;--t:#e8eef2;--m:#8fa0ac;--a:#ff7a1a;--at:#ff7a1a;--on:#1b1005;--l:#2a3a46;--warn:#f08a5d;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#0e161c;--c:#17222b;--t:#e8eef2;--m:#8fa0ac;--a:#ff7a1a;--at:#ff7a1a;--on:#1b1005;--l:#2a3a46;--warn:#f08a5d;color-scheme:dark}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--t);font:16px/1.4 "Trebuchet MS",system-ui,sans-serif;padding-top:env(safe-area-inset-top,0px)}
 main{max-width:600px;margin:0 auto;padding:12px 12px 110px}
@@ -387,6 +385,172 @@ details.card.det>summary{color:var(--t);font-size:17px;font-weight:700}
 .trow span{color:var(--m)}
 .nwarn{border-left:5px solid var(--warn)}
 .nfull{width:100%;margin-top:8px}
+
+/* ---- refonte, lot 1 (direction B+, 22/10/2026) : polices, boutons, cartes ; accueil, séance, repos, fin de séance ----
+   Jetons dans tokens.css. Règles « :root … » : même priorité que l'ancien style qu'elles remplacent. */
+body{font-family:var(--ff-text)}
+h1,h2,h3,.topbar h1,.qt{font-family:var(--ff-title);font-variation-settings:"opsz" 72}
+.topbar h1{font-weight:800;font-stretch:90%;font-size:21px}
+:root h2{font-weight:700;font-stretch:92%;font-size:19px;line-height:1.2}
+h3{text-transform:none;letter-spacing:0;font-size:16px;font-weight:700;color:var(--t)}
+.num,.st b,.tiles b,.wkbig b,.toti b,#tm{font-family:var(--ff-title);font-stretch:85%;font-variant-numeric:tabular-nums lining-nums}
+:focus-visible{outline:2px solid var(--t);outline-offset:2px}
+:root .card,.card{border-radius:var(--r-card);border:1px solid var(--l);box-shadow:none;padding:16px}
+:root .go,.go{border-radius:var(--r-btn);min-height:56px;font-size:18px;font-weight:800;box-shadow:inset 0 0 0 2px rgba(0,0,0,.2);transition:transform var(--t-fast)}
+.sm{border:0;background:var(--f);color:var(--t);border-radius:var(--r-btn);font-weight:700;transition:transform var(--t-fast)}
+.go:active,.sm:active,.pm:active,.tick:not([aria-pressed="true"]):active{transform:translateY(var(--press))}
+.sm.danger,.danger{background:none;color:var(--danger);text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:3px}
+.btn-t{min-height:44px;padding:0 8px;border:0;background:none;color:var(--t);font:inherit;font-size:15px;font-weight:700;text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:3px;cursor:pointer}
+.chip{border:0;background:var(--f)}
+input,select,textarea{border-color:var(--l);background:var(--bg)}
+.tabbar button{font-size:13px}
+:root .tabbar button.on{color:var(--t);font-weight:700}
+:root .tabbar button.on .ic{background:none;color:var(--t);box-shadow:inset 0 3px 0 var(--a);border-radius:0}
+.tag.rec{color:var(--at);border-color:var(--a)}
+@media (prefers-reduced-motion:reduce){.go,.sm,.pm,.tick{transition:none}.go:active,.sm:active,.pm:active,.tick:active{transform:none}}
+
+/* signes propres à B : trait de feutre (titre de l'écran seulement), bâtons de comptage, étiquette patine, surlignage (conseil seulement) */
+.scrib{display:block;width:150px;height:12px;margin:4px 0 0 2px;color:var(--a)}
+.tally{display:inline-flex;gap:4px;vertical-align:-2px}
+.tally i{width:3px;height:16px;border-radius:2px;background:var(--ctl);transform:rotate(8deg)}
+.tally i.d{background:var(--a)}
+.zchip{display:inline-flex;align-items:center;gap:6px;background:var(--pat-bg);color:var(--pat);font-weight:700;font-size:13px;padding:2px 10px 2px 5px;border-radius:999px;margin-top:6px}
+.zchip i{width:14px;height:14px;border-radius:50%;background:var(--pat)}
+
+/* accueil */
+:root .hero{background:none;border:0;box-shadow:none;color:var(--t);padding:4px 4px 8px;margin:0 0 8px;border-radius:0;overflow:visible}
+:root .hero .dt{color:var(--m);font-size:15px}
+:root .hero h2{font-size:40px;font-weight:800;font-stretch:88%;line-height:1.05;letter-spacing:-.02em;margin:4px 0 0;max-width:none}
+:root .hero .sub{color:var(--t);font-size:17px;max-width:none;margin:12px 0 0}
+:root .hero .sub+.sub{color:var(--m);font-size:15px;margin-top:0}
+:root .hero .go{background:var(--a);color:var(--on);margin-top:16px}
+:root .hero .sm.big{width:100%;min-height:56px;font-size:18px;font-weight:800;margin-top:16px}
+:root .hero .rest{color:var(--m);font-size:15px;margin-top:12px}
+.card.wk{display:flex;align-items:center;gap:12px}
+.wk .wkbig b{font-size:40px;font-weight:800}
+.wk .wkl{flex:1;line-height:1.3}
+.wk .wkl b{display:block;font-size:17px}
+:root .wk .tiles{display:block;margin:0;max-width:96px;text-align:right}
+:root .wk .tiles div{border:0;background:none;padding:0;text-align:right}
+:root .wk .tiles b{font-size:24px;color:var(--t)}
+.idea .zl{font-weight:700;font-size:17px;margin:4px 0 12px}
+.idea .row2{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* séance : mode « un exercice à la fois » */
+.fprog{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;font-size:15px}
+.fprog .tally{margin-left:6px}
+.fprog .tally i{height:18px;width:4px}
+.warmp{background:var(--s2);border-radius:var(--r-tile);padding:8px 12px;margin:0 0 8px}
+.focus .exh{display:grid;grid-template-columns:88px 1fr;gap:12px;align-items:center}
+.focus .thumb{height:62px;border:0;border-radius:var(--r-tile);background:var(--s2);display:grid;place-items:center;overflow:hidden;position:relative;padding:0;cursor:pointer}
+.focus .thumb svg{width:96px;max-width:none}
+.focus .thumb::after{content:"";position:absolute;right:5px;bottom:5px;border-left:8px solid var(--t);border-top:5px solid transparent;border-bottom:5px solid transparent;opacity:.7}
+.focus .ft{font-family:var(--ff-title);font-size:24px;font-weight:700;font-stretch:92%;line-height:1.1;margin:0}
+.focus .fta{font-weight:700;font-size:15px;color:var(--t);margin:2px 0 0}
+.focus .fta .tally{margin-right:6px}
+.focus .light1{color:var(--pat);font-weight:700;font-size:15px;margin:8px 0 0}
+.focus .sug{border:0;padding:0;margin:12px 0 0;font-size:19px;font-weight:800;color:var(--t)}
+.sug u{text-decoration:none;background:linear-gradient(transparent 55%,var(--hl) 55%);padding:0 2px}   /* surlignage : seulement sur le conseil */
+.focus .lastrow{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px}
+.focus .lastrow .last{margin:0;color:var(--m);font-size:15px}
+.focus .lastrow details{margin:0}
+.focus .frow{min-height:52px}
+.focus .frow input{border:0;background:none;text-align:center;font-family:var(--ff-title);font-stretch:85%;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;padding:4px}
+.focus .frow.ok input{color:var(--m)}
+.focus .frow.act{border:2px solid var(--a);border-radius:16px 16px 16px 4px;padding:8px;margin:4px -6px;background:none}
+.focus .frow.act input{font-size:56px;font-weight:800;padding:0;line-height:1.05}
+.pm{width:56px;height:56px;min-width:56px;border-radius:50%;border:0;background:var(--f);color:var(--t);font-size:26px;font-weight:700;padding:0;transition:transform var(--t-fast)}
+.tick{border:0;background:var(--f);color:var(--ck)}
+.tick .tk0{color:var(--ck);opacity:1}
+.frow.ok .tick{background:var(--a);color:var(--on)}
+.facts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.facts .sm{min-height:44px;font-size:15px}
+.fnavb{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;gap:8px;padding:8px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--l)}
+.fnavb button{margin:0;min-height:52px}
+.fnavb .prev{width:52px;flex:none;padding:0;font-size:22px}
+.fnavb .next{flex:1}
+.fnavb .go{font-size:17px}
+body.foc main{padding-bottom:110px}
+body.foc.rest-on .fnavb{position:static;background:none;border:0;padding:12px 0 0}   /* pendant un repos : « Suivant › » reste accessible, sous l'exercice, au-dessus de la barre de repos */
+.feel .feelb{display:grid;gap:8px}
+.feel .feelb button{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:52px;padding:0 16px;border:0;border-radius:var(--r-btn);background:var(--f);color:var(--t);font:inherit;font-weight:700;font-size:17px}
+.feel .feelb button small{display:inline;font-weight:400;font-size:15px;color:var(--t);margin:0}
+.feel .feelb button.on{background:var(--a);color:var(--on)}
+.feel .feelb button.on small{color:var(--on)}
+
+/* barre de repos : feuille posée sur le contenu ; démonstration de l'exercice suivant après sa dernière série */
+.bar{background:var(--c);border:1px solid var(--l);box-shadow:var(--sh-bar)}
+.foc .bar{left:0;right:0;bottom:0;border-radius:20px 20px 0 0;border-width:1px 0 0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+.foc:not(.rest-on) .bar{display:none}
+.rb-top b{font-size:var(--fs-timer)}
+.bar .pbar{height:4px;background:var(--f)}
+.bar .pbar i{background:var(--a)}
+.rb-demo{height:150px;margin:8px 0;border-radius:var(--r-tile);background:var(--s2);display:grid;place-items:center;overflow:hidden}
+.rb-demo svg.fig{height:146px;width:auto;max-width:100%}
+.rb-next b{font-size:17px}
+body.foc.rest-on main{padding-bottom:200px}
+body.foc.rest-on.demo main{padding-bottom:360px}
+
+/* fenêtre de démonstration (vignette touchée) */
+.demo-ov .pr-card{text-align:left;max-width:420px}
+.demo-ov svg.fig{background:var(--s2);border-radius:var(--r-tile)}
+
+/* fin de séance */
+.fin .dt{color:var(--m);margin:12px 0 0}
+.fin h2.big{font-size:40px;font-weight:800;font-stretch:88%;line-height:1.05;letter-spacing:-.02em;margin:4px 0 0}
+.fin .sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.fin .sum div{background:var(--c);border:1px solid var(--l);border-radius:var(--r-tile);padding:12px 6px;text-align:center}
+.fin .sum b{display:block;font-family:var(--ff-title);font-stretch:85%;font-variant-numeric:tabular-nums;font-size:30px;font-weight:800;line-height:1.05}
+.fin .sum span{font-size:13px;color:var(--m)}
+.fin .rec{display:grid;grid-template-columns:4px 1fr;gap:12px;padding:8px 0}
+.fin .rec+.rec{border-top:1px solid var(--l)}
+.fin .rec i{background:var(--a);border-radius:2px}
+.fin .rec .v{font-family:var(--ff-title);font-stretch:85%;font-size:20px;font-weight:800}
+.reward .tok{font-family:var(--ff-title);font-stretch:85%;font-size:36px;font-weight:800;line-height:1;color:var(--pat);margin:8px 0 0}
+.reward ul{list-style:none;padding:0;margin:8px 0;font-size:15px}
+.reward li{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
+.reward .evo{display:flex;align-items:center;gap:12px;background:var(--pat-bg);border-radius:var(--r-tile);padding:4px 12px 4px 4px;margin:8px 0;color:var(--pat);font-weight:700}
+.reward .evo svg{width:64px;height:64px;flex:none}
+.reward .bal{display:flex;align-items:center;gap:8px}
+.reward .bal span{flex:1;color:var(--m)}
+body.fin-on .tabbar{display:none}
+body.fin-on main{padding-bottom:110px}
+
+/* accueil : carte Esprits compacte (équipe entière, esprit de tête plus grand), propositions */
+.card.spirits{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px 12px}
+.spirits .sm{grid-row:1/3;grid-column:2;min-height:48px}
+.spirits .team{display:flex;align-items:flex-end;gap:8px}
+.spirits .team span{width:44px;height:44px;border-radius:var(--r-tile);background:var(--s2);display:grid;place-items:center}
+.spirits .team span.lead{width:64px;height:64px}
+.spirits .team svg{width:40px;height:40px;overflow:visible}
+.spirits .team .lead svg{width:60px;height:60px}
+.spirits .txt{font-size:15px}
+:root .offb{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* séance : la série en cours (kg puis reps, entre − et +), rond de validation et « Série n sur N » dessous */
+.focus .fcard{padding:12px 12px 16px;margin-top:4px}
+.focus .frow.act{grid-template-columns:56px 1fr;grid-template-areas:"st st" "tk lb";row-gap:8px}
+.focus .frow.act>span:first-child{display:none}
+.focus .frow.act .stps{grid-area:st}
+.focus .frow.act .tick{grid-area:tk;width:52px;height:52px}
+.focus .frow.act .slab{grid-area:lb;font-weight:700;color:var(--t)}
+.focus .stpr{grid-template-columns:56px 1fr 56px;gap:4px}
+.focus .stp .u{text-align:center;margin:0}
+.focus .stp+.stp{margin-top:4px}
+.focus .frow:not(.act){grid-template-columns:28px 1fr 1fr 44px}
+.focus .frow:not(.act) .tick{width:44px;height:44px}
+.focus .adv{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:8px}
+.focus .adv .sug{grid-column:1/-1;order:-1}
+.focus .adv .last{margin:0;min-height:44px;display:flex;align-items:center;font-size:15px}
+.focus .adv details{margin:0}
+.focus .adv details[open]{grid-column:1/-1}
+.focus .exh.nth{grid-template-columns:1fr}
+.focus .warmp summary{min-height:44px;padding:12px 0}
+
+.focus .frow input::placeholder{font-family:var(--ff-text);font-size:17px;font-weight:400;color:var(--m)}
+.tick svg{display:block;margin:auto}
+
+.focus .feel{border:0;background:none;padding:0;margin-top:12px}
+.focus .feel p b{font-family:var(--ff-title);font-size:19px;font-weight:700}
 </style>
 </head>
 <body>
@@ -488,7 +652,7 @@ function effBox(e) {   // une fois, juste après la dernière série validée (t
   if (v && F.effOpen !== e.id) return `<p class="feel1">Ressenti\u00a0: <b>${effLabel(v)}</b><button class="sm" onclick="F.effOpen=${e.id};R()">Changer</button></p>`;
   if (F.mode !== 'edit' && F.effOpen !== e.id && !(rows.length && rows.every((_, k) => d[k]))) return '';
   const nx = F.mode === 'new' ? feelNext(e) : null;
-  return `<div class="feel" role="group" aria-label="Ressenti"><p><b>Comment c’était\u00a0?</b></p><div class="feelb">${FEEL.map(([n, t]) => `<button class="${v === n ? 'on' : ''}" aria-pressed="${v === n}" onclick="setEff(${e.id},${n})">${t}${nx ? `<small>→ ${esc(nx[n])}</small>` : ''}</button>`).join('')}</div></div>`;
+  return `<div class="feel" role="group" aria-label="Ressenti"><p><b>Comment c’était\u00a0?</b></p><div class="feelb">${FEEL.map(([n, t]) => `<button class="${v === n ? 'on' : ''}" aria-pressed="${v === n}" onclick="setEff(${e.id},${n})">${t}${nx ? `<small>ensuite\u00a0: ${esc(nx[n])}</small>` : ''}</button>`).join('')}</div></div>`;
 }
 /* conséquence de chaque choix sur le conseil de la prochaine séance de ce programme : loadTip appliqué à l'historique
    complété par la séance en cours (séries saisies, ressenti essayé). Rien ne change le conseil d'ici là sans une action de l'utilisateur
@@ -694,7 +858,7 @@ function advice(e, exceptSid, wid) {   // wid : programme de la séance en cours
   }
   const {ef, tip, why} = T;
   const other = wid && ref[0].workout_id !== wid && ref[0].workout_name ? ` (${esc(ref[0].workout_name)})` : '';
-  let h = `<p class="m last">Dernière${other}\u00a0: ${esc(lastTxt(e, l))}</p><p class="sug">Conseil\u00a0: ${esc(tip)}</p>`;
+  let h = `<p class="m last">Dernière${other}\u00a0: ${esc(lastTxt(e, l))}</p><p class="sug">Conseil\u00a0: <u>${esc(tip)}</u></p>`;
   let d = (why ? `<p class="m">${esc(why)}</p>` : '') + ph1 + (e.tip ? `<p class="m">${esc(e.tip)}</p>` : '');
   if (ef) d += `<p class="m">Dernière fois : ${l.map(a => setText(e, a)).join(' · ')} · ressenti : ${effLabel(ef)}</p>`;
   if (e.own) d += '<p class="m">Réglage propre à ce programme.</p>';
@@ -727,12 +891,13 @@ const IC = {
 const IC_MENU = '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
 const IC_CLOSE = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 function nav() {
-  $('ttl').textContent = view === 'accueil' ? 'Fonte' : view === 'profil' && window.PROFIL ? PROFIL.title() : VL[view];
+  $('ttl').textContent = view === 'accueil' ? 'Fonte' : view === 'fin' ? 'Séance faite' : view === 'profil' && window.PROFIL ? PROFIL.title() : VL[view];
   document.body.classList.toggle('onb', !!(window.PROFIL && PROFIL.imposed()));
   $('tabs').innerHTML = tabsNow().map(k => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}')" ${k === view ? 'aria-current="page"' : ''}><span class="ic">${IC[k]}</span>${VL[k]}</button>`).join('');
   $('dnav').innerHTML = VIEWS.filter(([k]) => k !== 'jeu' || window.JEU).map(([k, t]) => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}');closeMenu()">${t}</button>`).join('');
   document.body.dataset.view = view;
   document.body.classList.toggle('foc', inFocus());
+  document.body.classList.toggle('fin-on', view === 'fin');
   barRender(); screenSync(); tabsPick();
 }
 function genderPick() {
@@ -754,7 +919,7 @@ function R() {
   if (window.PROFIL && PROFIL.imposed() && view !== 'profil' && view !== 'donnees') view = 'profil';   // questionnaire imposé tant que le profil n'existe pas
   if (view === 'seance') ensureForm();
   nav();
-  $('app').innerHTML = {accueil: vAccueil, seance: vSeance, zones: vZones, progres: vProgres, historique: vHisto, exercices: vCat, programmes: vProg, jeu: () => window.JEU ? JEU.view() : '', profil: () => window.PROFIL ? PROFIL.view() : '', notifications: () => window.NOTIF ? NOTIF.view() : '', donnees: vData}[view]();
+  $('app').innerHTML = {accueil: vAccueil, seance: vSeance, zones: vZones, progres: vProgres, historique: vHisto, exercices: vCat, programmes: vProg, jeu: () => window.JEU ? JEU.view() : '', profil: () => window.PROFIL ? PROFIL.view() : '', notifications: () => window.NOTIF ? NOTIF.view() : '', donnees: vData, fin: vFin}[view]();
   if (window.NOTIF) NOTIF.sync();   // plan des notifications recalculé après chaque changement (appli Android seulement)
   focReveal();
 }
@@ -785,36 +950,51 @@ function dayWord(iso) {   // « demain », sinon le jour de la semaine
   return d === 1 ? 'demain' : d < 7 ? dayDate(iso).toLocaleDateString('fr-FR', {weekday: 'long'}) : 'le ' + dayDate(iso).toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long'});
 }
 function acceptZones() { ZSEL = new Set(todayZones().map(x => x.k)); store('muscu-zones', [...ZSEL]); genZones(); }
+/* écran de fin : la séance faite d'abord (durée, séries, kg, records battus), puis les Esprits ; « Terminer » ramène à l'accueil */
+let FIN = null;
+function vFin() {
+  const s = FIN && SESS.find(x => x.id === FIN.sid);
+  if (!s) { view = 'accueil'; return vAccueil(); }
+  const nSets = s.entries.reduce((a, en) => a + en.sets.length, 0), kg = Math.round(sessionVolume(s)), dur = dureeMin(s);
+  const d0 = dayDate(s.day).toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long'});
+  const tiles = [dur ? [`${dur} min`, 'durée'] : null, [nSets, nSets > 1 ? 'séries' : 'série'], kg ? [kg.toLocaleString('fr-FR'), 'kg soulevés'] : [s.entries.length, s.entries.length > 1 ? 'exercices' : 'exercice']].filter(Boolean);
+  const prev = r => r.ex.kind === 'time' ? `${fmt(r.prev)} s` : r.ex.kind === 'cardio' ? `${fmt(r.prev)} min` : r.ex.kind === 'reps' ? `${fmt(r.prev)} reps` : r.ex.assisted ? `assistance ${fmt(-r.prev)} kg` : null;
+  let h = `<div class="fin"><p class="dt">${esc(d0.charAt(0).toUpperCase() + d0.slice(1))}</p><h2 class="big">${esc(s.workout_name)} faite</h2><svg class="scrib" style="width:190px" viewBox="0 0 150 12" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" aria-hidden="true"><path d="M3 8C26 4 52 3 79 5s48 3 68-1"/></svg>`
+    + `<div class="sum" style="grid-template-columns:repeat(${tiles.length},1fr)">${tiles.map(([b, t]) => `<div><b>${esc(String(b))}</b><span>${t}</span></div>`).join('')}</div>`;
+  if (FIN.pr.length) h += `<section class="card"><h2>${FIN.pr.length > 1 ? FIN.pr.length + ' records battus' : 'Record battu'}</h2>${FIN.pr.map(r => `<div class="rec"><i></i><div><b>${esc(r.ex.name)}</b><div class="v">${esc(setText(r.ex, r.set))}</div>${prev(r) ? `<span class="m">Avant : ${esc(prev(r))}</span>` : ''}</div></div>`).join('')}</section>`;
+  if (FIN.rep && window.JEU && JEU.rewardHtml) h += JEU.rewardHtml(FIN.rep);
+  h += `<p><button class="btn-t" id="fin-hist" onclick="FIN=null;go('historique')">Voir la séance dans l’historique</button></p>`
+    + `<div class="fnavb"><button class="go next" onclick="FIN=null;go('accueil')">Terminer</button></div></div>`;
+  return h;
+}
 function vAccueil() {
   const ws = weekStart(), wk = SESS.filter(s => dayDate(s.day) >= ws), n = wk.length;
-  const vol = wk.reduce((a, s) => a + sessionVolume(s), 0), total = SESS.length;
+  const total = SESS.length;
   const pending = XS.length > 0 || !!(F && F.mode === 'new' && F.dirty);
   const sch = window.PROFIL && PROFIL.schedule ? PROFIL.schedule(today()) : null, slot = sch && (sch.today || sch.next);
   const nw = (slot && WO.find(w => w.id === slot.wid)) || nextWorkout();   // avec le placement : la séance prévue ; sinon celle qui suit la dernière faite
   const ls = SESS.length ? SESS[SESS.length - 1] : null;
   const ago = ls ? Math.round((dayDate(today()) - dayDate(ls.day)) / 864e5) : null;
   const nEx = nw ? nw.items.filter(i => EX[i] && !EX[i].archived).length : 0;
-  const efs = ls ? ls.entries.map(e => e.effort).filter(Boolean) : [];
-  const feel = efs.length ? effLabel(Math.round(efs.reduce((a, b) => a + b, 0) / efs.length)) : '—';
   const dt0 = new Date().toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long'}), dt = dt0.charAt(0).toUpperCase() + dt0.slice(1);
   // « 6 exercices · prévue aujourd'hui », puis « Dernière : il y a 2 j »
   const when = !sch || !slot ? '' : sch.today ? ' · prévue aujourd’hui' : ` · prévue ${dayWord(slot.day)}`;
   const sub = pending ? 'Tu as une séance commencée.' : nw ? `${nEx} exercice${nEx > 1 ? 's' : ''}${when}` : 'Compose ta séance depuis l’onglet Séance.';
   const sub2 = ls ? `Dernière : ${ago === 0 ? 'aujourd’hui' : ago === 1 ? 'hier' : 'il y a ' + ago + ' j'}` : 'Aucune séance pour l’instant';
-  const pct = Math.min(n / WGOAL, 1), C = 251.3;
-  const ring = `<svg class="ring" viewBox="0 0 100 100" role="img" aria-label="${n} séance${n > 1 ? 's' : ''} sur ${WGOAL} cette semaine"><circle class="tr" cx="50" cy="50" r="40"/><circle class="pg" cx="50" cy="50" r="40" style="stroke-dasharray:${(pct * C).toFixed(1)} ${C}"/><text x="50" y="58" font-size="26">${n}/${WGOAL}</text></svg>`;
-  let h = `<section class="hero"><p class="dt">${esc(dt)}</p>${ring}<h2>${pending ? 'Séance en cours' : nw ? esc(nw.name) : 'Séance libre'}</h2><p class="sub">${esc(sub)}</p><p class="sub">${esc(sub2)}</p>`
-    + (pending ? `<button class="go" onclick="resumeSession()">Reprendre la séance</button>`
-      : nw ? `<button class="go" onclick="startFromHome(${nw.id})">Démarrer la séance</button>` : `<button class="go" onclick="go('seance')">Ouvrir la séance</button>`)
-    + (sch && !sch.planned ? '<p class="rest">Jour de repos : la récupération compte aussi.</p>' : '') + '</section>';
+  const restDay = !!(sch && !sch.planned) && !pending;   // jour de repos : aucun bouton orange, « Démarrer la séance » en secondaire, toujours en tête
+  const scrib = `<svg class="scrib" viewBox="0 0 150 12" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" aria-hidden="true"><path d="M3 8C26 4 52 3 79 5s48 3 68-1"/></svg>`;
+  const cta = (cls, t) => `<button class="${cls}" onclick="${pending ? 'resumeSession()' : nw ? `startFromHome(${nw.id})` : "go('seance')"}">${t}</button>`;
+  let h = `<section class="hero"><p class="dt">${esc(dt)}</p><h2>${pending ? 'Séance en cours' : nw ? esc(nw.name) : 'Séance libre'}</h2>${scrib}<p class="sub">${esc(sub)}</p><p class="sub">${esc(sub2)}</p>`
+    + (pending ? cta('go', 'Reprendre la séance') : cta(restDay ? 'sm big' : 'go', nw ? 'Démarrer la séance' : 'Ouvrir la séance'))
+    + (restDay ? '<p class="rest">Jour de repos : la récupération compte aussi.</p>' : '') + '</section>';
   if (window.PROFIL && PROFIL.homeCards) h += PROFIL.homeCards();   // proposition (phase, semaine allégée, reprise) : toujours sous le bouton
-  h += `<section class="card wk"><h2>Cette semaine</h2><div class="wkm"><div class="wkbig"><b>${n}</b><span>sur ${WGOAL} séances</span></div></div>
-    <div class="tiles"><div><b>${total}</b><span>séance${total > 1 ? 's' : ''} au total</span></div><div><b>${Math.round(vol)}</b><span>kg soulevés</span></div><div><b>${esc(feel)}</b><span>dernier ressenti</span></div></div></section>`;
+  const tally = Array.from({length: WGOAL}, (_, i) => `<i class="${i < n ? 'd' : ''}"></i>`).join('');
+  h += `<section class="card wk" aria-label="Cette semaine : ${n} séance${n > 1 ? 's' : ''} sur ${WGOAL}"><span class="wkbig"><b>${n}</b></span><span class="wkl"><b>sur ${WGOAL} cette semaine</b><span class="tally" aria-hidden="true">${tally}</span></span>
+    <div class="tiles"><div><b>${total}</b><span>séance${total > 1 ? 's' : ''} au total</span></div></div></section>`;
   if (jeuOn()) h += JEU.homeCard();
-  const tz = todayZones(), st = zoneStats();
-  h += `<section class="card"><h2>Que travailler aujourd’hui ?</h2><p class="m">${SESS.length ? 'Les zones que tu as le moins travaillées récemment.' : 'Pas encore d’historique : voici un point de départ.'}</p>
-    <div class="zrow">${tz.map(x => { const d = daysSince(x.k, st); return `<div class="zc">${ZL[x.k]}<small>${d === null ? 'jamais travaillée' : d === 0 ? 'aujourd’hui' : 'il y a ' + d + ' j'}</small></div>`; }).join('')}</div>
-    <button class="go" onclick="acceptZones()">Générer une séance avec ces zones</button><button class="sm w" onclick="go('zones')">Choisir mes zones</button></section>`;
+  const tz = todayZones();
+  h += `<section class="card idea"><h2>Autre idée</h2><p class="zl">${tz.map(x => ZL[x.k]).join(' · ')}</p>
+    <div class="row2"><button class="sm" onclick="acceptZones()">Séance avec ces zones</button><button class="btn-t" onclick="go('zones')">Choisir</button></div></section>`;
   return h;
 }
 
@@ -961,8 +1141,8 @@ function totalInfo() {
 }
 function totalBar() {
   const {total, thisWeek} = totalInfo();
-  const pct = Math.min(thisWeek / WGOAL, 1) * 100;
-  return `<div class="tot"><div class="toti">${IC_TOTAL}<b>${total}</b></div><div style="flex:1"><b>${total} séance${total > 1 ? 's' : ''} au total</b><div class="pbar"><i style="width:${pct}%"></i></div><div class="m">${thisWeek}/${WGOAL} séances cette semaine${thisWeek >= WGOAL ? ' : objectif atteint' : ''}</div></div></div>`;
+  const pct = Math.min(thisWeek / WGOAL, 1) * 100, ws = weekStart(), vol = Math.round(SESS.filter(s => dayDate(s.day) >= ws).reduce((a, s) => a + sessionVolume(s), 0));   // kg de la semaine : ici depuis le lot 1 (plus sur l'accueil)
+  return `<div class="tot"><div class="toti">${IC_TOTAL}<b>${total}</b></div><div style="flex:1"><b>${total} séance${total > 1 ? 's' : ''} au total</b><div class="pbar"><i style="width:${pct}%"></i></div><div class="m">${thisWeek}/${WGOAL} séances cette semaine${thisWeek >= WGOAL ? ' : objectif atteint' : ''}${vol ? ` · ${vol.toLocaleString('fr-FR')} kg soulevés` : ''}</div></div></div>`;
 }
 
 // records : une série « bat » le record si son score dépasse tout ce qui a été fait avant sur le même exercice
@@ -998,10 +1178,7 @@ function prText(r) {
   if (e.kind === 'cardio') return `${fmt(a[1])} min (avant ${fmt(r.prev)} min)`;
   return `${fmt(a[1])} reps (avant ${fmt(r.prev)})`;
 }
-function celebrate(list) {
-  const o = document.createElement('div'); o.className = 'pr-overlay'; o.onclick = () => o.remove();
-  o.innerHTML = `<div class="pr-card" onclick="event.stopPropagation()"><h2>${list.length > 1 ? 'Nouveaux records !' : 'Nouveau record !'}</h2>${list.map(r => `<p><b>${esc(r.ex.name)}</b><br><span class="m">${esc(prText(r))}</span></p>`).join('')}<button class="go" onclick="this.closest('.pr-overlay').remove()">Super</button></div>`;
-  document.body.appendChild(o);
+function celebrate(list) {   // records battus : vibration (réglage « Vibrations ») et confettis (coupés en mouvement réduit) ; le détail est sur l'écran de fin
   vib([80, 60, 80]);   // seul l'interrupteur « Vibrations » décide ; le mouvement réduit ne coupe que les confettis
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const cv = document.createElement('canvas'); cv.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:21';
@@ -1158,6 +1335,12 @@ function focReveal() {
     if (dy > 0) window.scrollBy(0, dy);
   });
 }
+function demoOpen(id) {
+  const e = exF(id); if (!e) return;
+  const o = document.createElement('div'); o.className = 'pr-overlay demo-ov'; o.onclick = ev => { if (ev.target === o) o.remove(); };
+  o.innerHTML = `<div class="pr-card" role="dialog" aria-modal="true" aria-label="Démonstration : ${esc(e.name)}"><h2>${esc(e.name)}</h2>${diagram(e, true)}<button class="sm w" onclick="this.closest('.pr-overlay').remove()">Fermer</button></div>`;
+  document.body.appendChild(o);
+}
 function focMove(d) { syncForm(); FOC = Math.max(0, Math.min(F.ids.filter(i => EX[i]).length - 1, FOC + d)); R(); window.scrollTo(0, 0); }
 function togDone(id, i) {
   syncForm(); F.dn = F.dn || {}; const a = F.dn[id] = F.dn[id] || []; a[i] = !a[i]; F.dirty = true;
@@ -1181,18 +1364,30 @@ function vFocus() {
   FOC = Math.min(FOC, ids.length - 1);
   const e = exF(ids[FOC]), rows = rowsFor(e); F.vals[e.id] = rows;
   const nDone = ids.filter(id => { const r = F.vals[id] || rowsFor(exF(id)), d = (F.dn && F.dn[id]) || []; return r.length && r.every((_, k) => d[k]); }).length;
-  let h = `<div class="focus"><div class="fhead"><b>Exercice ${FOC + 1}/${ids.length}</b><button class="sm" onclick="exitFocus()">Aperçu</button></div><div class="pbar"><i style="width:${nDone / ids.length * 100}%"></i></div>`;
-  if (FOC === 0) h += seanceIntro();   // avant le premier exercice : phase, semaine légère ou reprise, échauffement
-  h += `<div class="fdia">${diagram(e, true)}</div><h2 class="ft">${esc(e.name)}</h2><p class="fta">${esc(targetLine(e))}</p>`;
-  h += advice(e, F.sid, F.wid);
+  const done = (F.dn && F.dn[e.id]) || [], nOk = rows.filter((_, k) => done[k]).length, all = rows.length > 0 && nOk === rows.length;
+  const tl = (n, d) => `<span class="tally" aria-hidden="true">${Array.from({length: n}, (_, i) => `<i class="${i < d ? 'd' : ''}"></i>`).join('')}</span>`;
+  let h = `<div class="focus"><div class="fprog"><span>Exercice <b>${FOC + 1}</b> sur ${ids.length}${tl(ids.length, nDone)}</span><button class="btn-t" onclick="exitFocus()">Aperçu</button></div>`;
+  if (FOC === 0) {   // avant le premier exercice : semaine légère ou reprise (toujours visible), puis phase et échauffement dans un repli
+    const ph = phaseNow(), m = ph.match(/^((?:Semaine légère|Reprise en douceur)[^.]*\.)\s*(.*)$/);
+    h += `<details class="warmp"><summary>Échauffement · 8-10 min</summary><p class="m">${esc(m ? m[2] : ph)}</p><p class="m">5 min de cardio léger, 10 rotations d'épaules et de hanches, 10 squats au poids du corps, puis 1-2 séries légères du premier exercice.</p></details>`;
+    if (m) h += `<p class="light1">${esc(m[1])}</p>`;
+  }
+  const z = e.kind !== 'cardio' ? zonesOf(e).p[0] : null;
+  const zc = z ? `<span class="zchip"><i></i>${esc(ZL[z] || '')}${jeuOn() && JEU.zoneLevel ? ` · niveau ${JEU.zoneLevel(z)}` : ''}</span>` : '';
+  const th = diagram(e, false);
+  h += `<section class="card fcard"><div class="exh${th ? '' : ' nth'}">${th ? `<button class="thumb" onclick="demoOpen(${e.id})" aria-label="Voir la démonstration de ${esc(e.name)}">${th}</button>` : ''}
+    <div><h2 class="ft">${esc(e.name)}</h2><p class="fta">${e.kind !== 'cardio' ? tl(rows.length, nOk) : ''}${esc(targetLine(e))}</p>${zc}</div></div>`;
+  h += `<div class="adv">${advice(e, F.sid, F.wid)}</div>`;
   h += setRows(e, rows, true);
   h += effBox(e);
-  h += '<div class="acts">';
+  const rest = e.rest && e.kind !== 'cardio' ? e.rest : 90;
+  h += '<div class="facts">';
   if (e.kind !== 'cardio') h += `<button class="sm" onclick="addRow(${e.id})">+ série</button><button class="sm" onclick="delRow(${e.id})">− série</button>`;
-  h += '</div>';
+  h += `<button class="sm" onclick="TM(${rest}, ${e.id})">Repos ${rest < 120 || rest % 60 ? rest + ' s' : rest / 60 + ' min'}</button></div></section>`;
   if (FOC === ids.length - 1) h += `<div class="card"><h2>Notes</h2><textarea id="f-notes" placeholder="Forme, sensations, douleurs…" oninput="touched()">${esc(F.notes)}</textarea></div>`;   // dernier exercice : notes de la séance
-  h += `<div class="fnav"><button class="sm" onclick="focMove(-1)" ${FOC === 0 ? 'disabled' : ''}>‹ Précédent</button>`
-    + (FOC < ids.length - 1 ? `<button class="go" style="margin:0" onclick="focMove(1)">Suivant ›</button>` : `<button class="go" style="margin:0" onclick="saveSession()">Terminer et enregistrer</button>`) + '</div></div>';
+  // barre du bas : précédent, puis « Suivant › » (ou « Terminer et enregistrer ») ; orange seulement quand l'exercice est fini
+  h += `<div class="fnav fnavb"><button class="sm prev" onclick="focMove(-1)" ${FOC === 0 ? 'disabled' : ''} aria-label="Exercice précédent">‹</button>`
+    + (FOC < ids.length - 1 ? `<button class="${all ? 'go' : 'sm'} next" onclick="focMove(1)">Suivant ›</button>` : `<button class="${all ? 'go' : 'sm'} next" onclick="saveSession()">Terminer et enregistrer</button>`) + '</div></div>';
   return h;
 }
 
@@ -1201,16 +1396,17 @@ function vFocus() {
    chaque champ reste modifiable au clavier, avec une virgule ou un point, sans arrondi. ✓ valide la série et lance le repos. */
 const STEP = {weight: [0.5, 1], reps: [0.5, 1], time: [0.5, 5], cardio: [1, 1]};   // pas de [charge ou niveau, reps ou secondes ou minutes]
 const inVal = v => typeof v === 'number' ? fmt(v) : (v ?? '');
+const TICK = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 13c2 1 4 3 5 5 3-6 7-10 11-12"/></svg>';   // coche tracée à la main (grise à valider, foncée sur l'accent une fois validée)
 function setRows(e, rows, steppers) {
   const dn = (F.dn && F.dn[e.id]) || [], [l1, l2] = inputLabels(e), act = steppers ? rows.findIndex((_, i) => !dn[i]) : -1, ticks = F.mode !== 'edit';
   return rows.map((a, i) => {
     const lab = e.kind === 'cardio' ? '' : 'S' + (i + 1), sn = e.kind === 'cardio' ? '' : `, série ${i + 1}`;
     const inp = (k, ph, v) => `<input id="v${e.id}_${i}${k}" type="text" inputmode="decimal" autocomplete="off" placeholder="${ph}" value="${esc(inVal(v))}" oninput="touched()" aria-label="${ph}${sn}">`;
-    const tick = ticks ? `<button class="tick" onclick="togDone(${e.id},${i})" aria-label="Valider la série ${i + 1}" aria-pressed="${!!dn[i]}">${dn[i] ? '✓' : '<span class="tk0" aria-hidden="true">✓</span>'}</button>` : '';
+    const tick = ticks ? `<button class="tick" onclick="togDone(${e.id},${i})" aria-label="Valider la série ${i + 1}" aria-pressed="${!!dn[i]}">${dn[i] ? TICK : TICK.replace('<svg', '<svg class="tk0"')}</button>` : '';
     if (i !== act) return `<div class="frow${dn[i] ? ' ok' : ''}${ticks ? '' : ' nt'}"><span>${lab}</span>${inp('l', l1, a[0])}${inp('v', l2, a[1])}${tick}</div>`;
     const st = (k, ph, v, d) => `<div class="stp"><b class="u">${ph}</b><div class="stpr"><button class="pm" data-in="v${e.id}_${i}${k}" data-d="${-d}" aria-label="Moins ${fmt(d)}, ${ph}${sn}">−</button>${inp(k, ph, v)}<button class="pm" data-in="v${e.id}_${i}${k}" data-d="${d}" aria-label="Plus ${fmt(d)}, ${ph}${sn}">+</button></div></div>`;
     const [d1, d2] = STEP[e.kind] || [0.5, 1];
-    return `<div class="frow act"><span>${lab}</span><div class="stps">${st('l', l1, a[0], d1)}${st('v', l2, a[1], d2)}</div>${tick}</div>`;
+    return `<div class="frow act"><span>${lab}</span><div class="stps">${st('l', l1, a[0], d1)}${st('v', l2, a[1], d2)}</div>${tick}${ticks && e.kind !== 'cardio' ? `<span class="slab">Série ${i + 1} sur ${rows.length}</span>` : ''}</div>`;
   }).join('');
 }
 /* − et + : un appui = un pas ; un appui long répète (après 0,4 s, toutes les 0,1 s). Le champ est modifié sur place, sans redessiner l'écran. */
@@ -1380,8 +1576,13 @@ async function saveSession() {
     if (F.xid) { XS = XS.filter(x => x.xid !== F.xid); saveXS(); store('muscu-xcur', undefined); }
     F = null;
     if (editing) view = 'historique';
-  }, editing ? 'Séance modifiée' : 'Séance enregistrée');
-  if (!editing && SESS.length > nBefore) { const ns = SESS.reduce((a, b) => b.ts > a.ts ? b : a), pr = computePRs().bySession[ns.id]; if (pr && pr.length) celebrate(pr); if (window.JEU) { const rep = JEU.award(ns.id); if (rep && !JEU.hidden()) JEU.rewardOverlay(rep); } }
+  }, editing ? 'Séance modifiée' : '');
+  if (!editing && SESS.length > nBefore) {
+    const ns = SESS.reduce((a, b) => b.ts > a.ts ? b : a), pr = computePRs().bySession[ns.id] || [];
+    const rep = window.JEU ? JEU.award(ns.id) : null;   // crédité même si l'onglet Esprits est masqué ; affiché seulement s'il ne l'est pas
+    FIN = {sid: ns.id, pr, rep: rep && !JEU.hidden() ? rep : null}; view = 'fin'; R();
+    if (pr.length) celebrate(pr);
+  }
   window.scrollTo(0, 0);
 }
 function editSession(sid) {
@@ -1402,7 +1603,8 @@ function vHisto() {
   let h = '';
   [...SESS].reverse().forEach(s => {
     const v = sessionVolume(s);
-    h += `<div class="card"><h2>${frDate(s.day)} · ${esc(s.workout_name)}</h2>${v ? `<p class="m">${Math.round(v)} kg soulevés</p>` : ''}<table>`;
+    const inf = v ? `${Math.round(v).toLocaleString('fr-FR')} kg soulevés` : '';   // le ressenti y est déjà, exercice par exercice
+    h += `<div class="card"><h2>${frDate(s.day)} · ${esc(s.workout_name)}</h2>${inf ? `<p class="m">${inf}</p>` : ''}<table>`;
     s.entries.forEach(en => {
       const e = EX[en.exercise_id];
       h += `<tr><td>${e ? esc(e.name) : '?'}${PRH[s.id] && PRH[s.id].some(r => r.ex.id === en.exercise_id) ? '<span class="tag rec">record</span>' : ''}${en.effort ? `<span class="tag">${effLabel(en.effort).toLowerCase()}</span>` : ''}</td><td>${e ? en.sets.map(a => esc(setText(e, a))).join('<br>') : ''}</td></tr>`;
@@ -1799,17 +2001,27 @@ function barRender() {
     return tk();
   }
   const more = TMO ? `<div class="rb-more">${[60, 90, 120].map(x => `<button class="sm" onclick="TM(${x}, TMID)">${x < 120 ? x + ' s' : '2 min'}</button>`).join('')}</div>` : '';
+  document.body.classList.remove('demo');
   if (TEND) {
-    const nx = nextInfo(TMID);
+    const nx = nextInfo(TMID), dm = !away && inFocus() ? demoNext(TMID) : null;
+    if (dm) document.body.classList.add('demo');
     b.innerHTML = `<div class="rb-top">${away ? '<button class="sm rb-red" onclick="BARX=false;barRender()" aria-expanded="true" aria-label="Réduire le minuteur de repos">Réduire</button>' : '<span class="m">Repos</span>'}<b id="tm" role="timer" aria-live="off">${mmss(Math.max(T, 0))}</b><button class="sm" onclick="TMskip()">Passer</button></div>`
       + `<div class="pbar"><i id="tmp"></i></div>`
       + `<div class="rb-btn"><button class="sm" onclick="TMadd(-15)" aria-label="Moins 15 secondes">−15 s</button><button class="sm" onclick="TMadd(15)" aria-label="Plus 15 secondes">+15 s</button><button class="sm" onclick="TMmore()" aria-expanded="${TMO}">Autre durée</button></div>`
-      + more + (nx ? `<p class="rb-next">Ensuite\u00a0: ${esc(nx)}</p>` : '');
+      + more + (dm ? `<div class="rb-demo">${diagram(dm, true)}</div>` : '') + (nx ? `<p class="rb-next">Ensuite\u00a0: ${esc(nx)}</p>` : '');
     tk();
   } else {
     const id = curExId(), e = id != null ? exF(id) : null, d = e && e.rest && e.kind !== 'cardio' ? e.rest : 90;
     b.innerHTML = `<div class="rb-idle"><span class="m">Repos</span><button class="sm" onclick="TM(${d}, curExId())">Lancer · ${d < 120 || d % 60 ? d + ' s' : d / 60 + ' min'}</button><button class="sm" onclick="TMmore()" aria-expanded="${TMO}">Autre durée</button></div>` + more;
   }
+}
+/* repos qui suit la dernière série d'un exercice : l'exercice suivant, montré en grand dans la barre de repos (image fixe si mouvement réduit) */
+function demoNext(id) {
+  if (!F || id == null) return null;
+  const ids = F.ids.filter(i => EX[i]), k = ids.indexOf(id); if (k < 0 || k >= ids.length - 1) return null;
+  const rows = F.vals[id] || rowsFor(exF(id)), d = (F.dn && F.dn[id]) || [];
+  if (!rows.length || !rows.every((_, j) => d[j])) return null;
+  const e = exF(ids[k + 1]); return diagram(e, false) ? e : null;
 }
 function nextSet(id) {   // « Prochaine série : Développé couché, série 3 sur 4. » : première série non validée, à partir de l'exercice en cours
   if (!F) return null;

@@ -620,7 +620,7 @@
           + '<p class="m">Seuls les réglages de tes séances changent (séries, répétitions, repos) : tes exercices et ton historique restent les mêmes.</p>';
       }
     }
-    return `<section class="card offer" data-offer="${f.k}"><h2>${esc(title)}</h2><p>${esc(line)}</p>${det(more)}<div class="offb"><button class="go" onclick="PROFIL.accept('${f.k}')">Accepter</button><button class="sm" onclick="PROFIL.later('${f.k}')">Plus tard</button></div></section>`;
+    return `<section class="card offer" data-offer="${f.k}"><h2>${esc(title)}</h2><p>${esc(line)}</p>${det(more)}<div class="offb"><button class="sm" onclick="PROFIL.accept('${f.k}')">Accepter</button><button class="btn-t" onclick="PROFIL.later('${f.k}')">Plus tard</button></div></section>`;
   }
   function lightCard(l) {   // une ligne : « Semaine légère jusqu'au dim. 13/12 : −20 % »
     const end = frDay(l.end, {weekday: 'short', day: '2-digit', month: '2-digit'});
