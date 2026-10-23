@@ -31,11 +31,12 @@ try:
             pg.evaluate("document.querySelectorAll('.pr-overlay,.j-ov').forEach(o => o.remove())")
             st = pg.evaluate("fetch('/api/state').then(r => r.json()).then(s => s.sessions)")
             ok(sorted(e["effort"] for s in st for e in s["entries"]) == [1, 5], f"{mode} · notes 1 et 5 enregistrées telles quelles")
-            # Historique : étiquette de ressenti de chaque exercice
-            pg.evaluate("go('historique')"); pg.wait_for_timeout(300)
-            tags = pg.evaluate("[...document.querySelectorAll('#app .card')].map(c => [c.querySelector('h2').textContent, [...c.querySelectorAll('td .tag:not(.rec)')].map(t => t.textContent.trim())])")
-            vu = {h.split(" · ")[0]: t for h, t in tags}
-            ok([x.lower() for x in vu.get("10/10/2026", [])] == ["facile"] and [x.lower() for x in vu.get("12/10/2026", [])] == ["dur"], f"{mode} · Historique : note 1 « facile », note 5 « dur » {vu}")
+            # Historique : étiquette de ressenti de chaque exercice, dans le détail de la séance (lot 2)
+            vu = {}
+            for sid in ids[:2]:
+                pg.evaluate("sid => openSess(sid, 'historique')", sid); pg.wait_for_timeout(200)
+                vu[pg.evaluate("SESS.find(s => s.id === HDET).day")] = pg.evaluate("[...document.querySelectorAll('#app .sd .tag.feel')].map(t => t.textContent.trim())")
+            ok([x.lower() for x in vu.get("2026-10-10", [])] == ["facile"] and [x.lower() for x in vu.get("2026-10-12", [])] == ["dur"], f"{mode} · Historique (détail de la séance) : note 1 « facile », note 5 « dur » {vu}")
             # « Ressenti : … » quand on modifie une séance passée
             lignes = []
             for sid in ids[:2]:

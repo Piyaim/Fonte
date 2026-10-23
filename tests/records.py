@@ -10,7 +10,15 @@
 #   3. cardio 15 min puis 20 min : pas d'étiquette record, mais +1 jeton ;
 #   4. traction assistée 30 kg puis 25 kg d'assistance, avec moins de reps : record ;
 #   5. dips sans lest 10 reps, puis lest 5 kg × 6 : record ; puis sans lest 11 reps : record ; puis sans lest 10 reps : pas record.
-# Témoin : FONTE_ROOT=dossier d'une autre version du code (par exemple celle du commit 08f52a0) ; ce test doit alors échouer.
+#   6. séance sans lest après un historique où toutes les séries étaient lestées : pas un record (une première fois, décision du 23/10) ;
+#   7. même exercice deux fois (ou trois) dans une séance (lot 2) : la meilleure série de la séance, comparée aux séances précédentes
+#      seulement ; une seule étiquette « record » par exercice et par séance ; jeton « Progression » une seule fois ;
+#      première séance d'un exercice fait deux fois : pas de record (la 2e fois ne se compare pas à la 1re de la même séance).
+#      Le serveur (app.py) et le mode local (local-backend.js) rendent un exercice saisi deux fois en UNE ligne avec toutes ses séries :
+#      le détail montre donc une ligne, et computePRs réunit aussi les séries d'un même exercice s'il en trouvait deux.
+# Les étiquettes sont lues dans le détail de chaque séance (écran du lot 2) et le nombre de records dans la liste de l'Historique.
+# Témoins : FONTE_ROOT=dossier d'une autre version du code (par exemple celle du commit 08f52a0) ; ce test doit alors échouer.
+#   Cas 7 : comme les données arrivent déjà réunies, le code de 764a6e1 passe aussi ce cas (il ne prouve que le résultat affiché).
 #   FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/records.py
 import os, subprocess, sys, tempfile, time
 from playwright.sync_api import sync_playwright
@@ -31,6 +39,9 @@ X = {"presse": {"name": "Presse test", "grp": "Jambes", "kind": "weight", "targe
      "velo": {"name": "Vélo test", "grp": "Cardio", "kind": "cardio", "target_min": 15, "target_max": 30},
      "trac": {"name": "Traction assistée test", "grp": "Dos", "kind": "weight", "assisted": True, "target_min": 6, "target_max": 10},
      "dips": {"name": "Dips test", "grp": "Pectoraux", "kind": "reps", "target_min": 6, "target_max": 15},
+     "dipl": {"name": "Dips lestés test", "grp": "Pectoraux", "kind": "reps", "target_min": 6, "target_max": 15},
+     "squat": {"name": "Squat test", "grp": "Jambes", "kind": "weight", "target_min": 3, "target_max": 10},
+     "fente": {"name": "Fente test", "grp": "Jambes", "kind": "weight", "target_min": 8, "target_max": 10},
      "filler": {"name": "Gainage test", "grp": "Abdos et gainage", "kind": "time", "target_min": 30, "target_max": 30}}
 F3 = [[None, 30]] * 3
 S = [("2026-09-01", [("presse", [[42.5, 10]] * 3)]), ("2026-09-02", [("presse", [[42.5, 12]] * 3)]),
@@ -38,7 +49,10 @@ S = [("2026-09-01", [("presse", [[42.5, 10]] * 3)]), ("2026-09-02", [("presse", 
      ("2026-09-05", [("velo", [[None, 15]]), ("filler", F3)]), ("2026-09-06", [("velo", [[None, 20]]), ("filler", F3)]),
      ("2026-09-07", [("trac", [[30, 8]] * 3)]), ("2026-09-08", [("trac", [[25, 6]] * 3)]),
      ("2026-09-09", [("dips", [[None, 10]] * 3)]), ("2026-09-10", [("dips", [[5, 6]] * 3)]),
-     ("2026-09-11", [("dips", [[None, 11]] * 3)]), ("2026-09-12", [("dips", [[None, 10]] * 3)])]
+     ("2026-09-11", [("dips", [[None, 11]] * 3)]), ("2026-09-12", [("dips", [[None, 10]] * 3)]),
+     ("2026-09-13", [("dipl", [[5, 8]] * 3)]), ("2026-09-14", [("dipl", [[7.5, 6]] * 3)]), ("2026-09-15", [("dipl", [[None, 12]] * 3)]),
+     ("2026-09-16", [("squat", [[50, 10]] * 3)]), ("2026-09-17", [("squat", [[50, 10]]), ("squat", [[57.5, 5]]), ("squat", [[60, 3]])]),
+     ("2026-09-18", [("fente", [[20, 10]] * 2), ("fente", [[22.5, 8]] * 2)])]
 try:
     with sync_playwright() as p:
         b = p.chromium.launch(); ctx = b.new_context(viewport={"width": 390, "height": 844})
@@ -52,14 +66,17 @@ try:
           for (const [day, en] of S) sid[day] = (await api('POST', '/api/sessions', {day, workout_name: 'Test', entries: en.map(([k, sets]) => ({exercise_id: ex[k], sets}))})).id;
           await load(); return {ex, sid}; }""", [X, S])
         sid, ex = ids["sid"], ids["ex"]
-        # ce que l'Historique affiche pour chaque séance (étiquettes de chaque ligne)
-        H = pg.evaluate("""() => { const d = document.createElement('div'); d.innerHTML = vHisto(); const out = {};
-          [...d.querySelectorAll('.card')].forEach(c => { const day = c.querySelector('h2').textContent.slice(0, 10);
-            out[day] = [...c.querySelectorAll('tr')].map(r => [r.cells[0].childNodes[0].textContent, [...r.querySelectorAll('.tag')].map(t => t.textContent)]); });
-          return out; }""")
-        def tags(day, name):   # étiquettes de l'exercice dans la séance du jour (jj/mm/aaaa dans l'Historique)
-            y, m, d = day.split("-"); row = [r for r in H.get(f"{d}/{m}/{y}", []) if r[0] == X[name]["name"]]
-            return row[0][1] if row else None
+        # ce que le détail de chaque séance affiche (étiquettes de chaque exercice), et le nombre de records de la liste de l'Historique
+        # (rendu appelé directement : sans questionnaire rempli, l'appli affiche le questionnaire à la place des onglets)
+        H = pg.evaluate("""() => { const out = {}, d = document.createElement('div');
+          for (const s of SESS) { HDET = s.id; d.innerHTML = vHisto();
+            out[s.day] = [...d.querySelectorAll('.sd .ex')].map(x => [x.querySelector('.exh b').textContent, [...x.querySelectorAll('.tag')].map(t => t.textContent)]); }
+          HDET = null; return out; }""")
+        LISTE = pg.evaluate("""() => { HDET = null; const d = document.createElement('div'); d.innerHTML = vHisto();
+          return Object.fromEntries([...d.querySelectorAll('.hlist .lrow')].map((r, i) => [SESS[SESS.length - 1 - i].day, (r.querySelector('.tag.rec') || {}).textContent || ''])); }""")
+        def rows(day, name): return [r[1] for r in H.get(day, []) if r[0] == X[name]["name"]]
+        def tags(day, name):   # étiquettes de l'exercice dans la séance du jour (toutes ses lignes réunies)
+            r = rows(day, name); return [t for x in r for t in x] if r else None
         def jeton(day):   # lignes de jetons de la séance (JEU.award, comme à l'enregistrement)
             r = pg.evaluate(f"JEU.award({sid[day]})"); return [l[0] for l in (r or {}).get("lines", [])]
         def rec(day, name): return "record" in (tags(day, name) or [])
@@ -85,6 +102,19 @@ try:
         # témoins : la première fois n'est jamais un record ; une séance sans progrès ne rapporte pas le jeton
         ok(not any(rec(d, k) for d, k in (("2026-09-01", "presse"), ("2026-09-03", "dev"), ("2026-09-07", "trac"), ("2026-09-09", "dips"))), "première fois sur un exercice : pas de record")
         j = jeton("2026-09-12"); ok(j and "Progression" not in j and "Séance terminée" in j, f"(témoin) dips 11 puis 10 reps : pas de jeton « Progression » {j}")
+        # 6. sans lest après un historique entièrement lesté : une première fois, pas un record
+        ok(rec("2026-09-14", "dipl"), f"6. (témoin) lest 5 kg × 8 puis 7,5 kg × 6 : record {tags('2026-09-14', 'dipl')}")
+        t = tags("2026-09-15", "dipl"); ok(t is not None and "record" not in t and not any(x.startswith("+") for x in t), f"6. puis sans lest 12 reps : ni record ni gain {t}")
+        # 7. même exercice trois fois dans une séance
+        pr = pg.evaluate(f"(computePRs().bySession[{sid['2026-09-17']}] || []).map(r => [r.ex.name, recTxt(r.ex, r.set), recAvant(r)])")
+        ok(pr == [["Squat test", "60 kg × 3", "Avant\u00a0: 50 kg × 10"]], f"7. squat 50 × 10, puis 57,5 × 5 et 60 × 3 dans la même séance : un seul record, la meilleure série, « Avant : 50 kg × 10 » {pr}")
+        r7 = rows("2026-09-17", "squat")
+        n7 = pg.evaluate(f"SESS.find(s => s.id === {sid['2026-09-17']}).entries.map(e => e.sets.length)")
+        ok(n7 == [3] and len(r7) == 1 and r7[0].count("record") == 1, f"7. détail : une ligne de squat avec ses 3 séries, une seule étiquette « record » {n7} {r7}")
+        ok(LISTE.get("2026-09-17") == "1 record", f"7. Historique : « 1 record » pour cette séance {LISTE.get('2026-09-17')!r}")
+        j = jeton("2026-09-17"); ok(j.count("Progression") == 1, f"7. jeton « Progression » une seule fois {j}")
+        r8 = rows("2026-09-18", "fente"); p8 = pg.evaluate(f"(computePRs().bySession[{sid['2026-09-18']}] || []).length")
+        ok(len(r8) == 1 and not any("record" in x for x in r8) and p8 == 0, f"7. première séance de fentes, faites deux fois (20 puis 22,5 kg) : pas de record {r8} {p8}")
         ok(not errs, f"aucune erreur JavaScript {errs[:2]}")
         b.close()
 finally:

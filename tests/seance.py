@@ -84,8 +84,8 @@ try:
             pg.evaluate("saveSession()"); time.sleep(1); pg.evaluate("document.querySelectorAll('.pr-overlay,.j-ov').forEach(o => o.remove())")
             en = {e["exercise_id"]: e["sets"] for e in entrees()}
             ok(en.get(x) == [[47.3, 10], [47.25, 10], [47.333, 12]] and en.get(p_) == [[0.3, 40]], f"{M} · enregistré tel quel (virgule et point) : {en}")
-            pg.evaluate("go('historique')"); time.sleep(.2); h = pg.inner_text("#app")
-            ok("47,3 kg × 10" in h and "47,25 kg × 10" in h and "47,333 kg × 12" in h and "0,3 kg × 40 s" in h, f"{M} · historique : 47,3 · 47,25 · 47,333 · 0,3 kg, sans arrondi")
+            pg.evaluate("go('historique'); openSess(SESS[SESS.length - 1].id, 'historique')"); time.sleep(.2); h = pg.inner_text("#app")   # détail de la séance (lot 2)
+            ok("47,3\u00a0kg × 10" in h and "47,25\u00a0kg × 10" in h and "47,333\u00a0kg × 12" in h and "0,3\u00a0kg × 40\u00a0s" in h, f"{M} · historique (détail de la séance) : 47,3 · 47,25 · 47,333 · 0,3 kg, sans arrondi")
             demarrer(); t = pg.locator(".focus").evaluate(TXT)
             ok("Dernière : 47,3 kg × 10 · 47,25 kg × 10 · 47,333 kg × 12" in t, f"{M} · « Dernière » sans arrondi {[l for l in t.splitlines() if 'Dernière' in l]}")
             pg.evaluate("exitFocus()"); pg.evaluate("go('progres')"); pg.evaluate(f"PGEX = {x}; R()"); time.sleep(.2)

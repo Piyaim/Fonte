@@ -23,7 +23,9 @@ with sync_playwright() as p:
     pg.evaluate("go('seance')"); time.sleep(.3); ok(pg.locator(".eff").count() > 0 or "Presse" in pg.inner_text("#app") or len(pg.inner_text("#app")) > 200, "vue séance affichée")
     # enregistrer une séance par l'API de la page puis la retrouver dans l'historique
     pg.evaluate("""async () => { await api('POST','/api/sessions',{day:'2026-10-10',entries:[{exercise_id:EX_FIRST(),sets:[[40,10],[40,9]],effort:3}]}); await load(); }""".replace("EX_FIRST()", "Object.keys(EX)[0]"))
-    pg.evaluate("go('historique')"); time.sleep(.3); ok("ressenti 3/5" in pg.inner_text("#app") or "40" in pg.inner_text("#app"), "séance visible dans l'historique")
+    pg.evaluate("go('historique')"); time.sleep(.3); li = pg.locator("#app .hlist .lrow").all_inner_texts()
+    pg.evaluate("openSess(SESS[0].id, 'historique')"); time.sleep(.2); d = pg.inner_text("#app")   # séries dans le détail de la séance (lot 2)
+    ok(len(li) == 1 and li[0].startswith("10") and "40" in d and "juste bien" in d, f"séance visible dans l'historique, ses séries et son ressenti dans le détail {li}")
     # photo
     pg.evaluate("go('progres')"); time.sleep(.5)
     pg.set_input_files('input[accept="image/*"]', "/tmp/ui_photo.jpg"); time.sleep(1.5)

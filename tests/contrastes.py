@@ -2,11 +2,15 @@
 # Contrastes des écrans de la refonte (lot 1), mesurés sur l'appli affichée, pour toutes les palettes : les 6 couleurs du menu
 # (orange, bleu, vert, violet, rouge, noir et blanc), en clair et en sombre (12 palettes), à 390 × 844.
 # Écrans : accueil (jour de séance, jour de repos avec une carte de proposition, séance commencée avec la barre de repos compacte),
-# séance (ouverture, repos, repos avec démonstration et ressenti, exercice fini), écran de fin.
+# séance (ouverture, repos, repos avec démonstration et ressenti, exercice fini), écran de fin ; lot 2 : Progrès (sans aucune séance,
+# poids replié puis ouvert ; avec séances et pesées, « Détails » ouvert ; jour choisi dans le calendrier), Historique, détail d'une séance.
 # - texte : 4,5:1 au moins contre le fond réellement dessous (fonds composés, surlignage du conseil compris), et 13 px au moins ;
 # - éléments non textuels (WCAG 1.4.11) : 3:1 au moins pour le bouton principal (fond ou bord contre ce qui l'entoure), les bâtons
 #   de comptage, le cadre de la série en cours, la coche des ronds de validation, la barre de progression du repos, le point de
-#   l'étiquette de zone, la marque de l'onglet actif, le trait des records, le choix du ressenti sélectionné.
+#   l'étiquette de zone, la marque de l'onglet actif, le trait des records, le choix du ressenti sélectionné ; lot 2 : pastilles des
+#   jours de séance, courbes (charge, poids de corps) et leurs points, traits des records, bord des étiquettes « record », chevrons,
+#   période choisie, bords du choix d'exercice et des champs.
+# Les lignes de graduation et les bords des cartes sont décoratifs (valeurs écrites ; cartes distinguées par leur fond) : non comptés.
 # Les boutons secondaires sans bord (V3) sont identifiés par leur texte (contrôlé comme du texte) ; les boutons désactivés sont exclus.
 # Témoin : FONTE_ROOT=dossier du code du commit 08f52a0 : « Démarrer la séance » blanc sur papier en « Noir et blanc » doit échouer.
 #   FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/contrastes.py
@@ -63,9 +67,20 @@ MESURE = r"""() => {
   obj('.tabbar button.on', el => { const c = parse(getComputedStyle(el, '::before').backgroundColor); return c ? cr(over(c, bgOf(el)), bgOf(el)) : 0; }, "marque de l'onglet actif");
   obj('.fin .rec i', el => cr(over(bgc(el), bgOf(el.parentElement)), bgOf(el.parentElement)), 'trait du record');
   obj('.feelb button.on', el => cr(over(bgc(el), bgOf(el.parentElement)), bgOf(el.parentElement)), 'ressenti choisi');
+  // lot 2
+  const svgc = (el, prop) => parse(getComputedStyle(el)[prop]), card = el => bgOf(el.closest('.card,section,div'));
+  obj('.cal .cd.on i', el => cr(over(bgc(el), bgOf(el.parentElement)), bgOf(el.parentElement)), 'pastille du jour de séance');
+  obj('.recl i', el => cr(over(bgc(el), bgOf(el.parentElement)), bgOf(el.parentElement)), 'trait du record (lot 2)');
+  obj('.chart .l1, .chart .lb', el => cr(over(svgc(el, 'stroke'), card(el)), card(el)), 'courbe');
+  obj('.chart .p1, .chart .pb', el => cr(over(svgc(el, 'fill'), card(el)), card(el)), 'point de la courbe');
+  obj('.tag.rec', el => cr(over(parse(getComputedStyle(el).borderTopColor), bgOf(el)), bgOf(el)), 'bord de l’étiquette « record »');
+  obj('svg.chev', el => cr(over(svgc(el, 'stroke'), bgOf(el.parentElement)), bgOf(el.parentElement)), 'chevron');
+  obj('.pg .chip[aria-pressed="true"]', el => cr(over(bgc(el), bgOf(el.parentElement)), bgOf(el.parentElement)), 'période choisie');
+  obj('.pg select, .pg input', el => cr(over(parse(getComputedStyle(el).borderTopColor), bgOf(el.parentElement)), bgOf(el.parentElement)), 'bord du champ');
   const n = sel => [...document.querySelectorAll(sel)].filter(vis).length;
   return {texte: [...new Set(texte)], petit: [...new Set(petit)], objets: [...new Set(objets)],
-          vus: {go: n('.go'), tally: n('.tally i'), act: n('.frow.act'), tick: n('.tick svg'), pbar: n('.bar .pbar i'), zchip: n('.zchip i'), onglet: n('.tabbar button.on'), rec: n('.fin .rec i'), feel: n('.feelb button.on')}};
+          vus: {go: n('.go'), tally: n('.tally i'), act: n('.frow.act'), tick: n('.tick svg'), pbar: n('.bar .pbar i'), zchip: n('.zchip i'), onglet: n('.tabbar button.on'), rec: n('.fin .rec i'), feel: n('.feelb button.on'),
+                pastille: n('.cal .cd.on i'), recl: n('.recl i'), courbe: n('.chart .l1'), poids: n('.chart .lb'), etiquette: n('.tag.rec'), chevron: n('svg.chev'), periode: n('.pg .chip[aria-pressed="true"]'), champ: n('.pg select, .pg input')}};
 }"""
 
 srv = subprocess.Popen([sys.executable, "-c", f"import app;app.init_db();app.app.run(port={PORT})"], cwd=APP, env=dict(os.environ, DB_PATH=os.path.join(TMP, "s.db"), PYTHONDONTWRITEBYTECODE="1"),
@@ -84,18 +99,27 @@ try:
         pg.reload(); pg.click("button:has-text('Générer mon programme')"); pg.wait_for_timeout(300)
         pg.click("button:has-text('Remplacer mes programmes')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
         pg.evaluate("JEU.view()")
-        pg.evaluate("""async () => { let d = new Date(2026, 10, 2), k = 0; const end = new Date(2026, 11, 9);
-          while (d <= end) { if ([1, 3, 5].includes(d.getDay())) { const w = WO[k % WO.length], wk = Math.floor(k / 3), day = new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
-            await api('POST', '/api/sessions', {day, workout_id: w.id, workout_name: w.name, entries: w.items.map(i => { const e = EX[i];
-              const s = e.kind === 'weight' ? [40 + 2.5 * Math.floor(wk / 2), 10 + wk % 2] : e.kind === 'cardio' ? [null, 20] : e.kind === 'time' ? [null, 30 + 5 * wk] : [null, 8 + wk];
-              return {exercise_id: i, sets: e.kind === 'cardio' ? [s] : [s, s, s], effort: 3}; })}); k++; }
-            d.setDate(d.getDate() + 1); } await load(); }""")
         def mesure(nom, M):
             pg.wait_for_timeout(250); r = pg.evaluate(MESURE)
             for k, v in r["vus"].items(): vus[k] = vus.get(k, 0) + v
             ok(not r["texte"], f"{M} · {nom} : texte à 4,5:1 au moins {r['texte'][:4]}")
             ok(not r["objets"], f"{M} · {nom} : éléments non textuels à 3:1 au moins {r['objets'][:4]}")
             ok(not r["petit"], f"{M} · {nom} : aucun texte sous 13 px {r['petit'][:4]}")
+        # lot 2 : Progrès et Historique sans aucune séance ni pesée (12 palettes)
+        for scheme, tn in (("light", "clair"), ("dark", "sombre")):
+            pg.emulate_media(color_scheme=scheme)
+            for acc in ("orange", "blue", "green", "violet", "red", "mono"):
+                M = f"{tn} · {acc}"; pg.evaluate(f"setAccent('{acc}')")
+                pg.evaluate("go('progres')"); mesure("Progrès sans séance", M)
+                pg.evaluate("document.querySelector('details.opt').open = true"); mesure("Progrès sans séance, pesée ouverte", M)
+                pg.evaluate("go('historique')"); mesure("Historique sans séance", M)
+        pg.evaluate("""async () => { for (const [day, kg] of [['2026-11-02', 75.4], ['2026-11-16', 75.1], ['2026-11-30', 74.9]]) await api('POST', '/api/bodyweight', {day, kg}); }""")
+        pg.evaluate("""async () => { let d = new Date(2026, 10, 2), k = 0; const end = new Date(2026, 11, 9);
+          while (d <= end) { if ([1, 3, 5].includes(d.getDay())) { const w = WO[k % WO.length], wk = Math.floor(k / 3), day = new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+            await api('POST', '/api/sessions', {day, workout_id: w.id, workout_name: w.name, entries: w.items.map(i => { const e = EX[i];
+              const s = e.kind === 'weight' ? [40 + 2.5 * Math.floor(wk / 2), 10 + wk % 2] : e.kind === 'cardio' ? [null, 20] : e.kind === 'time' ? [null, 30 + 5 * wk] : [null, 8 + wk];
+              return {exercise_id: i, sets: e.kind === 'cardio' ? [s] : [s, s, s], effort: 3}; })}); k++; }
+            d.setDate(d.getDate() + 1); } await load(); }""")
         for scheme, tn in (("light", "clair"), ("dark", "sombre")):
             pg.emulate_media(color_scheme=scheme)
             for acc in ("orange", "blue", "green", "violet", "red", "mono"):
@@ -112,8 +136,12 @@ try:
                 pg.click(".bar button:has-text('Passer')"); pg.locator(".focus .feelb button").nth(1).click(); mesure("séance, exercice fini", M)
                 pg.evaluate("""() => { const ids = F.ids.filter(i => EX[i]); ids.forEach((id, k) => { const e = exF(id); F.vals[id] = rowsFor(e).map(() => e.kind === 'weight' ? ['60', '8'] : ['', '40']); F.dn = F.dn || {}; F.dn[id] = F.vals[id].map(() => true); }); store(draftKey(), F); }""")
                 pg.evaluate("saveSession()"); pg.wait_for_selector(".fin"); pg.evaluate("window.scrollTo(0, 0)"); mesure("écran de fin", M)
-                pg.evaluate("FIN = null; go('accueil')")
-        ok(all(vus.get(k, 0) > 0 for k in ("go", "tally", "act", "tick", "pbar", "zchip", "onglet", "rec")), f"(témoin) chaque élément non textuel a bien été mesuré {vus}")
+                pg.evaluate("FIN = null; go('progres')"); pg.evaluate("document.querySelectorAll('#app details').forEach(d => d.open = true)"); mesure("Progrès", M)
+                pg.evaluate("CAL = null; R()"); pg.click("#app .cal .cd.on >> nth=0"); mesure("Progrès, jour choisi", M)
+                pg.evaluate("go('historique')"); mesure("Historique", M)
+                pg.evaluate("openSess(SESS.find(s => (computePRs().bySession[s.id] || []).length).id, 'historique')"); mesure("détail d’une séance", M)
+                pg.evaluate("go('accueil')")
+        ok(all(vus.get(k, 0) > 0 for k in ("go", "tally", "act", "tick", "pbar", "zchip", "onglet", "rec", "pastille", "recl", "courbe", "poids", "etiquette", "chevron", "periode", "champ")), f"(témoin) chaque élément non textuel a bien été mesuré {vus}")
         ok(not errs, f"aucune erreur JavaScript {errs[:2]}")
         b.close()
 finally:

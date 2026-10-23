@@ -190,7 +190,8 @@ try:
             pg.evaluate(f"go('{v}')"); time.sleep(.2); pg.evaluate("document.querySelectorAll('#app details').forEach(d => d.open = true)")
             if re.search(r"affilée|Série à lancer", pg.inner_text("body")): vus.append(v)
         ok(not vus, f"plus de « semaines d'affilée » ni de « Série à lancer » (accueil, Progrès, Séance) {vus}")
-        ok("3 séances au total" in pg.evaluate("go('progres'), document.getElementById('app').innerText"), "Progrès : « 3 séances au total »")
+        tp = pg.evaluate("go('progres'), [...document.querySelectorAll('#app .sum div')].map(d => d.innerText.replace(/\\n/g, ' '))")   # tuile du lot 2
+        ok("3 séances au total" in tp, f"Progrès : tuile « 3 séances au total » {tp}")
         pg.evaluate("go('accueil')"); time.sleep(.2)
         t = carte_ok(pg, "[data-offer=reprise]", "carte « Bon retour ! » (reprise)")
         ok("Bon retour !" in t and "On reprend à 80\u00a0% pendant 7 jours." in t, "reprise : titre et phrase")
