@@ -15,7 +15,7 @@
 #    phrase des photos selon le mode ; Historique (lignes de 64 px groupées par mois, durée seulement si elle existe) ; détail
 #    (« ‹ » revient à l'écran d'origine, durée absente d'une séance saisie après coup, Modifier puis Annuler revient au détail,
 #    Supprimer revient à la liste) ; aucune action orange ; ni « manqué » ni « semaines d'affilée » ; aucune requête sortante.
-#   FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/lot2.py
+#   FONTCONFIG_FILE=/home/PM/Claude-applications/Fonte-appli/Fonte/tests/polices-chromium.conf .venv/bin/python tests/lot2.py
 import base64, io, json, os, subprocess, sys, tempfile, time
 from playwright.sync_api import sync_playwright
 ROOT = os.environ.get("FONTE_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

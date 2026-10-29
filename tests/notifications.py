@@ -7,7 +7,7 @@
 # fois et plus rien ensuite, aucune notification des Esprits ni des jetons, aucun mot « raté » ou « manqué »), fin du repos,
 # réglages hors de l'export, aucune requête sortante.
 # Les valeurs attendues sont écrites ici en dur : une règle faussée dans notif.js doit faire échouer le test.
-#   FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/notifications.py
+#   FONTCONFIG_FILE=/home/PM/Claude-applications/Fonte-appli/Fonte/tests/polices-chromium.conf .venv/bin/python tests/notifications.py
 import json, os, re, subprocess, sys, time
 from datetime import date, datetime, timedelta
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5171

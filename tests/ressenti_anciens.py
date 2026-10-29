@@ -2,7 +2,7 @@
 # Ressenti à 3 choix (lot « Séance », 0.6.0) : les nouvelles séances enregistrent 2, 3 ou 4 ; les anciennes notes de 1 à 5 restent dans
 # les données. Contrôlé ici, en mode serveur et en mode local : une note 1 s'affiche « Facile » et une note 5 « Dur » (Historique,
 # « Ressenti : … » d'une séance modifiée, « Dernière fois » du conseil), et une note 1 revient identique après un export puis un import.
-#   FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/ressenti_anciens.py
+#   FONTCONFIG_FILE=/home/PM/Claude-applications/Fonte-appli/Fonte/tests/polices-chromium.conf .venv/bin/python tests/ressenti_anciens.py
 import os, subprocess, sys, tempfile, shutil, time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5178
 TMP = tempfile.mkdtemp(prefix="fonte-ressenti-")

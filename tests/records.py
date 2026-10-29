@@ -19,7 +19,7 @@
 # Les étiquettes sont lues dans le détail de chaque séance (écran du lot 2) et le nombre de records dans la liste de l'Historique.
 # Témoins : FONTE_ROOT=dossier d'une autre version du code (par exemple celle du commit 08f52a0) ; ce test doit alors échouer.
 #   Cas 7 : comme les données arrivent déjà réunies, le code de 764a6e1 passe aussi ce cas (il ne prouve que le résultat affiché).
-#   FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/records.py
+#   FONTCONFIG_FILE=/home/PM/Claude-applications/Fonte-appli/Fonte/tests/polices-chromium.conf .venv/bin/python tests/records.py
 import os, subprocess, sys, tempfile, time
 from playwright.sync_api import sync_playwright
 ROOT = os.environ.get("FONTE_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

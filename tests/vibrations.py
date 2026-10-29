@@ -3,7 +3,7 @@
 # vibrations de l'appli (✓ de série, record, fin du repos, tirage) ; il remplace opts.haptic de jeu.js (bouton retiré de
 # Esprits > Règles, « Sons » y reste). Migration : tirage coupé (opts.haptic false) = vibrations coupées partout, une seule fois.
 # Le réglage reste dans le menu quand l'onglet Esprits est masqué. Modes local et serveur.
-#   FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/vibrations.py
+#   FONTCONFIG_FILE=/home/PM/Claude-applications/Fonte-appli/Fonte/tests/polices-chromium.conf .venv/bin/python tests/vibrations.py
 import json, os, subprocess, sys, tempfile, shutil, time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5176
 TMP = tempfile.mkdtemp(prefix="fonte-vibrations-")

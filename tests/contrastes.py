@@ -13,7 +13,7 @@
 # Les lignes de graduation et les bords des cartes sont décoratifs (valeurs écrites ; cartes distinguées par leur fond) : non comptés.
 # Les boutons secondaires sans bord (V3) sont identifiés par leur texte (contrôlé comme du texte) ; les boutons désactivés sont exclus.
 # Témoin : FONTE_ROOT=dossier du code du commit 08f52a0 : « Démarrer la séance » blanc sur papier en « Noir et blanc » doit échouer.
-#   FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/contrastes.py
+#   FONTCONFIG_FILE=/home/PM/Claude-applications/Fonte-appli/Fonte/tests/polices-chromium.conf .venv/bin/python tests/contrastes.py
 import os, subprocess, sys, tempfile, time
 from playwright.sync_api import sync_playwright
 ROOT = os.environ.get("FONTE_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -3,7 +3,7 @@
 # mode « un exercice à la fois » (série en cours visible à l'ouverture), démonstration de l'exercice suivant pendant le repos qui suit
 # la dernière série d'un exercice (image fixe en mouvement réduit), écran de fin unique (records d'abord, puis les Esprits ; plus de
 # fenêtres superposées), aucune requête hors de l'appli. Mode local (comme l'appli Android), 360 × 780, normal et mouvement réduit.
-#   FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/lot1.py
+#   FONTCONFIG_FILE=/home/PM/Claude-applications/Fonte-appli/Fonte/tests/polices-chromium.conf .venv/bin/python tests/lot1.py
 import os, re, subprocess, sys, tempfile, shutil, time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5177
 TMP = tempfile.mkdtemp(prefix="fonte-lot1-")

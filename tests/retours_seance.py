@@ -9,7 +9,7 @@
 # 5. hors de l'onglet Séance, minuteur d'une ligne (temps restant, Passer), agrandi au toucher ; version complète sur l'onglet Séance ;
 # 6. sous chaque bouton du ressenti, la conséquence pour la prochaine séance : c'est bien le conseil affiché la fois suivante ;
 # 7. contrastes : texte en couleur d'accent, texte des boutons, au moins 4,5:1 (6 couleurs, clair et sombre).
-#   FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/retours_seance.py
+#   FONTCONFIG_FILE=/home/PM/Claude-applications/Fonte-appli/Fonte/tests/polices-chromium.conf .venv/bin/python tests/retours_seance.py
 import os, re, subprocess, sys, time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5163
 DB = "/tmp/retours_seance_test.db"

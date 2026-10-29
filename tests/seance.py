@@ -8,7 +8,7 @@
 # - ressenti en 3 choix, affiché seulement après la dernière série validée : Facile = 2, Juste bien = 3, Dur = 4 (« dur » fait garder la charge) ;
 # - minuteur : −15 s, +15 s, Passer, autre durée, série suivante annoncée, visible sur les autres onglets pendant un repos ;
 # - écran allumé (coque simulée : FonteApp.keepScreenOn) en mode « un exercice à la fois » et pendant un repos, réglage du menu.
-#   FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/seance.py
+#   FONTCONFIG_FILE=/home/PM/Claude-applications/Fonte-appli/Fonte/tests/polices-chromium.conf .venv/bin/python tests/seance.py
 import json, os, subprocess, sys, time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5161
 DB = "/tmp/seance_test.db"

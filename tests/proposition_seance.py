@@ -5,7 +5,7 @@
 #   questionnaire (4 séances lun, mar, jeu, ven → « Haut du corps » et « Bas du corps », anciens programmes remplacés)
 #   mercredi (jour libre) : Haut faite → Bas le jour même et jeudi ; jeudi : Bas faite → Haut vendredi (prévu Bas au calendrier) ;
 #   vendredi : Haut faite → Bas lundi (prévu Haut) ; mercredi suivant, après lundi et mardi sans séance : toujours Bas, puis Haut.
-#   FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/proposition_seance.py
+#   FONTCONFIG_FILE=/home/PM/Claude-applications/Fonte-appli/Fonte/tests/polices-chromium.conf .venv/bin/python tests/proposition_seance.py
 import os, re, subprocess, sys, time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5171
 DB = "/tmp/proposition_seance.db"

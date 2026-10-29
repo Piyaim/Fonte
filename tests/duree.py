@@ -5,7 +5,7 @@
 #   modification depuis l'Historique (sans les champs) : début et fin gardés ; la durée ne change ni les jetons ni les quêtes ;
 #   export et import : aller-retour exact, ancien export sans ces champs accepté ; un export actuel s'importe dans la 0.6.1
 #   (mode serveur : API ; le mode local est contrôlé par migration_v061.py) ; mêmes réponses du serveur et du mode local.
-#   FONTCONFIG_FILE=/home/PM/Fonte/tests/polices-chromium.conf .venv/bin/python tests/duree.py
+#   FONTCONFIG_FILE=/home/PM/Claude-applications/Fonte-appli/Fonte/tests/polices-chromium.conf .venv/bin/python tests/duree.py
 import json, os, shutil, subprocess, sys, tempfile, time, urllib.request
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5175
 TMP = tempfile.mkdtemp(prefix="fonte-duree-")
