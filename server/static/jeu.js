@@ -73,7 +73,7 @@
   IT.forEach(function (a) { ITM[a[0]] = { id: a[0], name: a[1], rar: a[2], slot: a[3], v: a[4] }; });
 
   /* ------------------------------------------------------------------ état */
-  function blank() { return { v: 1, init: false, tokens: 0, shards: 0, pulls: 0, pe: 0, pl: 0, owned: {}, items: {}, team: [], equip: {}, awarded: {}, days: {}, wk: {}, opts: { sound: false, haptic: true, hide: false }, log: [] }; }
+  function blank() { return { v: 1, init: false, tokens: 0, shards: 0, pulls: 0, pe: 0, pl: 0, owned: {}, items: {}, team: [], equip: {}, awarded: {}, days: {}, wk: {}, pend: 0, opts: { sound: false, haptic: true, hide: false }, log: [] }; }
   var S = null;
   function load() {
     try { var o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o && o.v === 1) S = Object.assign(blank(), o); } catch (e) {}
@@ -131,18 +131,23 @@
   function award(sid) {
     init(); var s = st(), x = sess().find(function (z) { return z.id === sid; });
     if (!x || s.awarded[sid] != null) return null;
-    var sc = scoreSession(x), gain = sc.total, lines = sc.lines.slice(), note = '';
-    var used = s.days[x.day] || 0, room = Math.max(0, DAY_CAP - used);
-    if (gain > room) { note = room ? 'Plafond de ' + DAY_CAP + ' jetons par jour atteint.' : 'Plafond de ' + DAY_CAP + ' jetons par jour déjà atteint : la séance compte pour tes stats, pas pour les jetons.'; gain = room; }
-    s.days[x.day] = used + gain; s.awarded[sid] = gain; s.tokens += gain;
+    var sc = scoreSession(x), lines = [], note = '';
+    var used = s.days[x.day] || 0, room = Math.max(0, DAY_CAP - used), left = room;
+    // plafond du jour, quêtes comprises (décision A du 23/10/2026) : la séance d'abord, puis les quêtes ; le reste des quêtes attend (s.pend)
+    sc.lines.forEach(function (l) { var k = Math.min(l[1], left); left -= k; lines.push([l[0], k]); });
+    var gain = room - left;
+    if (gain < sc.total) note = room ? 'Plafond de ' + DAY_CAP + ' jetons par jour atteint.' : 'Plafond de ' + DAY_CAP + ' jetons par jour déjà atteint : la séance compte pour tes stats, pas pour les jetons.';
+    var q = quests(true);   // les quêtes accomplies passent en attente, créditées ci-dessous dans la limite du jour
+    q.done.forEach(function (d) { lines.push([d.t, 0]); });
+    var qk = Math.min(s.pend, left); left -= qk; s.pend -= qk;
+    if (qk) lines.push(['Jetons de quête', qk]);
+    s.days[x.day] = used + gain + qk; s.awarded[sid] = gain; s.tokens += gain + qk;
     // série d'éclats pour l'équipe : chaque esprit dont la zone a travaillé
     var zs = sessionZones(x), bond = 0;
     s.team.forEach(function (cid) { if (zs.indexOf(CRE[cid].zone) >= 0 && gain > 0) bond += 3; });
     if (bond) { s.shards += bond; lines.push(['Équipe : ' + bond / 3 + ' esprit' + (bond > 3 ? 's' : '') + ' entraîné' + (bond > 3 ? 's' : '') + ' (+' + bond + ' éclats)', 0]); }
-    var q = quests(true);
-    q.done.forEach(function (d) { lines.push([d.t, d.r]); });
     var lv = levelUps(); save();
-    return { tokens: gain + q.done.reduce(function (a, d) { return a + d.r; }, 0), lines: lines, note: note, bond: bond, ups: lv, balance: s.tokens, sets: sc.sets };
+    return { tokens: gain + qk, lines: lines, note: note, pend: s.pend, bond: bond, ups: lv, balance: s.tokens, sets: sc.sets };
   }
   // quêtes de la semaine : évaluées à partir des séances, créditées une seule fois par semaine
   function questList() {
@@ -158,8 +163,8 @@
     ] };
   }
   function quests(claim) {
-    var s = st(), q = questList(), w = s.wk[q.key] = s.wk[q.key] || {}, done = [];
-    q.list.forEach(function (it) { it.claimed = !!w[it.id]; if (claim && it.ok && !w[it.id]) { w[it.id] = 1; s.tokens += it.r; done.push({ t: 'Quête : ' + it.t, r: it.r }); it.claimed = true; } });
+    var s = st(), q = questList(), w = s.wk[q.key] || {}, done = [];   // simple lecture : rien n'est écrit dans l'état
+    q.list.forEach(function (it) { it.claimed = !!w[it.id]; if (claim && it.ok && !w[it.id]) { w[it.id] = 1; s.wk[q.key] = w; s.pend = (s.pend || 0) + it.r; done.push({ t: 'Quête : ' + it.t, r: it.r }); it.claimed = true; } });
     return { list: q.list, done: done };
   }
   var seenLv = null;
@@ -267,8 +272,10 @@
   }
   function questsHtml() {
     var q = quests(false);
-    return '<section class="card"><h2>Quêtes de la semaine</h2><p class="m">Créditées toutes seules quand tu t\'entraînes.</p>' + q.list.map(function (it) { return '<div class="j-q ' + (it.ok ? 'ok' : '') + '"><span>' + (it.ok ? '✓ ' : '') + E(it.t) + '<br><small class="m">' + it.p + (it.claimed ? ' · reçu' : '') + '</small></span><span>+' + it.r + '</span></div>'; }).join('') + '</section>';
+    return '<section class="card"><h2>Quêtes de la semaine</h2><p class="m">Créditées toutes seules quand tu t\'entraînes.</p>' + pendHtml() + q.list.map(function (it) { return '<div class="j-q ' + (it.ok ? 'ok' : '') + '"><span>' + (it.ok ? '✓ ' : '') + E(it.t) + '<br><small class="m">' + it.p + (it.claimed ? ' · faite' : '') + '</small></span><span>+' + it.r + '</span></div>'; }).join('') + '</section>';
   }
+  function pendTxt(n) { return n + ' jeton' + (n > 1 ? 's' : '') + ' de quête en attente'; }
+  function pendHtml() { var n = st().pend || 0; return n ? '<p class="m">' + pendTxt(n) + '</p>' : ''; }
   function vTirage() {
     var s = st(), toE = PITY_E - s.pe, toL = PITY_L - s.pl;
     var h = '<section class="card"><h2>Ton équipe</h2>' + teamHtml() + '<p class="m">Les esprits évoluent avec les séries que tu fais sur leur zone. Tu choisis l\'équipe dans la collection.</p></section>';
@@ -278,7 +285,7 @@
       + '<p class="m" style="margin-top:8px">Épique ou mieux garanti dans ' + toE + ' tirage' + (toE > 1 ? 's' : '') + ' au plus, Légendaire dans ' + toL + ' au plus.</p>'
       + (s.tokens < 1 ? '<p class="m"><b>Plus de jeton ?</b> Termine une séance : tu en gagnes de 1 à 3 selon tes séries et tes progrès.</p>' : '') + '</section>';
     h += questsHtml();
-    h += '<section class="card"><h2>Comment gagner des jetons</h2><ul class="j-rule" style="padding-left:18px;margin:6px 0"><li>Séance terminée (3 séries ou plus) : +1</li><li>10 séries ou plus : +1</li><li>Progression (charge, reps, secondes ou minutes en plus) : +1</li><li>Maximum ' + DAY_CAP + ' jetons par jour.</li></ul></section>';
+    h += '<section class="card"><h2>Comment gagner des jetons</h2><ul class="j-rule" style="padding-left:18px;margin:6px 0"><li>Séance terminée (3 séries ou plus) : +1</li><li>10 séries ou plus : +1</li><li>Progression (charge, reps, secondes ou minutes en plus) : +1</li><li>Quêtes de la semaine : +1 ou +2</li><li>Maximum ' + DAY_CAP + ' jetons par jour, quêtes comprises. Au-delà, les jetons de quête attendent ta prochaine séance.</li></ul></section>';
     return h;
   }
   function vCollection() {
@@ -321,11 +328,11 @@
     var s = st(), pct = function (k) { return Math.round(RATES[k] * 100) + '\u00a0%'; };
     return '<section class="card"><h2>Taux de tirage</h2><p class="m">Affichés tels qu\'ils sont codés.</p><table>' + RK.slice().reverse().map(function (k) { return '<tr><td>' + tag(k) + '</td><td style="text-align:right">' + pct(k) + '</td></tr>'; }).join('') + '</table>'
       + '<p class="m">Garantie : Épique ou mieux tous les ' + PITY_E + ' tirages au plus, Légendaire tous les ' + PITY_L + ' au plus (compteurs actuels : ' + s.pe + ' et ' + s.pl + '). Chaque tirage donne 65\u00a0% d\'esprit et 35\u00a0% d\'objet de garde-robe, quand il en reste de cette rareté.</p></section>'
-      + '<section class="card"><h2>Garde-fous</h2><ul class="j-rule" style="padding-left:18px"><li>Aucun achat, aucun argent réel, aucune publicité.</li><li>Les jetons ne s\'obtiennent qu\'en s\'entraînant. Maximum ' + DAY_CAP + ' par jour : s\'entraîner plus ne rapporte pas plus.</li><li>Aucune série à perdre : si tu pauses, tu ne perds rien, tes jetons n\'expirent jamais.</li><li>Le niveau d\'un esprit vient des séries réellement faites sur sa zone.</li><li>Tout est stocké sur ton téléphone, rien n\'est envoyé.</li><li>Les jeux de tirage peuvent donner envie d\'en refaire : si tu le sens, tu peux masquer l\'onglet de la barre du bas ci-dessous ; il reste dans le menu ☰.</li></ul></section>'
+      + '<section class="card"><h2>Garde-fous</h2><ul class="j-rule" style="padding-left:18px"><li>Aucun achat, aucun argent réel, aucune publicité.</li><li>Les jetons ne s\'obtiennent qu\'en s\'entraînant. Maximum ' + DAY_CAP + ' par jour, quêtes comprises : s\'entraîner plus ne rapporte pas plus. Au-delà, les jetons de quête attendent ta prochaine séance.</li><li>Aucune série à perdre : si tu pauses, tu ne perds rien, tes jetons n\'expirent jamais.</li><li>Le niveau d\'un esprit vient des séries réellement faites sur sa zone.</li><li>Tout est stocké sur ton téléphone, rien n\'est envoyé.</li><li>Les jeux de tirage peuvent donner envie d\'en refaire : si tu le sens, tu peux masquer l\'onglet de la barre du bas ci-dessous ; il reste dans le menu ☰.</li></ul></section>'
       + '<section class="card"><h2>Réglages</h2><div class="chips"><button class="chip ' + (s.opts.sound ? 'on' : '') + '" onclick="JEU.opt(\'sound\')">Sons</button><button class="chip ' + (s.opts.hide ? 'on' : '') + '" onclick="JEU.opt(\'hide\')" aria-pressed="' + !!s.opts.hide + '">Masquer de la barre du bas</button></div></section>';
   }
   function view() {
-    init(); css(); var q = quests(true); if (q.done.length) { save(); var n = q.done.reduce(function (a, d) { return a + d.r; }, 0); toast2('+' + n + ' jeton' + (n > 1 ? 's' : '') + '\u00a0: ' + (q.done.length > 1 ? 'quêtes accomplies' : 'quête accomplie')); }
+    init(); css(); var q = quests(true); if (q.done.length) { save(); toast2(q.done.length > 1 ? 'Quêtes accomplies' : 'Quête accomplie'); }   // jetons en attente : crédités à la prochaine séance
     var body = sub === 'collection' ? vCollection() : sub === 'garde' ? vGarde() : sub === 'boutique' ? vBoutique() : sub === 'regles' ? vRegles() : vTirage();
     return head() + subnav() + body;
   }
@@ -347,10 +354,11 @@
   // partie « Esprits » de l'écran de fin de séance : mêmes lignes que la fenêtre de récompense, tirage en action secondaire
   function rewardHtml(rep) {
     css();
-    var lines = rep.lines.filter(function (l) { return l[1] > 0 || /Équipe/.test(l[0]); });
+    var lines = rep.lines.filter(function (l) { return l[1] > 0 || /^(Équipe|Quête)/.test(l[0]); });
     return '<section class="card reward"><h2>Esprits</h2>' + (rep.tokens ? '<p class="tok">+' + rep.tokens + ' jeton' + (rep.tokens > 1 ? 's' : '') + '</p>' : '')
       + (lines.length ? '<ul>' + lines.map(function (l) { return '<li><span>' + E(l[0]) + '</span>' + (l[1] ? '<b>+' + l[1] + '</b>' : '') + '</li>'; }).join('') + '</ul>' : '')
       + (rep.note ? '<p class="m">' + E(rep.note) + '</p>' : '')
+      + (rep.pend ? '<p class="m">' + pendTxt(rep.pend) + '</p>' : '')
       + rep.ups.map(function (u) { return '<div class="evo">' + art(u.id, u.stage) + '<span>' + E(CRE[u.id].name) + ' passe au stade ' + u.stage + '</span></div>'; }).join('')
       + '<div class="bal"><span>Solde : <b>' + rep.balance + '</b> jeton' + (rep.balance > 1 ? 's' : '') + '</span>'
       + (rep.balance >= 1 ? '<button class="sm" onclick="JEU.pull(1)">Tirer maintenant</button>' : '') + '</div></section>';
@@ -392,10 +400,11 @@
   function eggSvg(col) { return '<svg viewBox="0 0 100 120"><defs><radialGradient id="jeg" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="' + col + '"/><stop offset="1" stop-color="#223"/></radialGradient></defs><path d="M50 8C72 8 88 50 88 78c0 22-17 36-38 36S12 100 12 78C12 50 28 8 50 8z" fill="url(#jeg)"/><path d="M28 70l10-8 8 10 8-10 10 8 8-6" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="3" stroke-linecap="round"/></svg>'; }
   function rewardOverlay(rep) {
     css();
-    var lines = rep.lines.filter(function (l) { return l[1] > 0 || /Équipe/.test(l[0]); });
+    var lines = rep.lines.filter(function (l) { return l[1] > 0 || /^(Équipe|Quête)/.test(l[0]); });
     var o = ov('<h2>' + (rep.tokens ? '+' + rep.tokens + ' jeton' + (rep.tokens > 1 ? 's' : '') : 'Séance enregistrée') + '</h2>'
       + lines.map(function (l) { return '<p>' + E(l[0]) + (l[1] ? ' <b>+' + l[1] + '</b>' : '') + '</p>'; }).join('')
       + (rep.note ? '<p style="color:#ffd45e">' + E(rep.note) + '</p>' : '')
+      + (rep.pend ? '<p>' + pendTxt(rep.pend) + '</p>' : '')
       + (rep.ups.length ? '<h2 style="margin-top:14px">Évolution !</h2>' + rep.ups.map(function (u) { return '<div class="j-big j-pop" style="width:150px;margin:auto">' + art(u.id, u.stage) + '</div><p>' + E(CRE[u.id].name) + ' passe au stade ' + u.stage + '</p>'; }).join('') : '')
       + '<p style="margin-top:10px">Solde : ' + rep.balance + ' jeton' + (rep.balance > 1 ? 's' : '') + '</p>'
       + (rep.balance >= 1 ? '<button class="go" id="j-tt">Tirer maintenant</button>' : '') + '<button class="sm" id="j-la">' + (rep.balance >= 1 ? 'Plus tard' : 'Fermer') + '</button>');

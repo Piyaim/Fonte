@@ -44,6 +44,11 @@ def sans_duree(o):
                 if f in x: vus.append(x.pop(f))
     return o, vus
 
+def sans_attente(e):
+    """Sans le champ « pend » du jeu (jetons de quête en attente, ajouté à 0 par le code de la 0.7.1) ; renvoie aussi sa valeur."""
+    e = json.loads(json.dumps(e)); v = e["jeu"].pop("pend", None) if isinstance(e.get("jeu"), dict) else None
+    return e, v
+
 PROCS = []
 def serveur(dossier, dbf):
     os.makedirs(os.path.dirname(dbf), exist_ok=True)
@@ -163,7 +168,8 @@ try:
             b = pg.evaluate(RELEVE); a = avant[mode]
             (bs, vs), (be, ve) = sans_duree(b["state"]), sans_duree(b["export"])
             ok(bs == a["state"], f"mode {mode} : état identique (exercices, programmes et réglages, séances, ressentis, pesées)")
-            ok(be == a["export"], f"mode {mode} : export identique (les réglages des notifications n'y entrent pas)")
+            be, pv = sans_attente(be)
+            ok(be == a["export"] and not pv, f"mode {mode} : export identique (les réglages des notifications n'y entrent pas)")
             ok(len(vs) == 2 * len(a["state"]["sessions"]) and len(ve) == len(vs) and not any(v is not None for v in vs + ve) and "start_ts" not in json.dumps(a["export"]),
                f"mode {mode} : chaque ancienne séance a un début et une fin vides (null) dans l'état et l'export ({len(vs)} champs)")
             ok(b["photos"] == a["photos"] and b["octets"] == a["octets"] and len(b["octets"]) == 4, f"mode {mode} : 2 photos et 2 vignettes identiques octet par octet")
@@ -182,7 +188,7 @@ try:
         ok(any("\trappel:2026-10-19\t" in l for l in lignes), "coque simulée : rappel du lundi (jour du questionnaire) prévu")
         ok(pg.evaluate("[...JSON.parse(localStorage.getItem('muscu-notif')).rappel.days]") == [0, 2, 4], "réglages par défaut : jours du questionnaire (lundi, mercredi, vendredi)")
         b = pg.evaluate(RELEVE)
-        ok(sans_duree(b["export"])[0] == avant["local"]["export"] and b["profil"] == avant["local"]["profil"] and b["jeu"] == avant["local"]["jeu"], "coque simulée : export, profil et jeu inchangés")
+        ok(sans_attente(sans_duree(b["export"])[0])[0] == avant["local"]["export"] and b["profil"] == avant["local"]["profil"] and b["jeu"] == avant["local"]["jeu"], "coque simulée : export, profil et jeu inchangés")
         # une séance avec début et fin (52 min), comme l'enregistrerait l'interface, pour l'export importé dans la 0.6.1 (étape 4)
         pg.evaluate("""async () => { await api('POST', '/api/sessions', {day: '2026-10-19', workout_id: WO[0].id, start_ts: Date.parse('2026-10-19T09:00:00'),
           end_ts: Date.parse('2026-10-19T09:52:00'), entries: [{exercise_id: WO[0].items[0], sets: [[40, 10], [40, 10], [40, 9]]}]}); await load(); }""")
@@ -222,7 +228,7 @@ try:
                and set(sans_duree(n["export"])[1]) == {None},
                f"mode {mode} : export de la 0.6.1 importé à l'identique (exercices, programmes et réglages, séances, pesées)")
             if mode == "local":
-                ok(json.loads(n["jeu"]) == json.loads(avant["local"]["jeu"]) and json.loads(n["profil"]) == json.loads(avant["local"]["profil"]), "mode local : jeu et profil restaurés")
+                jn = json.loads(n["jeu"]); ok(jn.pop("pend", 0) == 0 and jn == json.loads(avant["local"]["jeu"]) and json.loads(n["profil"]) == json.loads(avant["local"]["profil"]), "mode local : jeu et profil restaurés")
                 ok([o[4] for o in n["octets"]] == [o[4] for o in avant["local"]["octets"]], "mode local : photos restaurées octet par octet")
             ctx.close()
         arreter(srv)
