@@ -47,14 +47,14 @@ try:
             pg = ctx.new_page(); errs = []
             pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("dialog", lambda d: d.accept())
             pg.clock.set_fixed_time(jour + "T10:00:00")
-            pg.goto(f"http://127.0.0.1:{PORT}/" + ("?local=1" if local else "")); pg.wait_for_selector("#app .card", timeout=8000); time.sleep(.3)
+            pg.goto(f"http://127.0.0.1:{PORT}/" + ("?local=1" if local else "")); pg.wait_for_selector("#app button:has-text('Commencer')", timeout=8000); time.sleep(.3)
             return ctx, pg, errs
         def le(pg, jour):          # même appareil, un autre jour
             pg.clock.set_fixed_time(jour + "T10:00:00"); pg.reload(); pg.wait_for_selector("#app .card, #app .hero", timeout=8000); time.sleep(.3)
         def gen(pg, a):            # questionnaire rempli puis « Remplacer mes programmes »
             pg.evaluate("a => localStorage.setItem('muscu-profil-brouillon', JSON.stringify({version: 1, answers: a, mode: 'resume', i: 16, redo: false}))", a)
             pg.reload(); pg.wait_for_selector("button:has-text('Générer mon programme')"); pg.click("button:has-text('Générer mon programme')"); time.sleep(.3)
-            pg.click("button:has-text('Remplacer mes programmes')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
+            pg.click("button:has-text('Remplacer')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
             pg.evaluate("go('accueil')"); time.sleep(.2)
             return pg.evaluate("fetch('/api/state').then(r => r.json())")
         def slug(s, sl): return next(e for e in s["exercises"] if e["slug"] == sl)
@@ -333,9 +333,9 @@ try:
         pg.reload(); pg.wait_for_selector("button:has-text('Générer mon programme')"); pg.evaluate(OUVRIR); t = pg.inner_text("#app")
         ok("Repos allongés de 30 s" in t and "IMC" not in t and "kcal" not in t, "IMC caché : repos allongés annoncés sans leur raison")
         pg.click("button:has-text('Afficher le détail santé')"); time.sleep(.2); pg.evaluate(OUVRIR)
-        ok("IMC de 30 ou plus : repos allongés de 30 s" in pg.inner_text("#app"), "(témoin : détail affiché, la raison apparaît)")
+        ok("IMC de 30 ou plus\u00a0: repos allongés de 30 s" in pg.inner_text("#app"), "(témoin : détail affiché, la raison apparaît)")
         pg.click("button:has-text('Masquer le détail santé')"); time.sleep(.2)
-        pg.click("button:has-text('Générer mon programme')"); time.sleep(.3); pg.click("button:has-text('Remplacer mes programmes')"); pg.wait_for_selector("text=Ton programme est prêt")
+        pg.click("button:has-text('Générer mon programme')"); time.sleep(.3); pg.click("button:has-text('Remplacer')"); pg.wait_for_selector("text=Ton programme est prêt")
         le(pg, J(28))
         vus = []
         for v in VUES:
@@ -360,10 +360,11 @@ try:
           const u = (ph, kg) => { const x = PROFIL._.context(Object.assign({}, %s, {poids: kg}), ph); return PROFIL._.usable('kettlebell-swing', x); };
           const out = [u(1, 66), u(2, 66), u(3, 66), u(3, 92.5)]; delete L['kettlebell-swing']; return out; }""" % json.dumps(BASE))
         ok(sw == [False, False, True, False], f"kettlebell swing (ajouté pour l'essai) : refusé en phases 1 et 2 et avec un IMC de 30, accepté en phase 3 {sw}")
-        # boutons ↑ ↓ ✕ de l'écran Programmes
+        # boutons ↑ ↓ ✕ de l'écran Programmes (lot 3 : « Monter », « Descendre » et « Retirer », dans le réglage ouvert de chaque exercice)
         for w in (390, 360):
-            pg.set_viewport_size({"width": w, "height": 844}); pg.evaluate("go('programmes')"); time.sleep(.3)
-            bx = pg.evaluate("[...document.querySelectorAll('.li .mv')].map(b => { const r = b.getBoundingClientRect(); return [r.width, r.height]; })")
+            pg.set_viewport_size({"width": w, "height": 844}); pg.evaluate("go('programmes'); selProg(WO[0].id)"); time.sleep(.3)
+            bx = pg.evaluate("""(() => { const out = []; for (const id of WO[0].items) { cfgProg(id);
+              for (const b of document.querySelectorAll('.pedit .acts .ib, .pedit .acts .btn-d')) { const r = b.getBoundingClientRect(); out.push([r.width, r.height]); } cfgProg(id); } return out; })()""")
             ok(len(bx) >= 6 and all(a >= 44 and h_ >= 44 for a, h_ in bx), f"Programmes à {w} px : boutons ↑ ↓ ✕ d'au moins 44 × 44 px ({min(min(a, h_) for a, h_ in bx):.0f} px au plus petit)")
             ok(pg.evaluate("document.documentElement.scrollWidth <= innerWidth"), f"Programmes à {w} px : pas de défilement horizontal")
         ok(not errs, f"aucune erreur JavaScript (IMC, sécurité) {errs[:2]}"); ctx.close()

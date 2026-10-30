@@ -94,10 +94,10 @@ try:
         b = p.chromium.launch(); ctx = b.new_context(viewport={"width": 390, "height": 844}); ctx.route("**/*", lambda r: r.continue_() if r.request.url.startswith(U) or not r.request.url.startswith("http") else r.abort())
         pg = ctx.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("dialog", lambda d: d.accept())
         pg.clock.set_fixed_time("2026-11-02T08:00:00")
-        pg.goto(U); pg.wait_for_selector("#app .card", timeout=8000)
+        pg.goto(U); pg.wait_for_selector("#app button:has-text('Commencer')", timeout=8000)
         pg.evaluate("a => localStorage.setItem('muscu-profil-brouillon', JSON.stringify({version: 1, answers: a, mode: 'resume', i: 16, redo: false}))", REP)
         pg.reload(); pg.click("button:has-text('Générer mon programme')"); pg.wait_for_timeout(300)
-        pg.click("button:has-text('Remplacer mes programmes')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
+        pg.click("button:has-text('Remplacer')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
         pg.evaluate("JEU.view()")
         def mesure(nom, M):
             pg.wait_for_timeout(250); r = pg.evaluate(MESURE)

@@ -33,7 +33,7 @@ try:
             pg = ctx.new_page(); errs = []
             pg.on("pageerror", lambda e: errs.append(str(e)))
             pg.on("dialog", lambda d: d.dismiss() if dismiss and d.type == "confirm" else d.accept())
-            pg.goto(f"http://127.0.0.1:{PORT}/" + ("?local=1" if local else "")); pg.wait_for_selector("#app .card", timeout=8000); time.sleep(.4)
+            pg.goto(f"http://127.0.0.1:{PORT}/" + ("?local=1" if local else "")); pg.wait_for_selector("#app button:has-text('Commencer')", timeout=8000); time.sleep(.4)
             return ctx, pg, errs
 
         # ------------------------------------------------------------ deux sauvegardes, faites à partir de l'état de départ
@@ -50,7 +50,7 @@ try:
 
         def commencer(pg):     # questionnaire commencé (brouillon avec un prénom), puis retour à l'écran Bienvenue
             pg.click("button:has-text('Commencer')"); time.sleep(.2); pg.fill("#qin", "Brouillon"); pg.click("button:has-text('Suivant')"); time.sleep(.2)
-            pg.click("button:has-text('Retour')"); time.sleep(.2); pg.click("button:has-text('Retour')"); time.sleep(.2)
+            pg.click("#tb-back[aria-label='Question précédente']"); time.sleep(.2); pg.click("#tb-back[aria-label='Retour']"); time.sleep(.2)   # « ‹ » : question 1, puis Bienvenue
         def ouvrir_import(pg, entree):
             if entree == "Bienvenue": pg.click("button:has-text('J’ai une sauvegarde')")
             else: pg.evaluate("go('donnees')")
@@ -58,7 +58,7 @@ try:
         def importer(pg, texte):
             pg.fill("#bk", texte); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(1500)   # wait_for_timeout laisse passer la boîte « Import terminé » (time.sleep la bloque)
         def recharger(pg):
-            pg.reload(); pg.wait_for_selector("#app .card", timeout=8000); time.sleep(.4); return pg.inner_text("#app")
+            pg.reload(); pg.wait_for_selector("#app .hero, #app #qh", timeout=8000); time.sleep(.4); return pg.inner_text("#app")
         prof = lambda pg: pg.evaluate("JSON.parse(localStorage.getItem('muscu-profil') || 'null')")
         brouillon = lambda pg: pg.evaluate("JSON.parse(localStorage.getItem('muscu-profil-brouillon') || 'null')")
 
@@ -79,7 +79,7 @@ try:
                 pr = prof(pg)
                 ok(pr and pr.get("imported") is True and pr["answers"] == {} and pr["program"] is None, f"{M} profil « importé, questionnaire non rempli »")
                 ok(brouillon(pg) is None, f"{M} brouillon du questionnaire effacé")
-                pg.evaluate("go('profil')"); time.sleep(.3); t = pg.inner_text("#app")
+                pg.evaluate("go('profil')"); time.sleep(.3); pg.evaluate("document.querySelectorAll('#app details').forEach(d => d.open = true)"); t = pg.inner_text("#app")
                 ok("Remplir le questionnaire" in t and "IMC" not in t, f"{M} « Mon profil » propose « Remplir le questionnaire »")
                 if local and entree == "Bienvenue":
                     pg.click("button:has-text('Remplir le questionnaire')"); time.sleep(.3)

@@ -40,12 +40,12 @@ try:
                 def jour(j):
                     pg.clock.set_fixed_time(j + "T10:00:00"); pg.reload(); pg.wait_for_selector("#app .hero", timeout=8000); time.sleep(.3)
                 pg.clock.set_fixed_time("2026-11-04T10:00:00")   # un mercredi, jour libre
-                pg.goto(f"http://127.0.0.1:{PORT}/" + ("?local=1" if mode == "local" else "")); pg.wait_for_selector("#app .card", timeout=8000); time.sleep(.3)
+                pg.goto(f"http://127.0.0.1:{PORT}/" + ("?local=1" if mode == "local" else "")); pg.wait_for_selector("#app button:has-text('Commencer')", timeout=8000); time.sleep(.3)
                 anciens = pg.evaluate("WO.map(w => w.id)")
                 # questionnaire rempli, puis « Générer mon programme » et « Remplacer mes programmes »
                 pg.evaluate("a => localStorage.setItem('muscu-profil-brouillon', JSON.stringify({version: 1, answers: a, mode: 'resume', i: 16, redo: false}))", REP)
                 pg.reload(); pg.click("button:has-text('Générer mon programme')"); time.sleep(.3)
-                pg.click("button:has-text('Remplacer mes programmes')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
+                pg.click("button:has-text('Remplacer')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
                 wo = pg.evaluate("WO.map(w => [w.id, w.name])"); ids = {n: i for i, n in wo}
                 ok([n for _, n in wo] == ["Haut du corps", "Bas du corps"] and anciens and not set(anciens) & set(ids.values()),
                    f"{M} · programme de 2 séances, anciens programmes remplacés ({anciens} → {wo})")

@@ -30,11 +30,11 @@ try:
             URL = f"http://127.0.0.1:{PORT}/" + ("?local=1" if mode == "local" else "")
             ctx = b.new_context(viewport={"width": 390, "height": 844}); ctx.add_init_script(ESPION); pg = ctx.new_page(); errs = []
             pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("dialog", lambda d: d.accept())
-            pg.goto(URL); pg.wait_for_selector("#app .card", timeout=8000)
+            pg.goto(URL); pg.wait_for_selector("#app button:has-text('Commencer')", timeout=8000)
             ok(pg.evaluate("localStorage.getItem('muscu-vibration')") == "true", f"{mode} · appli neuve : vibrations activées par défaut")
             pg.evaluate("a => localStorage.setItem('muscu-profil-brouillon', JSON.stringify({version: 1, answers: a, mode: 'resume', i: 16, redo: false}))", REP)
             pg.reload(); pg.click("button:has-text('Générer mon programme')"); pg.wait_for_timeout(300)
-            pg.click("button:has-text('Remplacer mes programmes')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
+            pg.click("button:has-text('Remplacer')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
             pg.evaluate("go('accueil')"); pg.click("#app .hero button:has-text('Démarrer la séance')"); pg.wait_for_selector(".focus")
             # les quatre sources de vibration : ✓ de série, record (celebrate), fin du repos (ring), tirage (buzz de jeu.js)
             QUATRE = """async () => { const n0 = __vib.length, out = {};
@@ -63,7 +63,7 @@ try:
             pg.keyboard.press("Escape"); pg.evaluate("go('seance')"); pg.wait_for_selector(".focus")
             off = pg.evaluate(QUATRE)
             ok(off == {"serie": [], "record": [], "repos": [], "tirage": []}, f"{mode} · coupé : aucune vibration nulle part ({off})")
-            pg.reload(); pg.wait_for_selector("#app .hero, #app .card")
+            pg.reload(); pg.wait_for_selector("#app .hero")
             ok(pg.evaluate("localStorage.getItem('muscu-vibration')") == "false", f"{mode} · coupé : le réglage survit au redémarrage")
             # Esprits masqué : le réglage reste dans le menu ; Règles : « Sons » reste, « Vibrations » n'y est plus
             pg.evaluate("go('jeu'); JEU.sub('regles')"); pg.wait_for_timeout(300); t = pg.inner_text("#app")
@@ -78,10 +78,10 @@ try:
             for haptic, deja, attendu, quoi in ((False, None, False, "tirage coupé → coupées partout"), (True, None, True, "tirage activé → activées"),
                                                 (None, None, True, "aucun état du jeu → activées"), (False, True, True, "réglage général déjà choisi : l'ancien n'est plus lu")):
                 c2 = b.new_context(); c2.add_init_script(ESPION); p2 = c2.new_page()
-                p2.goto(URL); p2.wait_for_selector("#app .card, #app .hero", timeout=8000)
+                p2.goto(URL); p2.wait_for_selector("#app button:has-text('Commencer')", timeout=8000)
                 j = dict(JEU_COUPE, opts={"sound": False, "haptic": haptic, "hide": False}) if haptic is not None else None
                 p2.evaluate("([j, d]) => { localStorage.clear(); if (j) localStorage.setItem('muscu-jeu', JSON.stringify(j)); if (d !== null) localStorage.setItem('muscu-vibration', JSON.stringify(d)); }", [j, deja])
-                p2.reload(); p2.wait_for_selector("#app .card, #app .hero", timeout=8000)
+                p2.reload(); p2.wait_for_selector("#app button:has-text('Commencer')", timeout=8000)
                 p2.evaluate("APPX.vib(15)")
                 ok(p2.evaluate("localStorage.getItem('muscu-vibration')") == json.dumps(attendu) and (p2.evaluate("__vib") == [15]) == attendu,
                    f"{mode} · migration : {quoi}")

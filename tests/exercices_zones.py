@@ -58,7 +58,7 @@ try:
         ok(not any(s in ("tapis-incline", "velo", "rameur", "elliptique", "stairmaster") for s in ids), f"cardio doux sur machine écarté : {ids}")
         pg.evaluate("ZCARD = false; ZPDC = false; localStorage.removeItem('muscu-zpdc')")
         pg.evaluate("ZPDC = true; go('zones')"); time.sleep(.3)
-        ok("Poids du corps uniquement" in pg.inner_text("#app"), "case visible dans la séance par zones")
+        ok(pg.locator("#app [role=switch]:has-text('Poids du corps seulement')").is_visible() and pg.locator("#app [role=switch]:has-text('Poids du corps seulement')").get_attribute("aria-checked") == "true", "interrupteur « Poids du corps seulement » visible et activé dans la séance par zones")
         n_dos = pg.evaluate("zCount('dos')"); pg.evaluate("ZPDC = false"); n_dos2 = pg.evaluate("zCount('dos')")
         ok(n_dos < n_dos2, f"le petit chiffre des zones suit l'option (dos : {n_dos} au poids du corps, {n_dos2} en tout)")
         ok(not errs, f"aucune erreur JavaScript : {errs}")

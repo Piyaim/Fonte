@@ -54,14 +54,14 @@ try:
             if profil: ctx.add_init_script(f"localStorage.getItem('muscu-profil') || localStorage.setItem('muscu-profil', {json.dumps(json.dumps(profil))})")
             pg = ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("dialog", lambda d: d.accept())
             pg.clock.set_fixed_time(f"{jour}T{heure}")
-            pg.goto(f"http://127.0.0.1:{PORT}/" + ("?local=1" if local else "")); pg.wait_for_selector("#app .card, #app .hero", timeout=8000); time.sleep(.5)
+            pg.goto(f"http://127.0.0.1:{PORT}/" + ("?local=1" if local else "")); pg.wait_for_selector("#app .hero, #app button:has-text('Commencer')", timeout=8000); time.sleep(.5)
             return ctx, pg, errs
         def le(pg, jour, heure="10:00:00"):
-            pg.clock.set_fixed_time(f"{jour}T{heure}"); pg.reload(); pg.wait_for_selector("#app .card, #app .hero", timeout=8000); time.sleep(.4)
+            pg.clock.set_fixed_time(f"{jour}T{heure}"); pg.reload(); pg.wait_for_selector("#app .hero, #app button:has-text('Commencer')", timeout=8000); time.sleep(.4)
         def gen(pg, a):            # questionnaire rempli puis « Remplacer mes programmes »
             pg.evaluate("a => localStorage.setItem('muscu-profil-brouillon', JSON.stringify({version: 1, answers: a, mode: 'resume', i: 16, redo: false}))", a)
             pg.reload(); pg.wait_for_selector("button:has-text('Générer mon programme')"); pg.click("button:has-text('Générer mon programme')"); time.sleep(.3)
-            pg.click("button:has-text('Remplacer mes programmes')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
+            pg.click("button:has-text('Remplacer')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
             pg.evaluate("go('accueil')"); time.sleep(.2)
             return pg.evaluate("fetch('/api/state').then(r => r.json())")
         def seance(pg, jour, wid=None):

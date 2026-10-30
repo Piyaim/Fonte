@@ -121,10 +121,10 @@ try:
         srv = serveur(os.path.join(OLD, "server"), DBF); ctx = navigateur(); errs = []
         avant, exports, rep = {}, {}, {}
         for mode in MODES:
-            pg = ouvrir(ctx, mode, errs, "#app .card")
+            pg = ouvrir(ctx, mode, errs, "#app button:has-text('Commencer')")
             pg.evaluate("a => localStorage.setItem('muscu-profil-brouillon', JSON.stringify({version: 1, answers: a, mode: 'resume', i: 16, redo: false}))", REPONSES)
             pg.reload(); pg.wait_for_selector("button:has-text('Générer mon programme')"); pg.click("button:has-text('Générer mon programme')"); time.sleep(.4)
-            pg.click("button:has-text('Remplacer mes programmes')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
+            pg.click("button:has-text('Remplacer')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
             rep[mode] = pg.evaluate(REMPLIR, [IMG, THUMB]); time.sleep(.5)
             avant[mode] = pg.evaluate(RELEVE)
             exports[mode] = telecharger(pg, "Télécharger l'export")
@@ -185,7 +185,7 @@ try:
         br = p.chromium.launch(); errs = []
         for mode in MODES:
             ctx = br.new_context(viewport={"width": 390, "height": 844}, service_workers="block"); ctx.on("dialog", lambda d: d.accept()); surveiller(ctx)
-            pg = ouvrir(ctx, mode, errs, "#app .card")
+            pg = ouvrir(ctx, mode, errs, "#app button:has-text('Commencer')")
             importer(pg, exports[mode])
             if mode == "local":
                 pg.evaluate("go('donnees')"); time.sleep(.3); pg.fill("#bk", json.dumps(exports["photos"])); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(2000)
@@ -203,7 +203,7 @@ try:
         # ============================================================ 4. export du code actuel importé dans la 0.6.0
         srv = serveur(os.path.join(OLD, "server"), DBF_RETOUR)
         ctx = br.new_context(viewport={"width": 390, "height": 844}, service_workers="block"); ctx.on("dialog", lambda d: d.accept()); surveiller(ctx)
-        pg = ouvrir(ctx, "local", errs, "#app .card"); importer(pg, nouvel_export)
+        pg = ouvrir(ctx, "local", errs, "#app button:has-text('Commencer')"); importer(pg, nouvel_export)
         pg.evaluate("go('accueil')"); pg.reload(); pg.wait_for_selector("#app .card, #app .hero", timeout=8000); time.sleep(.6)
         n = pg.evaluate(RELEVE)
         ok({k: v for k, v in n["export"].items() if k not in ("photos",)} == {k: v for k, v in nouvel_export.items() if k not in ("photos",)},

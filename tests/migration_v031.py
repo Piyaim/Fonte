@@ -145,10 +145,10 @@ try:
         srv = serveur(os.path.join(ROOT, "server"), DBF); ctx = navigateur(); errs = []
         apres = {}
         for mode in MODES:
-            pg = ouvrir(ctx, mode, errs); t = pg.inner_text("#app")
+            pg = ouvrir(ctx, mode, errs, "#app button:has-text('Commencer')"); t = pg.inner_text("#app")
             ok(QUESTIONNAIRE(t) and not pg.locator(".tabbar").is_visible(), f"mode {mode} : le questionnaire de départ s'affiche à la première ouverture")
             apres[mode] = pg.evaluate(RELEVE); pg.close()
-        idb1 = ouvrir(ctx, "local", errs).evaluate(BRUT_IDB)
+        idb1 = ouvrir(ctx, "local", errs, "#app button:has-text('Commencer')").evaluate(BRUT_IDB)
         for mode in MODES:
             a, b = avant[mode], apres[mode]
             ok(sans_settings(b["state"]) == a["state"], f"mode {mode} : état identique (exercices, programmes, séances, ressentis, pesées)")
@@ -166,7 +166,7 @@ try:
 
         # « Garder mes programmes », dans chaque mode
         for mode in MODES:
-            pg = ouvrir(ctx, mode, errs)
+            pg = ouvrir(ctx, mode, errs, "#app button:has-text('Commencer')")
             pg.evaluate("a => { localStorage.setItem('muscu-profil-brouillon', JSON.stringify({version: 1, answers: a, mode: 'resume', i: 16, redo: false})); }", REPONSES)
             pg.reload(); pg.wait_for_selector("button:has-text('Générer mon programme')"); x0 = pg.evaluate(PROGS)
             pg.click("button:has-text('Générer mon programme')"); time.sleep(.4)
@@ -189,7 +189,7 @@ try:
         b = p.chromium.launch(); errs = []
         for mode in MODES:
             ctx = b.new_context(viewport={"width": 390, "height": 844}, service_workers="block"); ctx.on("dialog", lambda d: d.accept()); surveiller(ctx)
-            pg = ouvrir(ctx, mode, errs, "#app .card")
+            pg = ouvrir(ctx, mode, errs, "#app button:has-text('Commencer')")
             ok(QUESTIONNAIRE(pg.inner_text("#app")), f"appli neuve, mode {mode} : questionnaire de départ")
             pg.click("button:has-text('J’ai une sauvegarde')"); time.sleep(.3)
             pg.fill("#bk", json.dumps(exports[mode])); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(2000)

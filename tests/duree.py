@@ -42,10 +42,10 @@ try:
             def heure(h): pg.clock.set_fixed_time(T(h))
             def clean(): pg.evaluate("document.querySelectorAll('.pr-overlay,.j-ov').forEach(o => o.remove())")
             def derniere(): return pg.evaluate("fetch('/api/state').then(r => r.json()).then(s => s.sessions.reduce((a, x) => x.id > a.id ? x : a))")
-            heure("09:00"); pg.goto(f"http://127.0.0.1:{PORT}/" + ("?local=1" if mode == "local" else "")); pg.wait_for_selector("#app .card", timeout=8000)
+            heure("09:00"); pg.goto(f"http://127.0.0.1:{PORT}/" + ("?local=1" if mode == "local" else "")); pg.wait_for_selector("#app button:has-text('Commencer')", timeout=8000)
             pg.evaluate("a => localStorage.setItem('muscu-profil-brouillon', JSON.stringify({version: 1, answers: a, mode: 'resume', i: 16, redo: false}))", REP)
             pg.reload(); pg.click("button:has-text('Générer mon programme')"); pg.wait_for_timeout(300)
-            pg.click("button:has-text('Remplacer mes programmes')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
+            pg.click("button:has-text('Remplacer')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
 
             # 1. « Démarrer la séance » à 10:00, saisie en mode focus, enregistrée à 10:52
             heure("10:00"); pg.evaluate("go('accueil')"); pg.click("#app .hero button:has-text('Démarrer la séance')"); pg.wait_for_timeout(300)

@@ -47,7 +47,7 @@ try:
             ctx = b.new_context(viewport={"width": 390, "height": 844}, color_scheme="dark" if dark else "light", accept_downloads=True)
             pg = ctx.new_page(); errs = []
             pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("dialog", lambda d: d.accept())
-            pg.goto(f"http://127.0.0.1:{PORT}/" + ("?local=1" if local else "")); pg.wait_for_selector("#app .card", timeout=8000); time.sleep(.4)
+            pg.goto(f"http://127.0.0.1:{PORT}/" + ("?local=1" if local else "")); pg.wait_for_selector("#app button:has-text('Commencer')", timeout=8000); time.sleep(.4)
             return ctx, pg, errs
         ctx, pg, errs = page()
         ev = pg.evaluate
@@ -164,9 +164,9 @@ try:
         pg.fill("#qin", "66,5"); pg.click("button:has-text(\"Suivant\")"); time.sleep(.2)
         pg.click("button:has-text(\"Corps athlétique\")"); pg.click("button:has-text(\"Suivant\")"); time.sleep(.2)
         ok("Question 7 sur 17" in pg.inner_text("#app"), "arrivé à la question 7")
-        pg.reload(); pg.wait_for_selector("#app .card"); time.sleep(.4)   # l'utilisateur quitte l'appli puis revient
+        pg.reload(); pg.wait_for_selector("#app .qcount:text-is('Question 7 sur 17')"); time.sleep(.4)   # l'utilisateur quitte l'appli puis revient
         ok("Question 7 sur 17" in pg.inner_text("#app"), "après fermeture : retour à la question 7")
-        pg.click("button:has-text(\"Retour\")"); time.sleep(.2); pg.click("button:has-text(\"Retour\")"); time.sleep(.2)
+        pg.click("#tb-back[aria-label='Question précédente']"); time.sleep(.2); pg.click("#tb-back[aria-label='Question précédente']"); time.sleep(.2)
         ok(pg.input_value("#qin") == "66.5" or pg.input_value("#qin") == "66,5", f"réponses retrouvées (poids : {pg.input_value('#qin')})")
         d = ev("JSON.parse(localStorage.getItem('muscu-profil-brouillon')).answers")
         ok(d["prenom"] == "Léa" and d["age"] == 40 and d["objectif"] == "athletique", "brouillon : prénom, âge, objectif enregistrés")
@@ -178,24 +178,24 @@ try:
         # la suite des réponses : brouillon complet, comme si les questions avaient été remplies
         ev("a => { const d = JSON.parse(localStorage.getItem('muscu-profil-brouillon')); d.answers = a; d.mode = 'resume'; localStorage.setItem('muscu-profil-brouillon', JSON.stringify(d)); }",
            prof(niveau="intermediaire", objectif="force", seances=4, jours=["lun", "mar", "jeu", "ven"]))
-        pg.reload(); pg.wait_for_selector("#app .card"); time.sleep(.4)
-        tx = pg.inner_text("#app")
-        ok("voici ton résumé" in tx and "IMC :" not in tx and "kcal" not in tx, "résumé, détail santé masqué : ni IMC ni calories")
+        pg.reload(); pg.wait_for_selector("#app #qh:text-is('Ton résumé')"); time.sleep(.4)
+        pg.evaluate(OUVRIR); tx = pg.inner_text("#app")   # replis ouverts : « IMC » absent de tout l'écran
+        ok("Léa, vérifie puis génère ton programme." in tx and "IMC" not in tx and "kcal" not in tx, "résumé, détail santé masqué : ni IMC ni calories, replis ouverts compris")
         pg.click("button:has-text(\"Afficher le détail santé\")"); time.sleep(.2); tx = pg.inner_text("#app")
-        ok("IMC : 22,8" in tx and "Il ne distingue pas le muscle de la graisse" in tx and "kcal" in tx, "détail santé affiché : IMC, message neutre, calories")
+        ok("IMC\u00a0: 22,8" in tx and "Il ne distingue pas le muscle de la graisse" in tx and "kcal" in tx, "détail santé affiché : IMC, message neutre, calories")
         ok("ne remplace pas un avis médical" in tx and "douleur vive" in tx, "avertissements du cahier des charges affichés")
         pg.click("button:has-text(\"Masquer le détail santé\")"); time.sleep(.2)
         # confirmation : Annuler ne change rien
         avant = ev("fetch('/api/state').then(r => r.json())"); cata0 = ev(CATA)
         pg.click("button:has-text(\"Générer mon programme\")"); time.sleep(.3); pg.evaluate(OUVRIR); tx = pg.inner_text("#app")
-        ok("Programmes supprimés" in tx and "Séance A" in tx and "Haut du corps" in tx and "Développé incliné haltères\n4 × 4 à 6 · repos 2 min 30" in tx, "confirmation : programmes supprimés, nouveaux programmes et réglages de chaque séance")
+        ok("Séance A et Séance B seront retirés." in tx and "Haut du corps\u00a0: Développé incliné haltères (4 × 4 à 6 · repos 2 min 30)" in tx, "confirmation : programmes retirés, nouveaux programmes et réglages de chaque séance")
         ok("Exercices modifiés" not in tx and "valent partout" not in tx and "→" not in tx, "confirmation : plus de section « Exercices modifiés » ni d'avertissement « ces réglages valent partout »")
         ok("séance en cours non enregistrée est conservée" in tx, "confirmation : le brouillon de séance est annoncé conservé")
-        pg.click("button:has-text('Annuler')"); time.sleep(.3)
+        pg.click("#tb-back[aria-label='Retour au résumé']"); time.sleep(.3)   # « ‹ » remplace « Annuler » (lot 3)
         apres = ev("fetch('/api/state').then(r => r.json())")
-        ok(avant == apres and ev("localStorage.getItem('muscu-profil')") is None and "voici ton résumé" in pg.inner_text("#app"), "Annuler : aucune donnée modifiée, pas de profil, retour au résumé")
+        ok(avant == apres and ev("localStorage.getItem('muscu-profil')") is None and pg.locator("#app #qh").inner_text() == "Ton résumé", "« ‹ » (ancien « Annuler ») : aucune donnée modifiée, pas de profil, retour au résumé")
         # confirmation : Remplacer
-        pg.click("button:has-text(\"Générer mon programme\")"); time.sleep(.3); pg.click("button:has-text(\"Remplacer mes programmes\")"); pg.wait_for_selector("text=Ton programme est prêt", timeout=5000)
+        pg.click("button:has-text(\"Générer mon programme\")"); time.sleep(.3); pg.click("button:has-text(\"Remplacer\")"); pg.wait_for_selector("text=Ton programme est prêt", timeout=5000)
         s = ev("fetch('/api/state').then(r => r.json())")
         ok([w["name"] for w in s["workouts"]] == ["Haut du corps", "Bas du corps"] and not {w["id"] for w in s["workouts"]} & {1, 2}, "programmes remplacés par Haut / Bas du corps")
         h = s["sessions"]
@@ -221,8 +221,8 @@ try:
         pg.evaluate("go('accueil')"); time.sleep(.2)
         # Mon profil, Refaire le questionnaire, Quitter
         pg.click("#menu-btn"); time.sleep(.3); ok("Mon profil" in pg.inner_text("#dnav"), "menu : entrée « Mon profil »")
-        pg.click("#dnav >> text=Mon profil"); time.sleep(.3); tx = pg.inner_text("#app")
-        ok("Refaire le questionnaire" in tx and "IMC :" not in tx, "Mon profil : résumé sans détail santé, bouton « Refaire le questionnaire »")
+        pg.click("#dnav >> text=Mon profil"); time.sleep(.3); pg.evaluate(OUVRIR); tx = pg.inner_text("#app")
+        ok("Refaire le questionnaire" in tx and "IMC" not in tx, "Mon profil : résumé sans détail santé, bouton « Refaire le questionnaire »")
         pg.click("button:has-text(\"Refaire le questionnaire\")"); time.sleep(.2)
         ok(pg.input_value("#qin") == "Léa", "refaire : réponses précédentes préremplies")
         pg.click("button:has-text(\"Quitter\")"); time.sleep(.2)
@@ -234,7 +234,7 @@ try:
         with pg.expect_download() as dl: pg.click("text=Télécharger l'export")
         data = json.load(open(dl.value.path()))
         ok(data.get("profil", {}).get("answers", {}).get("sante", {}).get("tension") is False and data["profil"]["version"] == 1, "l'export contient la clé « profil »")
-        ev("localStorage.removeItem('muscu-profil'); localStorage.removeItem('muscu-profil-brouillon')"); pg.reload(); pg.wait_for_selector("#app .card"); time.sleep(.3)
+        ev("localStorage.removeItem('muscu-profil'); localStorage.removeItem('muscu-profil-brouillon')"); pg.reload(); pg.wait_for_selector("#app button:has-text('Commencer')"); time.sleep(.3)
         ok("Bienvenue dans Fonte" in pg.inner_text("#app"), "(profil effacé : questionnaire imposé)")
         pg.click("button:has-text(\"J’ai une sauvegarde\")"); time.sleep(.3)
         pg.fill("#bk", json.dumps(data)); pg.click("button.go:has-text('Importer')"); time.sleep(.8)
@@ -249,14 +249,14 @@ try:
         pg3.evaluate("a => localStorage.setItem('muscu-profil-brouillon', JSON.stringify({version: 1, answers: a, mode: 'q', i: 12, redo: false}))", prof(blessures=[]))
         pg3.reload(); pg3.wait_for_selector("text=Question 13 sur 17")
         bl = lambda: pg3.evaluate("JSON.parse(localStorage.getItem('muscu-profil-brouillon')).answers.blessures")
-        pg3.click("button.qopt:has-text('Genoux')"); pg3.click("button.qopt:has-text('Épaules')")
+        pg3.click("button.qo:has-text('Genoux')"); pg3.click("button.qo:has-text('Épaules')")
         ok(bl() == ["epaules", "genoux"], f"blessures : deux zones cochées ({bl()})")
-        pg3.click("button.qopt:has-text('Aucune')"); ok(bl() == ["aucune"], f"cocher « Aucune » décoche les zones ({bl()})")
-        pg3.click("button.qopt:has-text('Genoux')"); ok(bl() == ["genoux"], f"cocher une zone décoche « Aucune » ({bl()})")
-        ok(pg3.locator("input.qinp").count() == 0, "sans « Autre », pas de champ de texte")
-        pg3.click("button.qopt:has-text('Autre')"); time.sleep(.2)
-        ok(pg3.locator("input.qinp").count() == 1, "« Autre » ouvre le champ de texte libre")
-        pg3.fill("input.qinp", "tendinite au talon"); time.sleep(.1)
+        pg3.click("button.qo:has-text('Aucune')"); ok(bl() == ["aucune"], f"cocher « Aucune » décoche les zones ({bl()})")
+        pg3.click("button.qo:has-text('Genoux')"); ok(bl() == ["genoux"], f"cocher une zone décoche « Aucune » ({bl()})")
+        ok(pg3.locator("#app input[oninput*='typedOther']").count() == 0, "sans « Autre », pas de champ de texte")
+        pg3.click("button.qo:has-text('Autre')"); time.sleep(.2)
+        ok(pg3.locator("#app input[oninput*='typedOther']").count() == 1, "« Autre » ouvre le champ de texte libre")
+        pg3.fill("#app input[oninput*='typedOther']", "tendinite au talon"); time.sleep(.1)
         ok(pg3.evaluate("JSON.parse(localStorage.getItem('muscu-profil-brouillon')).answers.blessures_autre") == "tendinite au talon", "texte libre enregistré")
 
         # ------------------------------------------------------------ IMC caché pour de vrai : IMC 32, « Non, juste mon programme »
@@ -268,10 +268,10 @@ try:
             ok(not vus, f"IMC caché, écran {nom} : aucun de {CACHE} ({vus})"); return t
         t = cache("résumé"); ok("Cardio à faible impact, sans sauts" in t, "IMC caché : l'adaptation est écrite sans sa raison")
         pg3.click("button:has-text('Générer mon programme')"); time.sleep(.3); cache("confirmation")
-        pg3.click("button:has-text('Remplacer mes programmes')"); pg3.wait_for_selector("text=Ton programme est prêt"); cache("« Ton programme est prêt »")
+        pg3.click("button:has-text('Remplacer')"); pg3.wait_for_selector("text=Ton programme est prêt"); cache("« Ton programme est prêt »")
         pg3.evaluate("go('profil')"); time.sleep(.3); cache("« Mon profil »")
         pg3.click("button:has-text('Afficher le détail santé')"); time.sleep(.2)
-        ok("IMC : 32" in pg3.inner_text("#app") and "Obésité modérée" in pg3.inner_text("#app"), "témoin : détail affiché, l'IMC et sa tranche apparaissent")
+        ok("IMC\u00a0: 32" in pg3.inner_text("#app") and "Obésité modérée" in pg3.inner_text("#app"), "témoin : détail affiché, l'IMC et sa tranche apparaissent")
         ok(not errs3, f"aucune erreur JavaScript (blessures, IMC caché) {errs3[:2]}")
 
         # ------------------------------------------------------------ « Garder mes programmes »
@@ -289,8 +289,8 @@ try:
         ok(pg4.locator(".tabbar").is_visible() and "Bienvenue" not in pg4.inner_text("#app"), "garder mes programmes : le questionnaire ne revient plus au lancement")
         pg4.evaluate("go('profil')"); time.sleep(.3); pg4.click("button:has-text('Générer un programme à partir de ce profil')"); time.sleep(.3)
         pg4.click("button:has-text('Générer mon programme')"); time.sleep(.3)
-        ok("Programmes supprimés" in pg4.inner_text("#app"), "Mon profil : générer plus tard passe par la même confirmation")
-        pg4.click("button:has-text('Remplacer mes programmes')"); pg4.wait_for_selector("text=Ton programme est prêt", timeout=5000)
+        ok(pg4.locator("#app #qh").inner_text() == "Remplacer tes programmes\u00a0?" and "seront retirés." in pg4.inner_text("#app"), "Mon profil : générer plus tard passe par la même confirmation")
+        pg4.click("button:has-text('Remplacer')"); pg4.wait_for_selector("text=Ton programme est prêt", timeout=5000)
         s4 = pg4.evaluate("fetch('/api/state').then(r => r.json())")
         ok([w["name"] for w in s4["workouts"]] == ["Séance A", "Séance B"] and pg4.evaluate("JSON.parse(localStorage.getItem('muscu-profil')).program.phase") == 2, "Mon profil : programme généré et appliqué ensuite")
         ok(not errs4, f"aucune erreur JavaScript (garder) {errs4[:2]}")
@@ -300,7 +300,7 @@ try:
         pg2.evaluate("async () => { await api('POST', '/api/sessions', {day: '2026-10-13', workout_id: 2, entries: [{exercise_id: 3, sets: [[30, 10]]}]}); await load(); }")
         pg2.evaluate("a => localStorage.setItem('muscu-profil-brouillon', JSON.stringify({version: 1, answers: a, mode: 'resume', i: 16, redo: false}))", BASE)
         pg2.reload(); pg2.wait_for_selector("text=Générer mon programme"); pg2.click("button:has-text(\"Générer mon programme\")"); time.sleep(.3)
-        pg2.click("button:has-text(\"Remplacer mes programmes\")"); pg2.wait_for_selector("text=Ton programme est prêt", timeout=5000)
+        pg2.click("button:has-text(\"Remplacer\")"); pg2.wait_for_selector("text=Ton programme est prêt", timeout=5000)
         s2 = pg2.evaluate("fetch('/api/state').then(r => r.json())")
         mine = [x for x in s2["sessions"] if x["day"] == "2026-10-13"]
         ok(len(mine) == 1 and mine[0]["workout_id"] is None and mine[0]["workout_name"] == "Séance B" and mine[0]["entries"][0]["sets"] == [[30, 10]], "mode serveur : historique intact, workout_id à NULL (app.py)")

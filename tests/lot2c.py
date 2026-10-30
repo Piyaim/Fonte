@@ -89,18 +89,18 @@ try:
             pg = ctx.new_page(); errs = []
             pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("dialog", lambda d: d.accept())
             pg.clock.set_fixed_time(jour + "T10:00:00")
-            pg.goto(f"http://127.0.0.1:{PORT}/?local=1"); pg.wait_for_selector("#app .card", timeout=8000); time.sleep(.3)
+            pg.goto(f"http://127.0.0.1:{PORT}/?local=1"); pg.wait_for_selector("#app button:has-text('Commencer')", timeout=8000); time.sleep(.3)
             return ctx, pg, errs
         def le(pg, jour, vue="accueil"):
             pg.clock.set_fixed_time(jour + "T10:00:00"); pg.reload(); pg.wait_for_selector("#app .card, #app .hero", timeout=8000)
             pg.evaluate(f"go('{vue}')"); time.sleep(.3)
         def resume(pg, a):
             pg.evaluate("a => localStorage.setItem('muscu-profil-brouillon', JSON.stringify({version: 1, answers: a, mode: 'resume', i: 16, redo: !!localStorage.getItem('muscu-profil')}))", a)
-            pg.reload(); pg.wait_for_selector("#app .card"); pg.evaluate("localStorage.getItem('muscu-profil') && (go('profil'), PROFIL.redo())")   # profil existant : « Reprendre le questionnaire »
+            pg.reload(); pg.wait_for_selector("#app #qh:text-is('Ton résumé'), #app .hero"); pg.evaluate("localStorage.getItem('muscu-profil') && (go('profil'), PROFIL.redo())")   # profil existant : « Reprendre le questionnaire »
             pg.wait_for_selector("button:has-text('Générer mon programme')"); time.sleep(.2)
         def gen(pg, a):
             resume(pg, a); pg.click("button:has-text('Générer mon programme')"); time.sleep(.3)
-            pg.click("button:has-text('Remplacer mes programmes')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
+            pg.click("button:has-text('Remplacer')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
             pg.evaluate("go('accueil')"); time.sleep(.2)
             return pg.evaluate("fetch('/api/state').then(r => r.json())")
         def visible(pg, sel="#app"): return pg.locator(sel).first.evaluate(VISIBLE.replace("([el, sansBoutons])", "(el)").replace("sansBoutons", "false"))
@@ -108,8 +108,12 @@ try:
         # =============================================================== Bienvenue, résumé, confirmation
         ctx, pg, errs = page(J(0))
         t = visible(pg)
-        ok("17 questions, 3 minutes" in t and "Commencer" in t and "J’ai une sauvegarde" in t and "Ce n’est pas un avis médical." in t, f"Bienvenue : phrase, deux boutons, ligne d'avertissement ({mots(t)} mots)")
-        ok(mots(t) <= 35, f"Bienvenue : {mots(t)} mots visibles (35 au plus)")
+        # lot 3 (décision de Georgio, 30/10/2026) : l'avertissement médical complet est affiché ; les 35 mots se comptent sans lui
+        AVERT = ("Cette appli ne remplace pas un avis médical. En cas de doute, consulte un médecin.", "Arrête l’exercice en cas de douleur vive, de vertige ou de gêne à la poitrine.")
+        ok("17 questions, 3 minutes" in t and "Commencer" in t and "J’ai une sauvegarde" in t and all(t.count(x) == 1 for x in AVERT), f"Bienvenue : phrase, deux boutons, avertissement médical complet ({mots(t)} mots)")
+        sans = t
+        for x in AVERT: sans = sans.replace(x, "", 1)
+        ok(mots(sans) <= 35, f"Bienvenue : {mots(sans)} mots visibles hors avertissement médical (35 au plus)")
         resume(pg, prof(blessures=["genoux"]))
         t = visible(pg)
         ok("ne remplace pas un avis médical" in t and "Arrête l’exercice en cas de douleur vive, de vertige ou de gêne à la poitrine." in t, "résumé : avertissement médical visible, hors repli")
@@ -120,10 +124,12 @@ try:
         details_fermes(pg, "résumé")
         pg.click("button:has-text('Générer mon programme')"); time.sleep(.3)
         t = visible(pg)
-        ok(all(pg.locator(f"#app button:has-text('{x}')").is_visible() for x in ("Remplacer mes programmes", "Garder mes programmes", "Annuler")), "confirmation : les trois boutons restent visibles")
-        ok("Développé incliné haltères" in t and " × " not in t and "repos" not in t, "confirmation : noms d'exercices visibles, réglages dans « Détails »")
+        # lot 3 : « Annuler » devient le « ‹ » de la barre du haut ; les noms d'exercices passent dans « Détails » (« n exercices » visible)
+        ok(all(pg.locator(s).is_visible() for s in ("#app button:text-is('Remplacer')", "#app button:text-is('Garder mes programmes')", "#tb-back[aria-label='Retour au résumé']")), "confirmation : les trois boutons restent visibles (Remplacer, Garder mes programmes, ‹)")
+        ok(re.search(r"\b\d+ exercices\b", t) and "Développé incliné haltères" not in t and " × " not in t and "repos" not in t, "confirmation : nombre d'exercices visible, noms et réglages dans « Détails »")
         details_fermes(pg, "confirmation")
-        pg.click("button:has-text('Annuler')"); time.sleep(.2)
+        pg.evaluate(OUVRIR); ok("Développé incliné haltères (" in pg.inner_text("#app"), "confirmation : noms d'exercices et réglages dans « Détails »")
+        pg.click("#tb-back[aria-label='Retour au résumé']"); time.sleep(.2)
         resume(pg, prof(sante=dict(NON, coeur=True)))
         t = visible(pg)
         ok("Consulte un médecin avant de commencer." in t, "santé « Oui » : « Consulte un médecin » visible, hors repli")
@@ -225,7 +231,7 @@ try:
         ctx, pg, errs, wa, wb = jusqua_phase3(A2)
         LIB = pg.evaluate("PROFIL._.LIB")
         t = pg.inner_text("[data-offer=phase]")
-        ok("Phase 3 prête" in t and "Une 3e séance s’ajoute : puissance et cardio." in t, f"carte de phase 3 : « Phase 3 prête », « Une 3e séance s’ajoute : puissance et cardio. » {t[:90]!r}")
+        ok("Phase 3 prête" in t and "Une 3e séance s’ajoute\u00a0: puissance et cardio." in t, f"carte de phase 3 : « Phase 3 prête », « Une 3e séance s’ajoute : puissance et cardio. » {t[:90]!r}")
         pg.evaluate(OUVRIR); d = pg.inner_text("[data-offer=phase] details")
         lignes = [l.strip() for l in d.splitlines() if l.strip() and l.strip() != "Détails"]
         n_c = pg.locator("[data-offer=phase] details ul.qnames li").count()
@@ -312,7 +318,7 @@ try:
         s = gen(pg, prof(niveau="avance", seances=5, jours=["lun", "mar", "mer", "jeu", "ven"]))
         ok([w["name"] for w in s["workouts"]] == ["Poussée", "Tirage", "Jambes", "Haut du corps", "Bas du corps"], "Avancé, 5 séances : rien ne change, pas de séance C")
         n0 = len(s["workouts"]); resume(pg, prof(niveau="avance", seances=2, jours=["lun", "jeu"])); pg.click("button:has-text('Générer mon programme')"); time.sleep(.3)
-        ok(pg.locator("#app h2:has-text('Séance C')").count() == 1, "confirmation d'un profil Avancé : la séance C est annoncée")
+        ok(pg.locator("#app .lrow b:has-text('Séance C')").count() == 1, "confirmation d'un profil Avancé : la séance C est annoncée")
         pg.click("button:has-text('Garder mes programmes')"); time.sleep(.4)
         ok(len(pg.evaluate(ETAT)["workouts"]) == n0, "« Garder mes programmes » : aucune séance C ajoutée")
         ok(not errs, f"aucune erreur JavaScript (Avancé) {errs[:2]}"); ctx.close()

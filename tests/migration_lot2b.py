@@ -63,8 +63,8 @@ try:
 
         # ------------------------------------------------------------ 1. données créées par le code du lot 2A
         srv = serveur(os.path.join(OLD, "server")); ctx = navigateur(); errs = []
-        pg = ouvrir(ctx, "local", errs, "#app .card"); pg.evaluate(GENERER, REPONSES); pg.reload(); pg.wait_for_selector("button:has-text('Générer mon programme')")
-        pg.click("button:has-text('Générer mon programme')"); time.sleep(.3); pg.click("button:has-text('Remplacer mes programmes')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
+        pg = ouvrir(ctx, "local", errs, "#app button:has-text('Commencer')"); pg.evaluate(GENERER, REPONSES); pg.reload(); pg.wait_for_selector("button:has-text('Générer mon programme')")
+        pg.click("button:has-text('Générer mon programme')"); time.sleep(.3); pg.click("button:has-text('Remplacer')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
         jour = pg.evaluate("today()"); pg.evaluate(REMPLIR); time.sleep(.5); pg.close()
         pg = ouvrir(ctx, "serveur", errs)
         pg.evaluate("""async () => { const [a] = WO; await api('POST', '/api/sessions', {day: '2026-10-13', workout_id: a.id, entries: [{exercise_id: a.items[0], sets: [[30, 10]], effort: 3}]});
@@ -107,7 +107,7 @@ try:
 
         # ------------------------------------------------------------ 2 bis. export du lot 2A (profil sans les champs du lot 2B) importé dans le code actuel
         srv = serveur(os.path.join(ROOT, "server"), os.path.join(TMP, "data3", "suivi.db")); ctx = navigateur(os.path.join(TMP, "navigateur3"))
-        pg = ouvrir(ctx, "local", errs, "#app .card"); pg.click("button:has-text('J’ai une sauvegarde')"); time.sleep(.3)
+        pg = ouvrir(ctx, "local", errs, "#app button:has-text('Commencer')"); pg.click("button:has-text('J’ai une sauvegarde')"); time.sleep(.3)
         pg.fill("#bk", json.dumps(a["export"])); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(1500)
         ok(pg.evaluate("PROFIL.coach().phase") == 1 and pg.evaluate("JSON.parse(localStorage.getItem('muscu-profil')).program.ids").__len__() == 2,
            "export du lot 2A importé dans le code actuel : programmes suivis retrouvés tout de suite, phase 1 active")
@@ -115,7 +115,7 @@ try:
 
         # ------------------------------------------------------------ 3. export du code actuel -> code du lot 2A (navigateur et base neufs)
         srv = serveur(os.path.join(OLD, "server"), os.path.join(TMP, "data2", "suivi.db")); ctx = navigateur(os.path.join(TMP, "navigateur2")); errs2 = []
-        pg = ouvrir(ctx, "local", errs2, "#app .card")
+        pg = ouvrir(ctx, "local", errs2, "#app button:has-text('Commencer')")
         ok("Bienvenue dans Fonte" in pg.inner_text("#app"), "(code du lot 2A, appareil neuf : questionnaire affiché)")
         pg.click("button:has-text('J’ai une sauvegarde')"); time.sleep(.3); pg.fill("#bk", json.dumps(nouvel_export)); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(1500)
         pg.reload(); pg.wait_for_selector(".tabbar button", timeout=8000); time.sleep(.4)

@@ -3,9 +3,11 @@
 # sans réglage dans « Libre réglage ». Chaque séance affiche le sien, le conseil de charge et le minuteur l'utilisent,
 # l'écran Programmes permet de régler et de revenir aux valeurs de l'exercice, le catalogue ne bouge pas.
 # Mode local et mode serveur.
+# Lot 3 : l'écran Programmes règle avec − et + dans la ligne ouverte (plus de « Régler » ni de « Valider ») et garde les
+# changements en attente jusqu'à « Enregistrer ». Témoin : FONTE_ROOT=copie du code dont « Enregistrer » oublie les réglages.
 #   python3 tests/reglages_seance.py
 import json, os, subprocess, sys, time
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5116
+ROOT = os.environ.get("FONTE_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5116
 env = dict(os.environ, DB_PATH="/tmp/reglages.db", PYTHONDONTWRITEBYTECODE="1")
 for f in ("/tmp/reglages.db", "/tmp/reglages.db-wal", "/tmp/reglages.db-shm"):
     if os.path.exists(f): os.remove(f)
@@ -30,6 +32,13 @@ CARTE = "id => [...document.querySelectorAll('#app .card')].find(c => c.querySel
 def carte(pg, id): return pg.evaluate(f"id => {{ const c = ({CARTE})(id); if (c) c.querySelectorAll('details').forEach(d => d.open = true); return c ? c.innerText : ''; }}", id)
 def conseil(t): return next((l for l in t.splitlines() if l.startswith("Conseil")), "")
 def lignes(pg, id): return pg.evaluate(f"id => ({CARTE})(id).querySelectorAll('.frow input[id$=\"l\"]').length", id)
+def ligne(pg, nom): return pg.locator(".pitem", has_text=nom).first   # une ligne de l'écran Programmes
+def ouvrir_reglage(pg, nom):   # touche la ligne : le réglage s'ouvre dessous
+    ligne(pg, nom).locator("button.lrow").click(); time.sleep(.2); return ligne(pg, nom).locator(".pedit")
+def valeurs(pg): return [pg.inner_text("#c-sets"), pg.input_value("#c-min"), pg.input_value("#c-max"), pg.inner_text("#c-rest")]
+def regler(pg, avant, apres, moins, plus, pas=1):   # bouton − ou + autant de fois qu'il faut (pas : 1 série, 15 s de repos)
+    assert (apres - avant) % pas == 0, (avant, apres, pas)
+    for _ in range(abs(apres - avant) // pas): pg.click(f"button[aria-label='{plus if apres > avant else moins}']"); time.sleep(.05)
 def seance(pg, wid): pg.evaluate(f"go('seance'); pickWorkout({wid}); exitFocus()"); time.sleep(.3)   # Aperçu : toute la séance en liste
 
 try:
@@ -44,18 +53,26 @@ try:
 
             # ---------------------------------------------------- écran Programmes : régler « Force » à 4 × 5, repos 180 s
             pg.evaluate(f"go('programmes'); selProg({d['force']})"); time.sleep(.3)
-            li = pg.locator(".li", has_text=x["name"]).first
-            ok("propre à ce programme" not in li.inner_text(), f"{mode} · Programmes : sans réglage, l'exercice montre les valeurs du catalogue ({li.inner_text().replace(chr(10), ' ')[:70]!r})")
-            li.locator("button:has-text('Régler')").click(); time.sleep(.2)
-            ok(pg.locator(".cfg").count() == 1 and f"Valeurs de l’exercice : {x['sets']} × " in pg.inner_text(".cfg"), f"{mode} · « Régler » ouvre le réglage, avec les valeurs de l'exercice en rappel")
-            pg.fill("#c-sets", "4"); pg.fill("#c-min", "5"); pg.fill("#c-max", "5"); pg.fill("#c-rest", "180")
-            pg.click(".cfg button:has-text('Valider')"); time.sleep(.2)
-            ok("Modifications non enregistrées" in pg.inner_text("#app"), f"{mode} · réglage validé : modifications signalées non enregistrées")
-            pg.click("button:has-text('Enregistrer le programme')"); time.sleep(.6)
+            cat_ligne = pg.evaluate(f"targetLine(EX[{x['id']}])")
+            li = ligne(pg, x["name"]).locator("button.lrow").inner_text()
+            ok(cat_ligne in li and "4 × 5" not in li, f"{mode} · Programmes : sans réglage, l'exercice montre les valeurs du catalogue ({li.replace(chr(10), ' ')[:70]!r})")
+            ed = ouvrir_reglage(pg, x["name"])
+            ok(ed.count() == 1 and "Valeurs de l’exercice." in ed.inner_text() and valeurs(pg) == [str(x["sets"]), str(x["target_min"]), str(x["target_max"]), f"{x['rest']}s"],
+               f"{mode} · toucher la ligne ouvre le réglage, avec les valeurs de l'exercice ({valeurs(pg)})")
+            regler(pg, x["sets"], 4, "Une série de moins", "Une série de plus"); time.sleep(.5)
+            ok(pg.evaluate(f"WO.find(w => w.id === {d['force']}).settings") == {} and pg.locator(".pedit").count() == 1, f"{mode} · premier changement : rien n'est enregistré, le réglage reste ouvert")
+            pg.fill("#c-min", "5"); pg.press("#c-min", "Tab"); time.sleep(.1); pg.fill("#c-max", "5"); pg.press("#c-max", "Tab"); time.sleep(.1)
+            regler(pg, x["rest"], 180, "15 secondes de moins", "15 secondes de plus", 15)
+            ok("Pas encore enregistré" in pg.inner_text(".actbar") and valeurs(pg) == ["4", "5", "5", "180s"], f"{mode} · réglage changé : modifications signalées non enregistrées ({valeurs(pg)})")
+            ok(pg.evaluate(f"WO.find(w => w.id === {d['force']}).settings") == {}, f"{mode} · rien n'est enregistré avant « Enregistrer »")
+            pg.click(".actbar button:has-text('Enregistrer')"); time.sleep(.6)
             w = pg.evaluate(f"WO.find(w => w.id === {d['force']})")
             ok(w["settings"] == {str(x["id"]): {"sets": 4, "target_min": 5, "target_max": 5, "rest": 180}}, f"{mode} · réglage de « Force » enregistré ({w['settings']})")
-            li = pg.locator(".li", has_text=x["name"]).first.inner_text()
-            ok("4 × 5" in li and "repos 180 s" in li and "propre à ce programme" in li, f"{mode} · Programmes : la ligne montre 4 × 5, repos 180 s, propre à ce programme")
+            li = ligne(pg, x["name"]).locator("button.lrow").inner_text()
+            ed = ouvrir_reglage(pg, x["name"]).inner_text()
+            ok("4 × 5 · repos 180 s" in li and "Pour ce programme seulement." in ed and "Valeurs de l’exercice." not in ed and pg.locator(".pedit button:text-is('Valeurs de l’exercice')").count() == 1,
+               f"{mode} · Programmes : la ligne montre 4 × 5, repos 180 s, propre à ce programme (bouton « Valeurs de l’exercice »)")
+            ouvrir_reglage(pg, x["name"])
 
             # ---------------------------------------------------- écran Séance : chaque programme affiche le sien
             seance(pg, d["force"]); t = carte(pg, x["id"])
@@ -77,13 +94,14 @@ try:
             pg.evaluate("exitFocus(); TM(0)")
             # fiche exercice
             pg.evaluate(f"go('exercices'); openEx({x['id']})"); time.sleep(.3)
-            t = pg.locator(".card", has_text="Dans mes programmes").inner_text()
-            ok("Force (4 × 5, repos 180 s)" in t and "Volume (3 × 12, repos 60 s)" in t and "Libre réglage" in t and "Libre réglage (" not in t, f"{mode} · fiche exercice : réglage de chaque programme ({t!r})")
+            t = pg.locator(".card", has_text="Dans tes programmes").inner_text()
+            ok("Force\n4 × 5 · repos 180 s" in t and "Volume\n3 × 12 · repos 60 s" in t and f"Libre réglage\n{cat_ligne}" in t, f"{mode} · fiche exercice : réglage de chaque programme, valeurs du catalogue pour « Libre réglage » ({t!r})")
 
             # ---------------------------------------------------- retour aux valeurs de l'exercice
             pg.evaluate(f"go('programmes'); selProg({d['force']})"); time.sleep(.3)
-            pg.locator(".li", has_text=x["name"]).first.locator("button:has-text('Régler')").click(); time.sleep(.2)
-            pg.click("button:has-text('Revenir aux valeurs de l’exercice')"); pg.click("button:has-text('Enregistrer le programme')"); time.sleep(.6)
+            ouvrir_reglage(pg, x["name"]); pg.click(".pedit button:text-is('Valeurs de l’exercice')"); time.sleep(.2)
+            ok(valeurs(pg) == [str(x["sets"]), str(x["target_min"]), str(x["target_max"]), f"{x['rest']}s"], f"{mode} · « Valeurs de l’exercice » remet les valeurs du catalogue dans le réglage")
+            pg.click(".actbar button:has-text('Enregistrer')"); time.sleep(.6)
             ok(pg.evaluate(f"WO.find(w => w.id === {d['force']}).settings") == {}, f"{mode} · « Revenir aux valeurs de l'exercice » : réglage effacé")
             seance(pg, d["force"]); t = carte(pg, x["id"])
             ok(f"{x['sets']} × {cible}" in t and "propre à ce programme" not in t, f"{mode} · Séance « Force » : de nouveau les valeurs du catalogue")

@@ -673,7 +673,7 @@
     if (profile() && !['q', 'resume'].includes(P.mode)) P.mode = 'home';
   }
   function title() {
-    return {intro: 'Bienvenue', q: 'Questionnaire', resume: 'Résumé', confirm: 'Confirmation', done: 'Ton programme'}[P.mode] || (profile() ? 'Mon profil' : 'Bienvenue');
+    return {intro: 'Bienvenue', q: 'Questionnaire', resume: 'Questionnaire', confirm: 'Questionnaire', done: 'Ton programme'}[P.mode] || (profile() ? 'Mon profil' : 'Bienvenue');
   }
 
   /* ---------- saisies */
@@ -796,52 +796,54 @@
   }
 
   /* ------------------------------------------------------------------ écrans */
+  /* lot 3 : choix à l'encre (bord et coche), « Suivant » dans la barre sous le pouce, « ‹ » de la barre du haut = question précédente */
+  const CHK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13c2 1 4 3 5 5 3-6 7-10 11-12"/></svg>';
   function opt(on, label, onclick, multi, extra) {
-    return `<button class="qopt${on ? ' on' : ''}" onclick="${onclick}" aria-pressed="${on}"${extra || ''}><span class="qck${multi ? ' qsq' : ''}" aria-hidden="true">${on ? '✓' : ''}</span><span>${esc(label)}</span></button>`;
+    return `<button class="qo${multi ? ' multi' : ''}" onclick="${onclick}" aria-pressed="${on}"${extra || ''}><span class="mk">${CHK}</span><span>${esc(label)}</span></button>`;
   }
+  const scrib = w => `<svg class="scrib" style="width:${w}px" viewBox="0 0 150 12" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" aria-hidden="true"><path d="M3 8C26 4 52 3 79 5s48 3 68-1"/></svg>`;
   function vIntro() {
-    return `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">Bienvenue dans Fonte</h2>
-      <p>${QS.length} questions, 3 minutes, pour un programme fait pour toi.</p>
-      <button class="go" onclick="PROFIL.start()">Commencer</button>
-      <button class="sm w" onclick="go('donnees')">J’ai une sauvegarde</button>
-      <p class="m">Tes réponses restent sur ce téléphone. Ce n’est pas un avis médical.</p></div>`;
+    return `<div class="l3"><img class="logo" src="/static/icons/logo-${window.ACCENT || 'orange'}.svg" alt=""><h1 id="qh" tabindex="-1" class="title">Bienvenue dans Fonte</h1>${scrib(150)}
+      <p class="lead">${QS.length} questions, 3 minutes, pour un programme fait pour toi.</p><p class="m" style="margin-top:8px">Tes réponses restent sur ce téléphone.</p>${WARN}</div>
+      <div class="actbar col"><button class="btn btn-p" onclick="PROFIL.start()">Commencer</button><button class="btn-t" style="align-self:center" onclick="go('donnees')">J’ai une sauvegarde</button></div>`;
   }
+  const nSante = a => SANTE.filter(([k]) => a.sante && typeof a.sante[k] === 'boolean').length;
   function vQuestion() {
     const i = Math.min(D.i || 0, QS.length - 1), q = QS[i], a = D.answers;
-    let h = `<div class="qprog"><span class="m">Question ${i + 1} sur ${QS.length}</span><div class="pbar" role="progressbar" aria-label="Progression du questionnaire" aria-valuemin="1" aria-valuemax="${QS.length}" aria-valuenow="${i + 1}"><i style="width:${(i + 1) / QS.length * 100}%"></i></div></div>`;
-    h += `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">${esc(q.q)}</h2>`;
+    let h = `<div class="l3"><div class="qcount num">Question ${i + 1} sur ${QS.length}</div><div class="qbar" role="progressbar" aria-label="Progression du questionnaire" aria-valuemin="1" aria-valuemax="${QS.length}" aria-valuenow="${i + 1}"><i style="width:${(i + 1) / QS.length * 100}%"></i></div>`;
+    h += `<h1 id="qh" tabindex="-1" class="q">${esc(q.q)}</h1>`;
     let hint = q.h || '';
     if (q.k === 'jours') hint = `Au moins ${a.seances || 1} jour${a.seances > 1 ? 's' : ''}.`;
-    if (hint) h += `<p class="m">${esc(hint)}</p>`;
-    if (q.t === 'text') h += `<label class="qlab">Prénom<input id="qin" class="qinp" value="${esc(a[q.k] || '')}" maxlength="30" autocomplete="given-name" oninput="PROFIL.typed(this.value)" onkeydown="if(event.key==='Enter')PROFIL.next()"></label>`;
+    if (hint) h += `<p class="qh">${esc(hint)}</p>`;
+    if (q.t === 'text') h += `<label class="qfld"><span class="sr">Prénom</span><input id="qin" class="qinp" value="${esc(a[q.k] || '')}" maxlength="30" placeholder="Prénom" autocomplete="given-name" oninput="PROFIL.typed(this.value)" onkeydown="if(event.key==='Enter')PROFIL.next()"></label>`;
     if (q.t === 'num') {
       const n = parseNum(a[q.k]);
-      h += `<label class="qlab">${esc(q.s)} (${q.unit})<span class="qnum"><input id="qin" class="qinp" value="${esc(a[q.k] ?? '')}" inputmode="${q.int ? 'numeric' : 'decimal'}" autocomplete="off" oninput="PROFIL.typed(this.value)" onkeydown="if(event.key==='Enter')PROFIL.next()" aria-describedby="qerr"><b>${q.unit}</b></span></label>`;
+      h += `<div class="qfld"><input id="qin" class="qinp" value="${esc(a[q.k] ?? '')}" inputmode="${q.int ? 'numeric' : 'decimal'}" autocomplete="off" aria-label="${esc(q.s)} en ${q.unit}" oninput="PROFIL.typed(this.value)" onkeydown="if(event.key==='Enter')PROFIL.next()" aria-describedby="qerr"><span>${q.unit}</span></div>`;
       if (q.k === 'age') h += `<div id="qlive">${n >= 16 && n < 18 ? MINOR_WARN : ''}</div>`;
     }
-    if (q.t === 'one') h += `<div role="radiogroup" aria-labelledby="qh">${q.o.map((o, j) => opt(a[q.k] === o[0], o[1], `PROFIL.pick(${j})`, false, ' role="radio" aria-checked="' + (a[q.k] === o[0]) + '"')).join('')}</div>`;
+    if (q.t === 'one') h += `<div class="opts" role="group" aria-labelledby="qh">${q.o.map((o, j) => opt(a[q.k] === o[0], o[1], `PROFIL.pick(${j})`, false)).join('')}</div>`;
     if (q.t === 'multi') {
       const l = a[q.k] || [], o2 = q.k === 'objectifs2' ? q.o.filter(o => o[0] !== a.objectif) : q.o;
-      h += `<div role="group" aria-labelledby="qh">${o2.map(o => opt(l.includes(o[0]), o[1], `PROFIL.tog(${q.o.indexOf(o)})`, true)).join('')}</div>`;
-      if (q.k === 'blessures' && l.includes('autre')) h += `<label class="qlab" style="margin-top:10px">Précise si tu veux (facultatif)<input class="qinp" value="${esc(a.blessures_autre || '')}" maxlength="200" oninput="PROFIL.typedOther(this.value)"></label>`;
+      h += `<div class="opts" role="group" aria-labelledby="qh">${o2.map(o => opt(l.includes(o[0]), o[1], `PROFIL.tog(${q.o.indexOf(o)})`, true)).join('')}</div>`;
+      if (q.k === 'blessures' && l.includes('autre')) h += `<label class="fld" style="margin-top:12px"><span>Précise si tu veux <small>· facultatif</small></span><input class="inp" value="${esc(a.blessures_autre || '')}" maxlength="200" oninput="PROFIL.typedOther(this.value)"></label>`;
     }
-    if (q.t === 'sante') {
+    if (q.t === 'sante') {   // aucune réponse cochée d'avance ; « Suivant » inactif tant que les 7 questions n'ont pas de réponse
       const s = a.sante || {};
-      h += SANTE.map(([k, t]) => `<div class="qyn"><span>${esc(t)}</span><div class="qynb" role="group" aria-label="${esc(t)}">
-        <button class="${s[k] === true ? 'on' : ''}" onclick="PROFIL.yn('${k}',true)" aria-pressed="${s[k] === true}">Oui</button>
-        <button class="${s[k] === false ? 'on' : ''}" onclick="PROFIL.yn('${k}',false)" aria-pressed="${s[k] === false}">Non</button></div></div>`).join('');
+      h += `<div class="card" style="margin-top:20px;padding:4px 16px">${SANTE.map(([k, t]) => `<div class="sq"><p>${esc(t)}</p><div class="seg" role="group" aria-label="${esc(t)}">
+        <button aria-pressed="${s[k] === true}" onclick="PROFIL.yn('${k}',true)">Oui</button><button aria-pressed="${s[k] === false}" onclick="PROFIL.yn('${k}',false)">Non</button></div></div>`).join('')}</div>`;
       if (SANTE.some(([k]) => s[k] === true)) h += SANTE_WARN;
     }
     if (q.t === 'eviter') {
       const ex = Object.values(A().EX()).filter(e => !e.archived && LIB[e.slug]), l = a.eviter || [], grps = [...new Set(ex.map(e => e.grp))];
-      h += `<p class="m">${l.length ? l.length + ' exercice' + (l.length > 1 ? 's' : '') + ' écarté' + (l.length > 1 ? 's' : '') : 'Aucun exercice écarté.'}</p>`;
-      h += grps.map(g => `<h3>${esc(g)}</h3><div class="qchips">${ex.filter(e => e.grp === g).sort((x, y) => x.name.localeCompare(y.name, 'fr')).map(e =>
-        `<button class="qchip${l.includes(e.slug) ? ' on' : ''}" onclick="PROFIL.togEv('${e.slug}')" aria-pressed="${l.includes(e.slug)}">${esc(e.name)}</button>`).join('')}</div>`).join('');
+      h += `<p class="zinfo">${l.length ? l.length + ' exercice' + (l.length > 1 ? 's' : '') + ' écarté' + (l.length > 1 ? 's' : '') : 'Aucun exercice écarté.'}</p>`;
+      h += grps.map(g => `<h3 class="gh">${esc(g)}</h3><div class="chips">${ex.filter(e => e.grp === g).sort((x, y) => x.name.localeCompare(y.name, 'fr')).map(e =>
+        `<button class="chip qchip" onclick="PROFIL.togEv('${e.slug}')" aria-pressed="${l.includes(e.slug)}">${l.includes(e.slug) ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>' : ''}${esc(e.name)}</button>`).join('')}</div>`).join('');
     }
     h += `<p id="qerr" class="qerr" role="alert">${esc(P.err)}</p>`;
-    h += `<div class="qnav"><button class="sm" onclick="PROFIL.back()">${P.ret ? 'Annuler' : '‹ Retour'}</button><button class="go" onclick="PROFIL.next()">${P.ret ? 'Valider' : i === QS.length - 1 ? 'Voir le résumé' : 'Suivant'}</button></div></div>`;
-    if (D.redo && !P.ret) h += `<button class="sm w" onclick="PROFIL.quit()">Quitter et garder mes réponses</button>`;
-    return h;
+    if (D.redo && !P.ret) h += `<button class="btn-t" style="margin:8px 0 0 -8px" onclick="PROFIL.quit()">Quitter et garder mes réponses</button>`;
+    const lab = P.ret ? 'Valider' : i === QS.length - 1 ? 'Voir le résumé' : 'Suivant';
+    if (q.t === 'sante') { const n = nSante(a); return h + `</div><div class="actbar"><span class="info num">${n}\u00a0sur 7</span><button class="btn btn-p" id="qnext" onclick="PROFIL.next()" ${n < 7 ? 'disabled' : ''}>${lab}</button></div>`; }
+    return h + `</div><div class="actbar"><button class="btn btn-p" id="qnext" onclick="PROFIL.next()">${lab}</button></div>`;
   }
   // « Ton programme » en 3 puces au plus ; les messages de blessure restent visibles ; le reste va dans « Détails »
   const STRUCT_SHORT = {2: 'A et B en alternance', 3: 'A, B, A puis B, A, B', 4: 'haut et bas du corps, 2 fois chacun', 5: 'poussée, tirage, jambes, haut, bas'};
@@ -879,34 +881,46 @@
   }
   function vResume() {
     const a = D.answers, ok = !QS.some(q => check(q, a)), x = ok ? context(a) : null;
-    let h = `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">${a.prenom ? esc(String(a.prenom).trim()) + ', voici ton résumé' : 'Voici ton résumé'}</h2><p class="m">Vérifie, puis génère ton programme.</p></div>`;
+    let h = `<div class="l3"><section><h1 id="qh" tabindex="-1" class="title">Ton résumé</h1>${scrib(120)}<p class="lead">${a.prenom ? esc(String(a.prenom).trim()) + ', vérifie' : 'Vérifie'} puis génère ton programme.</p></section>`;
+    if (x) {
+      const wk = x.phase === 1 ? (a.niveau === 'debutant' ? 2 : 4) : 0;
+      h += `<div class="sum"><div><b>${a.seances}</b><span>séances par semaine</span></div><div><b>${a.duree}\u00a0min</b><span>par séance</span></div><div><b>${wk ? wk + '\u00a0sem.' : 'Phase ' + x.phase}</b><span>${wk ? 'de phase 1' : 'dès le début'}</span></div></div>`;
+    }
     if (x && x.sante) h += SANTE_WARN;
     if (x && x.minor) h += MINOR_WARN;
     if (ok) { h += programPreview(plan(a, phaseFor(a))); h += detailToggle(a.detail === 'oui'); if (a.detail === 'oui') h += healthBlock(a); }
     h += WARN + answersHtml(a, true);
-    h += ok ? `<button class="go" onclick="PROFIL.generate()">Générer mon programme</button>` : `<p class="qerr">Complète les réponses marquées avant de générer le programme.</p><button class="go" onclick="PROFIL.generate()">Compléter</button>`;
-    if (D.redo) h += `<button class="sm w" onclick="PROFIL.quit()">Quitter et garder mes réponses</button>`;
-    return h;
+    if (!ok) h += `<p class="qerr">Complète les réponses marquées avant de générer le programme.</p>`;
+    if (D.redo) h += `<button class="btn-t" style="margin:8px 0 0 -8px" onclick="PROFIL.quit()">Quitter et garder mes réponses</button>`;
+    return h + `</div><div class="actbar"><button class="btn btn-p" onclick="PROFIL.generate()">${ok ? 'Générer mon programme' : 'Compléter'}</button></div>`;
   }
   function vConfirm() {
-    const pl = P.plan, WO = A().WO(), dr = A().pendingDraft();
-    let h = `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">Remplacer tes programmes ?</h2><p>Rien ne change tant que tu ne confirmes pas.</p>`
-      + `<p class="m">${WO.length ? 'Programmes supprimés : ' + esc(WO.map(w => w.name).join(', ')) + '.' : 'Aucun programme à supprimer.'}</p>`
-      + det(`${A().SESS().length ? '<p class="m">Ton historique de séances reste intact : chaque séance passée garde son nom.</p>' : ''}${dr ? '<p class="m">Ta séance en cours non enregistrée est conservée.</p>' : ''}`
+    const pl = P.plan, WO = A().WO(), dr = A().pendingDraft(), names = WO.map(w => w.name);
+    const list = n => n.length < 2 ? n.join('') : n.slice(0, -1).join(', ') + ' et ' + n[n.length - 1];
+    let h = `<div class="l3"><section><h1 id="qh" tabindex="-1" class="title">Remplacer tes programmes ?</h1>${scrib(150)}<p class="lead">Rien ne change tant que tu ne confirmes pas.</p></section>`;
+    h += `<section class="card"><h2>Tes programmes actuels</h2><p>${names.length ? esc(list(names)) + (names.length > 1 ? ' seront retirés.' : ' sera retiré.') : 'Aucun programme à retirer.'}</p><p class="m">Ton historique reste le même.</p>`
+      + det(`${A().SESS().length ? '<p class="m">Chaque séance passée garde son nom.</p>' : ''}${dr ? '<p class="m">Ta séance en cours non enregistrée est conservée.</p>' : ''}`
         + '<p class="m">Séries, répétitions et repos valent dans chaque nouveau programme seulement : tes exercices ne sont pas modifiés.</p>'
-        + '<p class="m">« Garder mes programmes » enregistre ton profil sans toucher à tes programmes ni à tes exercices. Tu pourras générer le programme plus tard depuis « Mon profil ».</p>') + '</div>';
-    h += pl.workouts.map(w => workoutCard(w, pl.x)).join('');
+        + '<p class="m">« Garder mes programmes » enregistre ton profil sans toucher à tes programmes. Tu pourras générer le programme plus tard depuis « Mon profil ».</p>'
+        + '<p class="m">« ‹ » revient au résumé sans rien enregistrer.</p>') + '</section>';
+    h += `<section class="card"><h2>Tes nouveaux programmes</h2>${pl.workouts.map(w => `<div class="lrow" style="cursor:default"><div class="d"><b>${esc(w.name)}${w.type ? ' : ' + TYPE_TXT[w.type] : ''}</b><span>${w.items.length} exercices</span></div></div>`).join('')}`
+      + det(pl.workouts.map(w => `<p><b>${esc(w.name)}\u00a0:</b> ${w.items.map(p => esc(pl.x.ex[p.slug].name + ' (' + prmTxt(pl.x.ex[p.slug], w.prm[p.slug]) + ')')).join(', ')}</p>`).join('')) + '</section>';
     const miss = missingTxt(pl);
+    h += adaptations(pl).filter(isAlert).map(t => `<p class="qmiss">${esc(t)}</p>`).join('');
     if (miss.length) h += `<p class="qmiss">Manquants : ${esc(miss.join(' ; '))}.</p>`;
-    h += `<button class="go" onclick="PROFIL.apply()" ${P.busy ? 'disabled' : ''}>${P.busy ? 'Remplacement en cours…' : 'Remplacer mes programmes'}</button><button class="sm w" onclick="PROFIL.keep()" ${P.busy ? 'disabled' : ''}>Garder mes programmes</button><button class="sm w" onclick="PROFIL.cancel()" ${P.busy ? 'disabled' : ''}>Annuler</button>`;
-    return h;
+    return h + `</div><div class="actbar col"><button class="btn btn-p" onclick="PROFIL.apply()" ${P.busy ? 'disabled' : ''}>${P.busy ? 'Remplacement en cours…' : 'Remplacer'}</button><button class="btn-t" style="align-self:center" onclick="PROFIL.keep()" ${P.busy ? 'disabled' : ''}>Garder mes programmes</button></div>`;
   }
   function currentPlan() { const o = profile(); return filled(o) ? plan(o.answers, phaseFor(o.answers)) : null; }
   function vDone() {
-    const o = profile(), pl = currentPlan();
-    let h = `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">Ton programme est prêt</h2><p>${o && o.answers.prenom ? esc(o.answers.prenom) + ', l’accueil' : 'L’accueil'} te propose chaque jour la bonne séance.</p></div>`;
+    const o = profile(), pl = currentPlan(), w = A().WO()[0], n = w ? w.items.filter(id => A().EX()[id]).length : 0;
+    let h = `<div class="l3"><section><div class="done" aria-hidden="true">${CHK}</div><h1 id="qh" tabindex="-1" class="title">Ton programme est prêt</h1>${scrib(150)}
+      <p class="lead">${o && o.answers.prenom ? esc(o.answers.prenom) + ', l’accueil' : 'L’accueil'} te propose chaque jour la bonne séance.</p></section>`;
+    if (w) h += `<section class="card"><span class="m">Première séance</span><h2 style="margin-top:2px">${esc(w.name)}</h2><p class="num" style="font-size:17px;font-weight:700;margin:2px 0 0">${n} exercice${n > 1 ? 's' : ''}${o && o.answers.duree ? ' · ' + o.answers.duree + '\u00a0min' : ''}</p></section>`;
+    h += `<button class="btn btn-p w" style="margin-top:12px" onclick="PROFIL.home();go('accueil')">Aller à l’accueil</button>`;
+    if (pl) h += adaptations(pl).filter(isAlert).map(t => `<p class="qmiss">${esc(t)}</p>`).join('');
+    h += WARN;
     if (pl) h += programPreview(pl) + workoutsHtml(pl);
-    return h + WARN + `<button class="go" onclick="PROFIL.home();go('accueil')">Aller à l’accueil</button>`;
+    return h + '</div>';
   }
   function vHome() {
     const o = profile();
@@ -930,7 +944,17 @@
     if (a.detail === 'oui' && pl) h += healthBlock(a);
     return h + WARN + answersHtml(a, false);
   }
-  function view() {
+  // espace insécable avant « ? », « ! », « ; », « : » et à l'intérieur des guillemets, dans le texte seulement (jamais dans une balise)
+  const typo = h => h.replace(/>([^<]+)</g, (m, t) => '>' + t.replace(/ ([?!;:»])/g, '\u00a0$1').replace(/« /g, '«\u00a0') + '<');
+  /* « ‹ » de la barre du haut : question précédente, retour au résumé, ou rien */
+  function backBtn() {
+    if (P.mode === 'q' && D) return [P.ret ? 'Annuler et revenir au résumé' : D.i > 0 ? 'Question précédente' : 'Retour', back];
+    if (P.mode === 'resume' && D) return ['Question précédente', () => to('q', QS.length - 1)];
+    if (P.mode === 'confirm') return ['Retour au résumé', () => { P.plan = null; to('resume'); }];
+    return null;
+  }
+  function view() { return typo(view0()); }
+  function view0() {
     if (profile() && !(draft() && D.redo) && ['intro', 'q', 'resume', 'confirm'].includes(P.mode)) P.mode = 'home';   // profil restauré par un import
     if (['intro', 'q', 'resume'].includes(P.mode) && !draft()) { D = fresh(); saveD(); }
     if (P.mode === 'confirm' && !P.plan) P.mode = 'resume';
@@ -945,7 +969,7 @@
   }
 
   window.PROFIL = {
-    init, enter, title, view, phaseLine, imposed: () => !profile(), filled: () => filled(profile()), afterImport,
+    init, enter, title, view, phaseLine, backBtn, imposed: () => !profile(), filled: () => filled(profile()), afterImport,
     schedule, coach, offers, homeCards, accept, later,
     cycleKey: () => { const o = profile(); return o ? cycleStart(o) : null; },   // début du cycle en cours (notifications : une seule « semaine légère » par cycle)
     start, typed, typedOther, pick, tog, yn, togEv, next, back, edit, setDetail, generate, apply, keep, regen, redo, quit, dropDraft,

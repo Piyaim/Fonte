@@ -29,8 +29,8 @@
   --f:#e3dacb;
   --ck:#6c6055;        /* coche grise : 4,4:1 sur --f */
   --ctl:#7d7064;       /* bâtons à faire */
-  /* action destructive : texte seul, jamais en orange */
-  --danger:#a3261b;
+  /* action destructive et avertissement médical : framboise, texte seul, à 20 au moins (CIEDE2000) de --a et --at des 6 couleurs du menu (tests/lot3.py) */
+  --danger:#741a3a;
   /* silhouettes « ??? » */
   --sil:#b8b8b8;
 
@@ -59,12 +59,12 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#181c1a;--s1:#212624;--s2:#2f3532;--line:#3a413d;--ink:#ece8de;--mute:#a39f95;
   --a:#ff8434;--at:#ff9a55;--on:#1b1005;--cta-b:var(--a);--hl:#7a4220;--pat:#5cc7b8;--pat-bg:#1f3733;
-  --f:#363d39;--ck:#9aa49e;--ctl:#7c8780;--danger:#ff8a7a;--sil:#787878;--sh-bar:0 -2px 12px rgba(0,0,0,.45);
+  --f:#363d39;--ck:#9aa49e;--ctl:#7c8780;--danger:#f9b4d0;--sil:#787878;--sh-bar:0 -2px 12px rgba(0,0,0,.45);
   color-scheme:dark;
 }}
 :root[data-theme="dark"]{
   --bg:#181c1a;--s1:#212624;--s2:#2f3532;--line:#3a413d;--ink:#ece8de;--mute:#a39f95;
   --a:#ff8434;--at:#ff9a55;--on:#1b1005;--cta-b:var(--a);--hl:#7a4220;--pat:#5cc7b8;--pat-bg:#1f3733;
-  --f:#363d39;--ck:#9aa49e;--ctl:#7c8780;--danger:#ff8a7a;--sil:#787878;--sh-bar:0 -2px 12px rgba(0,0,0,.45);
+  --f:#363d39;--ck:#9aa49e;--ctl:#7c8780;--danger:#f9b4d0;--sil:#787878;--sh-bar:0 -2px 12px rgba(0,0,0,.45);
   color-scheme:dark;
 }

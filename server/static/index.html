@@ -690,14 +690,193 @@ details.card.opt[open]{padding-bottom:16px}
 .sd .dacts{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:16px}
 .sd .dacts .btn-t{font-size:17px}
 .btn-t.danger{color:var(--danger)}   /* « Supprimer la séance » : lien rouge (.btn-t, plus bas dans la feuille, imposait l'encre) */
+/* ---- refonte, lot 3 : questionnaire, Exercices, fiche, formulaire, Programmes, Zones (maquette validée le 29/10/2026) ----
+   Règles limitées à .l3 (écrans du lot 3) : une action orange au plus, dans la barre d'action sous le pouce ; choix sélectionné à l'encre ;
+   zones en patine ; liens « danger » en framboise avec une icône (jamais pris pour une action orange). */
+.l3 .scrib{width:130px}
+.l3 h1.title{margin-top:8px}
+.l3 .lead{font-size:17px;margin:10px 0 0}
+.l3 .m{font-size:15px}
+.l3 .card{margin:12px 0}
+:root .l3 h2{font-size:20px;margin:0}
+.l3 h3.gh{font-family:var(--ff-title);font-weight:700;font-stretch:92%;font-size:17px;color:var(--m);margin:20px 4px 6px}
+:is(.l3,.actbar) .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 16px;border:0;border-radius:var(--r-btn);font:inherit;font-weight:700;font-size:17px;cursor:pointer;transition:transform var(--t-fast)}
+:is(.l3,.actbar) .btn:active{transform:translateY(var(--press))}
+:is(.l3,.actbar) .btn-p{background:var(--a);color:var(--on);border:2px solid var(--cta-b);font-weight:800;min-height:52px}
+:is(.l3,.actbar) .btn-p:disabled{background:var(--s2);color:var(--m);border-color:var(--l);opacity:1;cursor:default}
+:is(.l3,.actbar) .btn-s{background:var(--f);color:var(--t)}
+:is(.l3,.actbar) .btn-s:disabled{opacity:.5}
+:is(.l3,.actbar) .btn-t{display:inline-flex;align-items:center;gap:6px;font-size:15px}
+:is(.l3,.actbar) .btn-d{color:var(--danger);background:none}
+:is(.l3,.actbar) .btn svg,:is(.l3,.actbar) .btn-t svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+:is(.l3,.actbar) .btn-d svg{width:18px;height:18px}
+.l3 .w{width:100%}
+.l3 .stack>*+*{margin-top:12px}
+@media (prefers-reduced-motion:reduce){:is(.l3,.actbar) .btn{transition:none}:is(.l3,.actbar) .btn:active{transform:none}}
+/* barre d'action sous le pouce : au-dessus de la barre du bas, ou tout en bas pendant le questionnaire imposé */
+.actbar{position:fixed;left:0;right:0;bottom:var(--tb);padding:12px 16px;background:var(--bg);border-top:1px solid var(--l);z-index:5;display:flex;gap:8px;align-items:center}
+body.onb .actbar,.actbar.bot{bottom:0;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.actbar.col{flex-direction:column;align-items:stretch}
+.actbar .btn-p{flex:1}
+.actbar .info{flex:1;font-size:15px;color:var(--m);min-width:0}
+.actbar .info+.btn-p{flex:2}
+body.has-act main{padding-bottom:calc(var(--tb) + 112px)}
+body.onb.has-act main{padding-bottom:132px}
+body.has-act.act2 main{padding-bottom:calc(var(--tb) + 160px)}
+body.onb.has-act.act2 main{padding-bottom:180px}
+body.has-act .toast{bottom:calc(var(--tb) + 96px)}
+/* signes */
+.l3 .chip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border:0;border-radius:999px;background:var(--f);color:var(--t);font:inherit;font-weight:700;font-size:15px;cursor:pointer}
+.l3 .chip[aria-pressed="true"]{background:var(--t);color:var(--bg)}
+.l3 .chip.z[aria-pressed="true"]{background:var(--pat);color:var(--bg)}
+.l3 .chip:disabled{opacity:.5;cursor:default}
+.l3 .chip small{font-family:var(--ff-title);font-stretch:85%;font-size:15px;font-weight:600}
+.l3 .chip svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.l3 .chip .dot{width:8px;height:8px;border-radius:50%;background:var(--t);display:inline-block}
+.l3 .chip[aria-pressed="true"] .dot{background:var(--bg)}
+.l3 .chips{display:flex;gap:8px;flex-wrap:wrap;margin:0}
+.l3 .scroller{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:2px 16px 4px;scrollbar-width:none}
+.l3 .scroller::-webkit-scrollbar{display:none}
+.l3 .scroller .chip{flex:none}
+.l3 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--s2);border-radius:var(--r-tile);padding:4px;gap:4px}
+.l3 .seg button{min-height:44px;border:0;background:none;border-radius:calc(var(--r-tile) - 4px);font:inherit;font-weight:700;font-size:15px;color:var(--t);cursor:pointer;padding:0 4px}
+.l3 .seg button[aria-pressed="true"]{background:var(--t);color:var(--bg)}
+.l3 details.det{margin:4px 0 0}
+.l3 details.det>summary{min-height:44px;display:flex;align-items:center;font-weight:700;font-size:15px;color:var(--t);cursor:pointer;list-style:none}
+.l3 details.det>summary::-webkit-details-marker{display:none}
+.l3 details.det>summary::before{content:"";width:0;height:0;border-left:7px solid var(--t);border-top:5px solid transparent;border-bottom:5px solid transparent;margin-right:8px}
+.l3 details.det[open]>summary::before{transform:rotate(90deg)}
+.l3 details.det>div{padding:0 0 4px 15px}
+.l3 details.det>div>*+*{margin-top:6px}
+.l3 .warn{border-left:4px solid var(--danger);background:var(--c);border-radius:6px var(--r-tile) var(--r-tile) 6px;padding:12px 14px;font-size:15px;margin:12px 0}
+.l3 .warn p{margin:0}.l3 .warn p+p{margin-top:6px}
+.l3 .lrow .d>span{font-size:15px}
+.l3 .list{background:var(--c);border:1px solid var(--l);border-radius:var(--r-card);padding:0 16px}
+.l3 .list>*+*{border-top:1px solid var(--l)}
+.l3 .sum{margin-top:12px}
+/* champs */
+.l3 .fld{display:block;color:var(--t);font-size:15px}
+.l3 .fld>span{display:block;font-size:15px;font-weight:700;margin-bottom:6px}
+.l3 .fld>span small{font-weight:400;color:var(--m);font-size:13px}
+.l3 .inp{width:100%;min-height:48px;margin:0;padding:0 12px;border:1.5px solid var(--ctl);border-radius:var(--r-tile);background:var(--bg);color:var(--t);font:inherit;font-size:17px}
+.l3 textarea.inp{padding:10px 12px;min-height:88px;resize:vertical}
+.l3 .inp::placeholder{color:var(--m)}
+.l3 .selw{position:relative}
+.l3 .selw select{appearance:none;-webkit-appearance:none;padding-right:40px}
+.l3 .selw svg{position:absolute;right:12px;top:14px;width:20px;height:20px;pointer-events:none;fill:none;stroke:var(--t);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.l3 .srch{position:relative;flex:1}
+.l3 .srch svg{position:absolute;left:12px;top:14px;width:20px;height:20px;fill:none;stroke:var(--m);stroke-width:2.2;stroke-linecap:round}
+.l3 .srch .inp{padding-left:40px}
+.l3 .def{font-size:13px;color:var(--m);margin:4px 0 0}
+/* − valeur + */
+.l3 .step{display:flex;align-items:center;gap:8px}
+.l3 .step .pm{width:48px;height:48px;border:0;border-radius:50%;background:var(--f);color:var(--t);display:grid;place-items:center;flex:none;padding:0;cursor:pointer}
+.l3 .step .pm svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.l3 .step .v{min-width:72px;text-align:center;font-family:var(--ff-title);font-stretch:85%;font-variant-numeric:tabular-nums;font-size:24px;font-weight:800}
+.l3 .step .v small{font-family:var(--ff-text);font-size:13px;font-weight:400;color:var(--m);margin-left:3px}
+.l3 .frow{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px}
+.l3 .frow+.frow{border-top:1px solid var(--l)}
+.l3 .frow>span{font-weight:700}
+.l3 .range{display:flex;align-items:center;gap:8px}
+.l3 .mini{width:64px;min-height:48px;text-align:center;font-family:var(--ff-title);font-stretch:85%;font-weight:800;font-size:20px;padding:0 6px}
+/* interrupteur */
+.l3 .swrow{display:flex;align-items:center;gap:12px;min-height:56px;width:100%;text-align:left;border:0;background:none;color:var(--t);font:inherit;padding:0;cursor:pointer}
+.l3 .swrow+.swrow{border-top:1px solid var(--l)}
+.l3 .swrow>span{flex:1;font-weight:700}
+.l3 .sw{position:relative;width:52px;height:32px;border-radius:16px;background:var(--ctl);flex:none}
+.l3 .sw::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:var(--c);transition:transform var(--t-fast)}
+.l3 .swrow[aria-checked="true"] .sw{background:var(--t)}
+.l3 .swrow[aria-checked="true"] .sw::after{transform:translateX(20px);background:var(--bg)}
+@media (prefers-reduced-motion:reduce){.l3 .sw::after{transition:none}}
+/* questionnaire */
+.l3 .qcount{font-size:15px;color:var(--m);font-weight:700}
+.l3 .qbar{height:6px;border-radius:3px;box-shadow:inset 0 0 0 1.5px var(--ctl);margin-top:6px;overflow:hidden}
+.l3 .qbar i{display:block;height:100%;background:var(--at);border-radius:3px}
+:root .l3 h1.q{font-family:var(--ff-title);font-weight:800;font-stretch:90%;font-size:28px;line-height:1.1;letter-spacing:-.01em;margin:20px 0 0;outline:none}
+.l3 .qh{color:var(--m);margin:6px 0 0;font-size:15px}
+.l3 .opts{display:grid;gap:8px;margin-top:20px}
+.l3 .qo{display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 14px;border-radius:var(--r-tile);background:var(--c);border:1.5px solid var(--ctl);color:var(--t);text-align:left;font:inherit;font-size:17px;line-height:1.25;width:100%;cursor:pointer}
+.l3 .qo .mk{width:24px;height:24px;flex:none;border:2px solid var(--ck);border-radius:50%;display:grid;place-items:center}
+.l3 .qo.multi .mk{border-radius:6px}
+.l3 .qo .mk svg{width:16px;height:16px;opacity:0;fill:none;stroke:var(--bg);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.l3 .qo[aria-pressed="true"]{border:2px solid var(--t);background:var(--s2);font-weight:700;padding:7.5px 13.5px}
+.l3 .qo[aria-pressed="true"] .mk{background:var(--t);border-color:var(--t)}
+.l3 .qo[aria-pressed="true"] .mk svg{opacity:1}
+.l3 .qfld{display:flex;align-items:center;gap:8px;margin-top:20px;border:1.5px solid var(--ctl);border-radius:var(--r-tile);background:var(--c);padding:0 16px;min-height:64px}
+.l3 .qfld input{flex:1;min-width:0;border:0;background:none;color:var(--t);font-size:32px;font-weight:800;font-family:var(--ff-title);font-stretch:85%;outline:none;padding:0;margin:0}
+.l3 .qfld:focus-within{outline:2px solid var(--t);outline-offset:2px}
+.l3 .qfld span{font-size:17px;color:var(--m);font-weight:700}
+.l3 .sq{display:grid;grid-template-columns:1fr auto;gap:10px 12px;align-items:center;padding:12px 0}
+.l3 .sq+.sq{border-top:1px solid var(--l)}
+.l3 .sq p{font-size:16px;line-height:1.3;margin:0}
+.l3 .sq .seg{width:132px}
+.l3 .qerr{color:var(--danger);font-weight:700;margin:12px 0 0;min-height:1px}
+.l3 .qchip{min-height:44px}
+.l3 .logo{width:72px;height:72px;margin:28px 0 20px;display:block}
+.l3 .done{width:64px;height:64px;border-radius:50%;background:var(--c);border:1px solid var(--l);display:grid;place-items:center;margin:24px 0 16px;color:var(--at)}
+.l3 .done svg{width:36px;height:36px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+/* Exercices */
+.l3 .li.exrow{display:flex;align-items:center;gap:12px;min-height:64px;width:100%;text-align:left;padding:6px 0;border:0;background:none;color:var(--t);font:inherit;cursor:pointer;justify-content:flex-start}
+.l3 .list>.li.exrow+.li.exrow{border-top:1px solid var(--l)}
+.l3 .li .th{width:76px;height:48px;border-radius:10px;background:var(--s2);flex:none;overflow:hidden;display:grid;place-items:center}
+.l3 .li .th svg{width:76px;height:auto;background:none;border-radius:0}
+.l3 .li .d{flex:1;min-width:0}
+.l3 .li .d b{display:block;font-size:17px;line-height:1.25}
+.l3 .li .d span{font-size:15px;color:var(--m)}
+.l3 .li.arch{opacity:1}
+.l3 .li.arch .d b{color:var(--m)}
+.l3 .tag{display:inline-block;font-size:13px;font-weight:700;padding:1px 8px;border:0;border-radius:999px;background:var(--f);color:var(--t);margin:0 0 0 4px;vertical-align:1px}
+/* fiche */
+.l3.exd .big{background:var(--s2);border-radius:var(--r-card);padding:8px;position:relative}
+.l3.exd .big svg{background:none;max-width:none}
+.l3.exd .big .figturn{position:absolute;right:8px;bottom:8px;margin:0;background:var(--c);min-height:44px;font-size:15px}
+.l3 .presc{font-family:var(--ff-title);font-stretch:85%;font-variant-numeric:tabular-nums;font-size:20px;font-weight:800;margin:8px 0 0}
+.l3 .steps{list-style:none;padding:0;counter-reset:s;margin:8px 0 0}
+.l3 .steps li{counter-increment:s;display:grid;grid-template-columns:32px 1fr;gap:4px;padding:6px 0;margin:0;font-size:16px;line-height:1.35}
+.l3 .steps li::before{content:counter(s);font-family:var(--ff-title);font-stretch:85%;font-weight:800;font-size:20px;color:var(--at);line-height:1.1}   /* numéros des étapes : couleur d'accent, jamais framboise */
+.l3 .errs{padding-left:20px;margin:8px 0 0}
+.l3 .errs li{padding:3px 0;margin:0;font-size:16px;line-height:1.35}
+.l3 .keep{border-left:4px solid var(--t);padding:4px 0 4px 12px;margin:12px 0 0;font-weight:700;font-size:16px;line-height:1.35}
+.l3 .bodies{display:flex;gap:12px;justify-content:center;margin:8px 0 0}
+.l3 .bodies figure{flex:0 1 150px;max-width:150px;text-align:center;margin:0}
+.l3 .bodies svg{width:100%;height:auto;display:block}
+.l3 .bodies figcaption{font-size:13px;color:var(--m)}
+.l3 .bodies .z{fill:var(--m);fill-opacity:.16;stroke:var(--m);stroke-opacity:.5;stroke-width:.35;stroke-linejoin:round;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.l3 .bodies .z.on{fill:var(--pat);fill-opacity:1;stroke:var(--pat);stroke-opacity:1}
+.l3 .bodies .z.heat{fill:var(--pat);fill-opacity:var(--h);stroke:var(--pat);stroke-opacity:.8}
+.l3 .bodies .z.sel{stroke:var(--t);stroke-width:1.6;stroke-opacity:1}
+.l3 .bodies.det .z{pointer-events:none;cursor:default}
+.l3 .zleg{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--m);margin-top:8px;justify-content:center}
+.l3 .zleg i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px;background:var(--pat)}
+.l3 .zleg i.s{opacity:.45}.l3 .zleg i.h0{background:var(--m);opacity:.16}.l3 .zleg i.h1{opacity:.35}.l3 .zleg i.h2{opacity:.65}
+.l3 .pn{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.l3 .pn .btn{flex-direction:column;gap:0;min-height:56px;line-height:1.2;padding:6px 12px;min-width:0}
+.l3 .pn .btn small{font-weight:400;font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.l3 .pn .btn:last-child{align-items:flex-end}
+.l3 .pn .btn:first-child{align-items:flex-start}
+/* Programmes */
+.l3 .pitem>.lrow{min-height:64px}
+.l3 .pitem .n{width:28px;font-family:var(--ff-title);font-stretch:85%;font-weight:800;font-size:20px;color:var(--m);flex:none}
+.l3 .pitem .lrow[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.l3 .pedit{background:var(--s2);border-radius:var(--r-tile);padding:4px 12px 12px;margin:0 -4px 12px}
+.l3 .pedit .acts{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.l3 .pedit .ib{background:var(--c);width:48px;height:48px;border-radius:50%}
+.l3 .pedit .ib:disabled{opacity:.4}
+.l3 .pedit .ib svg{width:24px;height:24px}
+.l3 .zinfo{margin-top:12px;font-size:15px;font-weight:700}
+.l3 .qwarn,.l3 .qmiss{border:0;border-left:4px solid var(--danger);border-radius:6px var(--r-tile) var(--r-tile) 6px;background:var(--c);padding:12px 14px;margin:12px 0;font-size:15px}
+.l3 .qwarn p{margin:0}.l3 .qwarn p+p{margin-top:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.pend{font-size:15px;margin:4px 0 8px}
 </style>
 </head>
 <body>
 <header class="topbar">
   <button class="ib" id="menu-btn" onclick="openMenu()" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="drawer"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-  <button class="ib" id="tb-back" hidden onclick="detBack()" aria-label="Retour à l’historique"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+  <button class="ib" id="tb-back" hidden onclick="doBack()" aria-label="Retour à l’historique"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
   <h1 id="ttl">Fonte</h1>
   <button class="btn-t" id="tb-ap" hidden onclick="exitFocus()">Aperçu</button>
+  <button class="btn-t" id="tb-r" hidden onclick="doRight()"></button>
 </header>
 <main>
   <div id="app"><p class="empty">Chargement…</p></div>
@@ -719,7 +898,7 @@ details.card.opt[open]{padding-bottom:16px}
 /* ------------------------------------------------------------------ état */
 let EX = {}, WO = [], SESS = [], BW = [];
 let view = 'accueil', curW = null, F = null;          // F = formulaire de séance en cours
-let catQ = '', catArch = false, editEx = null;       // catalogue
+let catQ = '', catArch = false, catG = '', editEx = null;   // catalogue (catG : groupe choisi, '' = tous)
 let progW = null, progDraft = null;                  // éditeur de programmes
 const VIEWS = [['accueil','Accueil'],['seance','Séance'],['zones','Zones'],['progres','Progrès'],['historique','Historique'],['exercices','Exercices'],['programmes','Programmes'],['jeu','Esprits'],['profil','Mon profil'],['notifications','Notifications'],['donnees','Données']];
 const KIND_LABEL = {weight:'Charge × reps', reps:'Reps (lest facultatif)', time:'Durée en secondes', cardio:'Cardio (minutes)'};
@@ -1034,9 +1213,12 @@ const IC_MENU = '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></s
 const IC_CLOSE = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 function nav() {
   const det = view === 'historique' && HDET != null, here = det ? HBACK : view;   // détail d'une séance : l'écran d'où il a été ouvert (titre, onglet, « ‹ »)
-  $('ttl').textContent = det ? VL[HBACK] : view === 'accueil' ? 'Fonte' : inFocus() ? F.wname : view === 'profil' && window.PROFIL ? PROFIL.title() : VL[view];
+  BACK = backNow(det); RIGHT = view === 'exercices' && viewEx && !editEx ? ['Modifier', () => editOpen(viewEx)] : null;
+  $('ttl').textContent = det ? VL[HBACK] : view === 'accueil' ? 'Fonte' : inFocus() ? F.wname : view === 'profil' && window.PROFIL ? PROFIL.title()
+    : view === 'exercices' && editEx ? (editEx.id ? 'Modifier' : 'Nouvel exercice') : VL[view];
   $('tb-ap').hidden = !inFocus();   // « Aperçu » : toute la séance en liste
-  $('menu-btn').hidden = det; $('tb-back').hidden = !det; $('tb-back').setAttribute('aria-label', HBACK === 'progres' ? 'Retour à Progrès' : 'Retour à l’historique');
+  $('menu-btn').hidden = !!BACK; $('tb-back').hidden = !BACK; if (BACK) $('tb-back').setAttribute('aria-label', BACK[0]);
+  $('tb-r').hidden = !RIGHT; $('tb-r').textContent = RIGHT ? RIGHT[0] : '';
   document.body.classList.toggle('onb', !!(window.PROFIL && PROFIL.imposed()));
   $('tabs').innerHTML = tabsNow().map(k => `<button class="${k === here ? 'on' : ''}" onclick="go('${k}')" ${k === here ? 'aria-current="page"' : ''}><span class="ic">${IC[k]}</span>${VL[k]}</button>`).join('');
   $('dnav').innerHTML = VIEWS.filter(([k]) => k !== 'jeu' || window.JEU).map(([k, t]) => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}');closeMenu()">${t}</button>`).join('');
@@ -1045,6 +1227,17 @@ function nav() {
   document.body.classList.toggle('fin-on', view === 'fin');
   barRender(); screenSync(); tabsPick();
 }
+/* « ‹ » de la barre du haut (à la place du menu) : détail d'une séance, fiche et formulaire d'exercice, questionnaire */
+let BACK = null, RIGHT = null;
+function backNow(det) {
+  if (det) return [HBACK === 'progres' ? 'Retour à Progrès' : 'Retour à l’historique', detBack];
+  if (view === 'exercices' && editEx) return ['Annuler et revenir', exCancel];
+  if (view === 'exercices' && viewEx) return ['Retour aux exercices', closeEx];
+  if (view === 'profil' && window.PROFIL) return PROFIL.backBtn();
+  return null;
+}
+function doBack() { if (BACK) BACK[1](); }
+function doRight() { if (RIGHT) RIGHT[1](); }
 function genderPick() {
   $('dgender').innerHTML = '<p class="m">Personnage des animations</p><div class="chips">' + [['m', 'Homme'], ['f', 'Femme']].map(([k, t]) => `<button class="chip ${GENDER === k ? 'on' : ''}" onclick="setGender('${k}')" aria-pressed="${GENDER === k}">${t}</button>`).join('') + '</div>';
 }
@@ -1067,6 +1260,7 @@ function R() {
   nav();
   $('app').innerHTML = {accueil: vAccueil, seance: vSeance, zones: vZones, progres: vProgres, historique: vHisto, exercices: vCat, programmes: vProg, jeu: () => window.JEU ? JEU.view() : '', profil: () => window.PROFIL ? PROFIL.view() : '', notifications: () => window.NOTIF ? NOTIF.view() : '', donnees: vData, fin: vFin}[view]();
   if (window.NOTIF) NOTIF.sync();   // plan des notifications recalculé après chaque changement (appli Android seulement)
+  const ab = $('app').querySelector('.actbar'); document.body.classList.toggle('has-act', !!ab); document.body.classList.toggle('act2', !!(ab && ab.classList.contains('col')));
   focReveal();
 }
 
@@ -1258,19 +1452,28 @@ function bodySvg(side) {
 }
 function vZones() {
   if (ZMODE === 'heat') ZST = zoneStats();
-  let h = `<div class="card"><h2>Séance par zones</h2><div class="chips"><button class="chip ${ZMODE === 'pick' ? 'on' : ''}" onclick="ZMODE='pick';R()">Choisir</button><button class="chip ${ZMODE === 'heat' ? 'on' : ''}" onclick="ZMODE='heat';ZINFO='';R()">Ma semaine</button><button class="chip" onclick="suggestZones()">Que travailler aujourd'hui ?</button></div>${ZMODE === 'heat' ? heatLegend() : '<p class="m">Touche les zones à travailler (sur le corps ou dans la liste), puis génère la séance. Les exercices viennent de ton catalogue, ceux faits le moins récemment passent en premier.</p>'}
-    <div class="body">${bodySvg('front')}${bodySvg('back')}</div>
-    <div class="chips">${ZONES.map(([k, t]) => `<button class="chip ${ZSEL.has(k) ? 'on' : ''}" onclick="togZone('${k}')">${t} <small>${zCount(k)}</small></button>`).join('')}</div>
-    <p class="m">Le petit chiffre = exercices disponibles pour la zone.</p></div>`;
-  h += `<div class="card"><div class="g2"><label>Nombre d'exercices<select onchange="ZN=+this.value;store('muscu-zn',ZN)">${[4,5,6,7,8].map(n => `<option value="${n}" ${n === ZN ? 'selected' : ''}>${n}</option>`).join('')}</select></label><div></div></div>
-    <label class="ck"><input type="checkbox" ${ZCARD ? 'checked' : ''} onchange="ZCARD=this.checked;store('muscu-zcard',ZCARD)">Ajouter un cardio doux en fin de séance</label>
-    <label class="ck"><input type="checkbox" ${zPdc() ? 'checked' : ''} onchange="ZPDC=this.checked;store('muscu-zpdc',ZPDC);R()">Poids du corps uniquement (sans machine ni charge)</label>
-    <label class="ck"><input type="checkbox" ${ZADV ? 'checked' : ''} onchange="ZADV=this.checked;store('muscu-zadv',ZADV)">Inclure les exercices avancés ou à utiliser peu</label>
-    <p class="m">Avec beaucoup de zones, le nombre d'exercices monte (jusqu'à 8) pour en couvrir un maximum.</p></div>`;
-  h += `<button class="go" onclick="genZones()">Générer la séance${ZSEL.size ? ' (' + ZSEL.size + ' zone' + (ZSEL.size > 1 ? 's' : '') + ')' : ''}</button>`;
-  if (ZSEL.size) h += `<button class="sm w" onclick="ZSEL.clear();store('muscu-zones',[]);R()">Effacer la sélection</button>`;
+  const heat = ZMODE === 'heat', n = ZSEL.size;
+  let h = `<div class="l3"><h1 class="title">Séance par zones</h1>${scribSvg(150)}
+    <div class="seg" style="margin-top:16px" role="group" aria-label="Vue"><button aria-pressed="${!heat}" onclick="ZMODE='pick';R()">Choisir</button><button aria-pressed="${heat}" onclick="ZMODE='heat';ZINFO='';R()">Ma semaine</button></div>
+    <section class="card"><div class="bodies">${bodySvg('front')}${bodySvg('back')}</div>`;
+  if (heat) h += '<div class="zleg"><span><i class="h0"></i>0</span><span><i class="h1"></i>1-3</span><span><i class="h2"></i>4-8</span><span><i></i>9 et plus</span></div><p class="def" style="text-align:center">Séries des 7 derniers jours</p>';
+  h += `<div class="chips" style="margin-top:12px">${ZONES.map(([k, t]) => { if (heat) { const v = Math.round((ZST.sets[k] || 0) * 10) / 10;
+      return `<button class="chip z" aria-pressed="false" onclick="zInfo('${k}')">${t}<small class="num">${fmt(v)}${NB}série${v > 1 ? 's' : ''}</small></button>`; }
+    const c = zCount(k); return `<button class="chip z" aria-pressed="${ZSEL.has(k)}" onclick="togZone('${k}')"${c ? '' : ' disabled'}>${t}</button>`; }).join('')}</div>`;
+  if (heat) h += ZINFO ? `<p class="zinfo">${esc(ZINFO)}</p>` : '<p class="def" style="margin-top:8px">Touche une zone pour le détail.</p>';
+  else h += (n ? `<button class="btn-t" style="margin:4px 0 0 -8px" onclick="ZSEL.clear();store('muscu-zones',[]);R()">Effacer la sélection</button>` : '') + det3('<p>Zone grisée : aucun exercice de ton catalogue pour elle.</p>');
+  h += '</section>';
+  if (!heat) h += `<button class="btn btn-s w" onclick="suggestZones()">Me proposer des zones</button>
+    <section class="card" style="padding-top:4px;padding-bottom:4px">${stepper('Exercices', ZN, '', 'zStep', 'z-n', ['Un exercice de moins', 'Un exercice de plus'])}
+      ${swRow('Cardio doux à la fin', ZCARD, "ZCARD=swFlip(this);store('muscu-zcard',ZCARD)")}
+      ${swRow('Poids du corps seulement', zPdc(), "ZPDC=swFlip(this);store('muscu-zpdc',ZPDC);R()")}
+      ${swRow('Exercices avancés', ZADV, "ZADV=swFlip(this);store('muscu-zadv',ZADV)")}
+      ${det3('<p>Les exercices viennent de ton catalogue. Ceux faits le moins récemment passent en premier.</p><p>Avec beaucoup de zones, le nombre d’exercices monte jusqu’à 8.</p><p>Exercices avancés : ceux à utiliser peu, ou d’un niveau avancé.</p>')}</section>`;
+  h += '</div><div class="actbar">' + (heat ? `<button class="btn btn-s" style="flex:1" onclick="ZMODE='pick';R()">Choisir mes zones</button>`
+    : n ? `<button class="btn btn-p" onclick="genZones()">Générer la séance · ${n}${NB}zone${n > 1 ? 's' : ''}</button>` : '<span class="info">Touche au moins une zone.</span>') + '</div>';
   return h;
 }
+function zStep(d) { ZN = Math.max(4, Math.min(8, ZN + d)); store('muscu-zn', ZN); $('z-n').textContent = ZN; }
 
 
 /* ------------------------------------------------------------------ Progrès : séances au total, records, calendrier, courbes */
@@ -1551,7 +1754,6 @@ function suggestZones() {
   toast('Zones les moins travaillées : ' + pick.map(x => ZL[x.k]).join(', ') + '. Ajuste puis génère.');
   R();
 }
-function heatLegend() { return `<p class="m">Plus une zone est orange, plus tu l'as travaillée ces 7 derniers jours. Touche une zone pour le détail ; le contour marque ta sélection.</p>${ZINFO ? `<p class="sug">${esc(ZINFO)}</p>` : ''}`; }
 
 /* ------------------------------------------------------------------ mode focus : un exercice à la fois */
 /* Séance : un exercice à la fois par défaut (FOC = son rang ; null = le premier exercice pas encore fini).
@@ -1621,7 +1823,7 @@ function vFocus() {
   const nDone = ids.filter(id => { const r = F.vals[id] || rowsFor(exF(id)), d = (F.dn && F.dn[id]) || []; return r.length && r.every((_, k) => d[k]); }).length;
   const done = (F.dn && F.dn[e.id]) || [], nOk = rows.filter((_, k) => done[k]).length, all = rows.length > 0 && nOk === rows.length;
   const tl = (n, d) => `<span class="tally" aria-hidden="true">${Array.from({length: n}, (_, i) => `<i class="${i < d ? 'd' : ''}"></i>`).join('')}</span>`;
-  let h = `<div class="focus"><div class="fprog"><span>Exercice <b>${FOC + 1}</b> sur ${ids.length}${tl(ids.length, nDone)}</span></div>`;
+  let h = `<div class="focus">${progPendLine()}<div class="fprog"><span>Exercice <b>${FOC + 1}</b> sur ${ids.length}${tl(ids.length, nDone)}</span></div>`;
   if (FOC === 0) {   // avant le premier exercice : semaine légère ou reprise (toujours visible), puis phase et échauffement dans un repli
     const ph = phaseNow(), m = ph.match(/^((?:Semaine légère|Reprise en douceur)[^.]*\.)\s*(.*)$/);
     h += `<details class="warmp"><summary>Échauffement · 8-10 min</summary><p><b>Avant de commencer</b></p><p class="m">${esc(m ? m[2] : ph)}</p><p class="m">5 min de cardio léger, 10 rotations d'épaules et de hanches, 10 squats au poids du corps, puis 1-2 séries légères du premier exercice.</p></details>`;
@@ -1800,7 +2002,7 @@ function vSeance() {
             + XS.map(x => `<button class="${F.xid === x.xid ? 'on' : ''}" onclick="selectX('${x.xid}')">${esc(x.label)}</button>`).join('') 
       + `<button class="${F.wid === null && !F.xid ? 'on' : ''}" onclick="pickWorkout(0)">Libre</button></div>`;
     if (F.xid) h += `<p class="sug">${esc(F.wname)} <button class="sm" onclick="delX('${F.xid}')">Supprimer cette séance</button></p>`;
-    h += seanceIntro();
+    h += progPendLine() + seanceIntro();
   }
   h += `<div class="g2"><label>Date<input id="f-day" type="date" value="${esc(F.day)}" onchange="syncForm()"></label><div></div></div>`;
   const ids = F.ids.filter(i => EX[i]);
@@ -1956,208 +2158,250 @@ let ZDET = null, viewEx = null;
 function openEx(id) { viewEx = id; R(); window.scrollTo(0, 0); }
 function closeEx() { viewEx = null; R(); window.scrollTo(0, 0); }
 function catOrder() {   // même ordre et mêmes filtres que la liste affichée
-  const q = catQ.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-  const match = e => !q || (e.name + ' ' + e.focus + ' ' + e.grp).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(q);
-  return groups().flatMap(g => Object.values(EX).filter(e => e.grp === g && (catArch || !e.archived) && match(e)).sort((a, b) => a.archived - b.archived || a.name.localeCompare(b.name, 'fr'))).map(e => e.id);
+  const ok = catMatch();
+  return groups().flatMap(g => Object.values(EX).filter(e => e.grp === g && ok(e)).sort((a, b) => a.archived - b.archived || a.name.localeCompare(b.name, 'fr'))).map(e => e.id);
 }
 function stepEx(d) {
   const ids = catOrder(), i = ids.indexOf(viewEx), j = i + d;
   if (i < 0 || j < 0 || j >= ids.length) return;
   viewEx = ids[j]; R(); window.scrollTo(0, 0);
 }
-function exNav(id) {
-  const ids = catOrder(), i = ids.indexOf(id);
-  return `<div class="exnav"><button class="sm" onclick="stepEx(-1)" ${i <= 0 ? 'disabled' : ''}>‹ Précédent</button><button class="sm" onclick="stepEx(1)" ${i < 0 || i >= ids.length - 1 ? 'disabled' : ''}>Suivant ›</button></div>`;
-}
 function addExToSession(id) {
   ensureForm(); F.dirty = true; syncForm(); if (!F.ids.includes(id)) F.ids.push(id);
   FOC = null; go('seance'); toast('Exercice ajouté à la séance en cours');
 }
+/* ------------------------------------------------------------------ refonte, lot 3 : icônes et pièces communes */
+const I3 = {
+  plus: '<path d="M12 5v14M5 12h14"/>', minus: '<path d="M5 12h14"/>', up: '<path d="M12 19V5M6 11l6-6 6 6"/>', dn: '<path d="M12 5v14M6 13l6 6 6-6"/>',
+  srch: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/>', pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+  down: '<path d="M6 9l6 6 6-6"/>', x: '<path d="M6 6l12 12M18 6L6 18"/>', check: '<path d="M4 13c2 1 4 3 5 5 3-6 7-10 11-12"/>',
+  trash: '<path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13"/>'
+};
+const ico3 = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${I3[k]}</svg>`;
+const det3 = (body, lab = 'Détails') => body ? `<details class="det"><summary>${lab}</summary><div>${body}</div></details>` : '';
+/* − valeur + : fn reçoit −1 ou +1 ; id : la valeur affichée, mise à jour sans redessiner l'écran (le nom en cours de saisie reste) */
+const stepper = (lab, v, u, fn, id, aria) => `<div class="frow"><span>${lab}</span><div class="step"><button class="pm" onclick="${fn}(-1)" aria-label="${aria[0]}">${ico3('minus')}</button><b class="v num" id="${id}">${v}${u ? `<small>${u}</small>` : ''}</b><button class="pm" onclick="${fn}(1)" aria-label="${aria[1]}">${ico3('plus')}</button></div></div>`;
+const swRow = (lab, on, fn, id) => `<button class="swrow" role="switch" aria-checked="${!!on}" onclick="${fn}"${id ? ` id="${id}"` : ''}><span>${lab}</span><i class="sw" aria-hidden="true"></i></button>`;
+function swFlip(el) { const on = el.getAttribute('aria-checked') !== 'true'; el.setAttribute('aria-checked', on); return on; }
+/* séance en cours : séance commencée (« Démarrer la séance »), séries saisies, séance par zones ou séance passée en modification */
+function inSession() { return pendingDraft() || !!(F && (F.mode === 'edit' || F.t0 || F.dirty)); }
+
 function vExDetail() {
   const e = EX[viewEx]; if (!e) { viewEx = null; return vCat(); }
   const z = zonesOf(e), info = EXINFO[e.slug], zl = a => a.map(k => ZL[k]).join(', ');
   ZDET = {p: z.p, s: z.s}; const bodies = bodySvg('front') + bodySvg('back'); ZDET = null;
   const hist = SESS.filter(s => setsOf(s, e.id));
-  const chips = [target(e), e.rest ? `repos ${e.rest} s` : '', info ? info.n : '', e.assisted ? 'assisté' : '', e.per_side ? 'chaque côté' : ''].filter(Boolean);
-  let h = `<div class="exd"><div class="fhead"><button class="sm" onclick="closeEx()">‹ Retour aux exercices</button><button class="sm" onclick="editEx=EX[${e.id}];viewEx=null;R();window.scrollTo(0,0)">Modifier</button></div>`;
-  h += exNav(e.id);
-  h += `<div class="card"><div class="big">${diagram(e, true)}</div><h2 style="margin-top:10px">${esc(e.name)}</h2><p>${chips.map(c => `<span class="tag">${esc(c)}</span>`).join(' ')}</p>${e.focus ? `<p class="m">${esc(e.focus)}</p>` : ''}<p class="m">${esc(KIND_DESC[e.kind] || '')} Touche le schéma pour mettre l'animation en pause.</p></div>`;
-  h += `<div class="card"><h2>Muscles travaillés</h2><div class="body det">${bodies}</div>`
-    + (z.p.length ? `<p><b>Principal :</b> ${esc(zl(z.p))}</p>` : '') + (z.s.length ? `<p><b>Secondaires :</b> ${esc(zl(z.s))}</p>` : '')
-    + (e.kind === 'cardio' ? '<p class="m">Exercice cardio : il sollicite surtout le cœur et le souffle.</p>' : '') + '</div>';
+  const sub = [info ? info.n : '', e.assisted ? 'Machine à assistance' : ''].filter(Boolean).join(' · ');
+  let h = `<div class="l3 exd"><div class="big">${diagram(e, true)}</div>`;
+  h += `<section>${z.p.length ? `<span class="zchip"><i></i>${esc(zl(z.p))}</span>` : ''}<h1 class="title" style="font-size:30px">${esc(e.name)}</h1>${scribSvg(140)}
+    <p class="presc">${esc(targetLine(e))}</p>${sub ? `<p class="m">${esc(sub)}</p>` : ''}${e.focus ? `<p class="m">${esc(e.focus)}</p>` : ''}</section>`;
+  h += `<button class="btn btn-s w" style="margin-top:12px" onclick="addExToSession(${e.id})">${inSession() ? 'Ajouter à ma séance en cours' : 'Démarrer une séance avec cet exercice'}</button>`;
   if (info) {
-    h += `<div class="card"><h2>Comment le faire</h2><ol>${info.s.map(x => `<li>${esc(x)}</li>`).join('')}</ol></div>`;
-    h += `<div class="card"><h2>Erreurs fréquentes</h2><ul>${info.e.map(x => `<li>${esc(x)}</li>`).join('')}</ul><p class="sug">${esc(info.c)}</p></div>`;
-  } else {
-    h += `<div class="card"><h2>Notes</h2>${e.tip ? `<p>${esc(e.tip)}</p>` : '<p class="m">Pas de fiche détaillée pour cet exercice que tu as créé. Ajoute une astuce via « Modifier ».</p>'}</div>`;
+    h += `<section class="card"><h2>Comment le faire</h2><ol class="steps">${info.s.map(x => `<li>${esc(x)}</li>`).join('')}</ol>${det3(`<p class="m">${esc(KIND_DESC[e.kind] || '')} Touche le schéma pour mettre l’animation en pause.</p>`)}</section>`;
+    h += `<section class="card"><h2>Erreurs fréquentes</h2><ul class="errs">${info.e.map(x => `<li>${esc(x)}</li>`).join('')}</ul><p class="keep">${esc(info.c)}</p></section>`;
   }
-  if (info && e.tip) h += `<div class="card"><h2>Ton astuce</h2><p>${esc(e.tip)}</p></div>`;
-  // stats personnelles
-  h += '<div class="card"><h2>Tes chiffres</h2>';
-  if (!hist.length) h += '<p class="m">Tu n\'as pas encore fait cet exercice. Les chiffres apparaîtront après ta première séance.</p>';
+  h += `<section class="card"><h2>Muscles travaillés</h2><div class="bodies det">${bodies}</div>`
+    + (z.p.length ? `<div class="zleg"><span><i></i>${esc(zl(z.p))}</span>${z.s.length ? `<span><i class="s"></i>${esc(zl(z.s))}</span>` : ''}</div>` : '')
+    + (e.kind === 'cardio' ? '<p class="m">Surtout le cœur et le souffle.</p>' : '') + '</section>';
+  if (!info || e.tip) h += `<section class="card"><h2>${info ? 'Ton astuce' : 'Notes'}</h2>${e.tip ? `<p>${esc(e.tip)}</p>` : '<p class="m">Ajoute une astuce avec « Modifier ».</p>'}</section>`;
+  h += '<section class="card"><h2>Tes chiffres</h2>';
+  if (!hist.length) h += '<p class="m">Tes chiffres apparaîtront après ta première séance.</p>';
   else {
     let bestSet = null, bestScore = null;
     hist.forEach(s => { const b = bestOf(e, setsOf(s, e.id)); if (b && (bestScore == null || b.score > bestScore)) { bestScore = b.score; bestSet = b.set; } });
-    h += `<p><b>${hist.length}</b> séance${hist.length > 1 ? 's' : ''} · dernière le ${frDate(hist[hist.length - 1].day)}</p>`;
-    if (bestSet) h += `<p><b>Meilleure série :</b> ${esc(setText(e, bestSet))}</p>`;
+    const last = hist[hist.length - 1].day, d = dayDate(last).toLocaleDateString('fr-FR', {day: 'numeric', month: 'short'});
+    const top = e.kind === 'weight' ? (() => { const l = hist.flatMap(s => setsOf(s, e.id)).map(a => a[0]).filter(v => v != null); return l.length ? [fmt(e.assisted ? Math.min(...l) : Math.max(...l)), e.assisted ? 'kg d’assistance' : 'kg au plus'] : null; })() : null;
+    const best = top || (bestSet ? [fmt(bestSet[1]), {reps: 'reps au mieux', time: 's au mieux', cardio: 'min au mieux'}[e.kind] || ''] : null);
+    h += `<div class="sum"><div><b>${hist.length}</b><span>séance${hist.length > 1 ? 's' : ''}</span></div>${best ? `<div><b>${best[0]}</b><span>${best[1]}</span></div>` : ''}<div><b>${esc(d.replace(/\.$/, '.'))}</b><span>dernière</span></div></div>`;
     h += advice(e, null).replace(/<svg[\s\S]*?<\/svg>/g, "");
     const sr = exSeries(e), lab = e.kind === 'weight' ? (e.assisted ? 'Assistance' : 'Charge max') : e.kind === 'cardio' ? 'Minutes' : e.kind === 'time' ? 'Durée (s)' : 'Meilleure série (reps)';
-    h += chart([...(sr.rm.length ? [{pts: sr.rm, c: 'l2'}] : []), {pts: sr.pts, c: 'l1', dot: 'p1'}], {label: `${e.name} : ${lab}`, int: e.kind !== 'weight', few: 'Pas encore assez de points pour tracer une courbe (il en faut au moins 2).'}) + `<p class="m">${lab}${sr.rm.length ? ' (orange) · 1RM estimé (gris pointillé)' : ''}</p>`;
+    h += chart([...(sr.rm.length ? [{pts: sr.rm, c: 'l2'}] : []), {pts: sr.pts, c: 'l1', dot: 'p1'}], {label: `${e.name} : ${lab}`, int: e.kind !== 'weight', few: 'Il faut au moins 2 séances pour tracer une courbe.'})
+      + (sr.pts.length > 1 ? `<div class="leg"><span><i></i>${lab}</span>${sr.rm.length ? '<span><i class="est"></i>1RM estimé (≈)</span>' : ''}</div>` : '')
+      + det3(bestSet ? `<p>Meilleure série${NB}: ${esc(setText(e, bestSet))}</p>` + (sr.rm.length ? '<p class="m">1RM : charge que tu pourrais soulever une fois, estimée à partir de tes séries.</p>' : '') : '');
   }
-  h += '</div>';
-  const progs = WO.filter(w => w.items.includes(e.id)).map(w => { const x = exIn(e, w); return esc(w.name) + (x.own ? ` <span class="m">(${esc(target(x))}${x.rest && x.kind !== 'cardio' ? ', repos ' + x.rest + ' s' : ''})</span>` : ''); });
-  h += `<div class="card"><h2>Dans mes programmes</h2><p>${progs.length ? progs.join(', ') : '<span class="m">Dans aucun programme pour l\'instant.</span>'}</p></div>`;
-  h += `<button class="go" onclick="addExToSession(${e.id})">Ajouter à ma séance en cours</button>` + exNav(e.id) + '</div>';
-  return h;
+  h += '</section>';
+  const progs = WO.filter(w => w.items.includes(e.id));
+  h += `<section class="card"><h2>Dans tes programmes</h2>${progs.length ? progs.map(w => `<div class="lrow" style="cursor:default"><div class="d"><b>${esc(w.name)}</b><span class="num">${esc(targetLine(exIn(e, w)))}</span></div></div>`).join('') : '<p class="m">Dans aucun programme.</p>'}</section>`;
+  const ids = catOrder(), i = ids.indexOf(e.id), pv = EX[ids[i - 1]], nx = EX[ids[i + 1]];
+  h += `<div class="pn"><button class="btn btn-s" onclick="stepEx(-1)" ${i > 0 ? '' : 'disabled'}>‹ Précédent<small>${pv ? esc(pv.name) : ''}</small></button><button class="btn btn-s" onclick="stepEx(1)" ${nx ? '' : 'disabled'}>Suivant ›<small>${nx ? esc(nx.name) : ''}</small></button></div>`;
+  return h + '</div>';
 }
 
 function vCat() {
   if (editEx) return exForm();
   if (viewEx) return vExDetail();
-  let h = `<div class="card"><div class="row" style="grid-template-columns:1fr auto"><input id="q" placeholder="Rechercher un exercice" value="${esc(catQ)}" oninput="catQ=this.value;listCat()"><button class="sm" onclick="editEx={};R()">+ Nouveau</button></div>
-    <label class="ck"><input type="checkbox" ${catArch ? 'checked' : ''} onchange="catArch=this.checked;listCat()">Afficher les exercices archivés</label></div><div id="catlist">${catList()}</div>`;
-  return h;
+  const g = groups();
+  return `<div class="l3"><h1 class="title">Tes exercices</h1>${scribSvg(130)}
+    <div style="display:flex;gap:8px;margin-top:16px"><div class="srch">${ico3('srch')}<input id="q" class="inp" type="search" placeholder="Rechercher" aria-label="Rechercher un exercice" value="${esc(catQ)}" oninput="catQ=this.value;listCat()"></div><button class="btn btn-s" onclick="editOpen(null)" aria-label="Nouvel exercice">${ico3('plus')}Nouveau</button></div>
+    <div class="scroller" style="margin-top:12px" role="group" aria-label="Groupe">${['', ...g].map(x => `<button class="chip" aria-pressed="${catG === x}" onclick="catG=${esc(JSON.stringify(x))};R()">${x ? esc(x) : 'Tous'}</button>`).join('')}</div>
+    <div id="catlist">${catList()}</div>
+    <button class="btn-t" style="margin-top:12px" onclick="catArch=!catArch;R()">${catArch ? 'Masquer les exercices archivés' : 'Afficher les exercices archivés'}</button></div>`;
 }
 function listCat() { $('catlist').innerHTML = catList(); }
-function catList() {
+function catMatch() {   // même filtre pour la liste et pour Précédent / Suivant de la fiche
   const q = catQ.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-  const match = e => !q || (e.name + ' ' + e.focus + ' ' + e.grp).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(q);
+  return e => (catArch || !e.archived) && (!catG || e.grp === catG) && (!q || (e.name + ' ' + e.focus + ' ' + e.grp).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(q));
+}
+function catList() {
+  const ok = catMatch();
   let h = '';
   groups().forEach(g => {
-    const list = Object.values(EX).filter(e => e.grp === g && (catArch || !e.archived) && match(e)).sort((a, b) => a.archived - b.archived || a.name.localeCompare(b.name, 'fr'));
+    const list = Object.values(EX).filter(e => e.grp === g && ok(e)).sort((a, b) => a.archived - b.archived || a.name.localeCompare(b.name, 'fr'));
     if (!list.length) return;
-    h += `<h3>${esc(g)}</h3><div class="card">`;
-    list.forEach(e => {
-      h += `<div class="li ${e.archived ? 'arch' : ''}"><div class="th" onclick="openEx(${e.id})">${diagram(e)}</div><div class="n" onclick="openEx(${e.id})"><b>${esc(e.name)}</b>${e.archived ? '<span class="tag">archivé</span>' : ''}${e.assisted ? '<span class="tag">assisté</span>' : ''}
-        <p class="m">${esc(target(e))}${e.focus ? ' · ' + esc(e.focus) : ''}</p></div>
-        <button class="sm" onclick="editEx=EX[${e.id}];R();window.scrollTo(0,0)">Modifier</button></div>`;
-    });
-    h += '</div>';
+    h += `<h3 class="gh">${esc(g)} <span class="num">· ${list.length}</span></h3><div class="list">` + list.map(e => { const zp = zonesOf(e).p;
+      return `<button class="li exrow ${e.archived ? 'arch' : ''}" onclick="openEx(${e.id})"><span class="th">${diagram(e)}</span><span class="d"><b>${esc(e.name)}${e.archived ? '<span class="tag">archivé</span>' : ''}</b><span class="num">${esc(target(e))}</span>${zp.length ? `<span> · ${esc(zp.map(k => ZL[k]).join(', '))}</span>` : ''}</span>${CHEV}</button>`; }).join('') + '</div>';
   });
-  return h || '<p class="empty">Aucun exercice ne correspond.</p>';
+  return h || '<p class="m" style="margin-top:16px">Aucun exercice ne correspond.</p>';
 }
+/* formulaire : EFD garde les valeurs en cours (les boutons − et + ne redessinent pas l'écran) */
+let EFD = null, EFROM = null;
+function editOpen(id) { EFROM = id; editEx = id ? EX[id] : {}; viewEx = null; EFD = null; R(); window.scrollTo(0, 0); }
+function exCancel() { editEx = null; EFD = null; viewEx = EFROM && EX[EFROM] ? EFROM : null; EFROM = null; R(); window.scrollTo(0, 0); }
+const UNIT = {weight: 'Répétitions', reps: 'Répétitions', time: 'Secondes', cardio: 'Minutes'};
+const KHINT = {weight: 'Charge et répétitions à chaque série.', reps: 'Répétitions, lest facultatif.', time: 'Secondes à chaque série, lest facultatif.', cardio: 'Minutes ; le nombre de séries ne compte pas.'};
 function exForm() {
   const e = editEx, isNew = !e.id;
-  const d = Object.assign({name: '', grp: GROUP_ORDER[0], kind: 'weight', sets: 3, target_min: 10, target_max: 12, rest: 90, focus: '', tip: '', green: 0, per_side: 0, assisted: 0}, e);
-  const inPrograms = isNew ? [] : WO.filter(w => w.items.includes(e.id)).map(w => w.name), ownIn = isNew ? [] : WO.filter(w => exIn(e, w).own).map(w => w.name);
-  let h = `<div class="card"><h2>${isNew ? 'Nouvel exercice' : 'Modifier l\'exercice'}</h2>
-    <label>Nom<input id="e-name" value="${esc(d.name)}" maxlength="120"></label>
-    <div class="g2"><label>Groupe<select id="e-grps" onchange="grpPick()">${grpChoices(d.grp).map(g => `<option value="${esc(g)}" ${g === d.grp ? 'selected' : ''}>${esc(g)}</option>`).join('')}<option value="">Autre groupe…</option></select></label>
-      <label>Type de saisie<select id="e-kind" onchange="kindHint()">${Object.entries(KIND_LABEL).map(([k, t]) => `<option value="${k}" ${k === d.kind ? 'selected' : ''}>${t}</option>`).join('')}</select></label></div>
-    <label id="e-grpl" style="display:none;margin-top:8px">Nom du nouveau groupe<input id="e-grp" value="" maxlength="60"></label>
-    <div class="g3"><label>Séries<input id="e-sets" type="number" min="1" max="10" value="${d.sets}"></label>
-      <label id="e-minl">Cible min<input id="e-min" type="number" min="1" value="${d.target_min ?? ''}"></label>
-      <label id="e-maxl">Cible max<input id="e-max" type="number" min="1" value="${d.target_max ?? ''}"></label></div>
-    <p class="m" id="e-hint"></p>
-    <div class="g2"><label>Repos (s)<input id="e-rest" type="number" min="0" max="600" step="15" value="${d.rest}"></label><div></div></div>
-    <label style="margin-top:8px">Rôle / muscles<input id="e-focus" value="${esc(d.focus)}" maxlength="200"></label>
-    <label style="margin-top:8px">Consigne technique<textarea id="e-tip" maxlength="1000">${esc(d.tip)}</textarea></label>
-    <label class="ck"><input id="e-side" type="checkbox" ${d.per_side ? 'checked' : ''}>Par côté (unilatéral)</label>
-    <label class="ck" id="e-assl"><input id="e-ass" type="checkbox" ${d.assisted ? 'checked' : ''}>Machine à assistance (progresser = baisser la charge)</label>
-    <button class="go" onclick="saveEx()">${isNew ? 'Créer l\'exercice' : 'Enregistrer'}</button>
-    <button class="sm w" onclick="editEx=null;R()">Retour au catalogue</button>`;
+  if (!EFD || EFD.src !== e) EFD = Object.assign({name: '', grp: GROUP_ORDER[0], kind: 'weight', sets: 3, target_min: 10, target_max: 12, rest: 90, focus: '', tip: '', green: 0, per_side: 0, assisted: 0}, e, {src: e});
+  const d = EFD, inPrograms = isNew ? [] : WO.filter(w => w.items.includes(e.id)).map(w => w.name), ownIn = isNew ? [] : WO.filter(w => exIn(e, w).own).map(w => w.name);
+  let h = `<div class="l3 stack"><section class="card stack"><label class="fld"><span>Nom</span><input id="e-name" class="inp" value="${esc(d.name)}" maxlength="120" placeholder="Par exemple : Fentes bulgares" oninput="EFD.name=this.value"></label>
+    <label class="fld"><span>Groupe</span><div class="selw"><select id="e-grps" class="inp" onchange="grpPick()">${grpChoices(d.grp).map(g => `<option value="${esc(g)}" ${g === d.grp ? 'selected' : ''}>${esc(g)}</option>`).join('')}<option value="">Autre groupe…</option></select>${ico3('down')}</div></label>
+    <label class="fld" id="e-grpl" style="display:none"><span>Nom du nouveau groupe</span><input id="e-grp" class="inp" value="" maxlength="60"></label>
+    <div class="fld"><span>Saisie</span><div class="seg" role="group" aria-label="Saisie" id="e-kind">${[['weight', 'Charge'], ['reps', 'Reps'], ['time', 'Secondes'], ['cardio', 'Cardio']].map(([k, t]) => `<button aria-pressed="${k === d.kind}" data-k="${k}" onclick="efKind('${k}')">${t}</button>`).join('')}</div><p class="def" id="e-hint">${KHINT[d.kind]}</p></div></section>
+    <section class="card" style="padding-top:4px;padding-bottom:4px"><div id="e-setsr"${d.kind === 'cardio' ? ' hidden' : ''}>${stepper('Séries', d.sets, '', 'efSets', 'e-sets', ['Une série de moins', 'Une série de plus'])}</div>
+      <div class="frow"><span id="e-unit">${UNIT[d.kind]}</span><div class="range"><input id="e-min" class="inp mini" inputmode="numeric" value="${d.target_min ?? ''}" aria-label="Cible, minimum" oninput="EFD.target_min=this.value"><span class="m">à</span><input id="e-max" class="inp mini" inputmode="numeric" value="${d.target_max ?? ''}" aria-label="Cible, maximum" oninput="EFD.target_max=this.value"></div></div>
+      <div id="e-restr"${d.kind === 'cardio' ? ' hidden' : ''}>${stepper('Repos', d.rest, 's', 'efRest', 'e-rest', ['15 secondes de moins', '15 secondes de plus'])}</div></section>
+    <section class="card" style="padding-top:4px;padding-bottom:4px">${swRow('Chaque côté', d.per_side, 'EFD.per_side=swFlip(this)', 'e-side')}
+      <div id="e-assl"${d.kind === 'weight' ? '' : ' hidden'}>${swRow('Machine à assistance', d.assisted, 'EFD.assisted=swFlip(this)', 'e-ass')}</div>
+      ${det3('<p>Chaque côté : un bras ou une jambe à la fois.</p><p>Machine à assistance : progresser veut dire baisser la charge.</p>')}</section>
+    <section class="card stack"><label class="fld"><span>Muscles visés <small>· facultatif</small></span><input id="e-focus" class="inp" value="${esc(d.focus)}" maxlength="200" oninput="EFD.focus=this.value"></label>
+      <label class="fld"><span>Ton astuce <small>· facultatif</small></span><textarea id="e-tip" class="inp" maxlength="1000" oninput="EFD.tip=this.value">${esc(d.tip)}</textarea></label></section>`;
   if (!isNew) {
-    h += `<p class="m" style="margin-top:12px">${inPrograms.length ? 'Présent dans : ' + inPrograms.map(esc).join(', ') + '.' : 'Dans aucun programme.'} Modifier cet exercice n'efface aucun historique.</p>${ownIn.length ? `<p class="m">Réglage propre gardé dans : ${ownIn.map(esc).join(', ')}. Ces programmes ne prennent pas les séries, la cible ni le repos d'ici.</p>` : ''}<div class="acts">`;
-    h += e.archived ? `<button class="sm" onclick="archEx(${e.id},false)">Restaurer</button>`
-      : `<button class="sm" onclick="archEx(${e.id},true)">Archiver</button>`;
-    if (!e.used) h += `<button class="sm danger" onclick="delEx(${e.id})">Supprimer</button>`;
-    h += '</div>';
+    h += `<section class="card"><p>${inPrograms.length ? 'Dans ' + inPrograms.map(esc).join(', ') + '.' : 'Dans aucun programme pour l’instant.'}</p><p class="m">Ton historique reste le même.</p>`
+      + det3(ownIn.length ? `<p>Réglage propre gardé dans ${ownIn.map(esc).join(', ')} : ces programmes ne prennent pas les séries, la cible ni le repos d’ici.</p>` : '')
+      + `<div style="display:flex;gap:8px;margin:8px -8px 0;flex-wrap:wrap">${e.archived ? `<button class="btn-t" onclick="archEx(${e.id},false)">Restaurer</button>` : `<button class="btn-t" onclick="archEx(${e.id},true)">Archiver</button>`}`
+      + (e.used ? '' : `<button class="btn-t btn-d" onclick="delEx(${e.id})">${ico3('trash')}Supprimer l’exercice</button>`) + '</div></section>';
   }
-  setTimeout(kindHint, 0);
-  return h + '</div>';
+  h += `</div><div class="actbar"><button class="btn-t" onclick="exCancel()">Annuler</button><button class="btn btn-p" onclick="saveEx()">${isNew ? 'Créer l’exercice' : 'Enregistrer'}</button></div>`;
+  return h;
 }
+function efKind(k) {
+  EFD.kind = k; document.querySelectorAll('#e-kind button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k));
+  $('e-hint').textContent = KHINT[k]; $('e-unit').textContent = UNIT[k];
+  $('e-setsr').hidden = $('e-restr').hidden = k === 'cardio'; $('e-assl').hidden = k !== 'weight';
+}
+function efSets(d) { EFD.sets = Math.max(1, Math.min(10, (+EFD.sets || 3) + d)); $('e-sets').textContent = EFD.sets; }
+function efRest(d) { EFD.rest = Math.max(0, Math.min(600, (+EFD.rest || 0) + 15 * d)); $('e-rest').innerHTML = EFD.rest + '<small>s</small>'; }
 /* Groupe : liste déroulante (le champ libre avec suggestions ne montrait que le groupe déjà écrit sur Android).
    Groupes du catalogue + groupes standard, puis « Autre groupe… » qui ouvre un champ libre. */
 function grpChoices(cur) { const l = [...new Set([...GROUP_ORDER, ...groups()])]; if (cur && !l.includes(cur)) l.push(cur); return l; }
 function grpPick() { const o = $('e-grps').value === ''; $('e-grpl').style.display = o ? '' : 'none'; if (o) $('e-grp').focus(); }
 function grpValue() { const v = $('e-grps').value; return v === '' ? $('e-grp').value.trim() : v; }
-function kindHint() {
-  const k = $('e-kind') && $('e-kind').value; if (!k) return;
-  $('e-hint').textContent = {weight: 'Cible en répétitions par série.', reps: 'Cible en répétitions par série, lest facultatif.', time: 'Cible en secondes par série.', cardio: 'Cible en minutes. Le nombre de séries est ignoré.'}[k];
-  $('e-assl').style.display = k === 'weight' ? '' : 'none';
-}
 function saveEx() {
   if (!grpValue()) return toast('Écris le nom du nouveau groupe');
-  const d = {name: $('e-name').value, grp: grpValue(), kind: $('e-kind').value, sets: $('e-sets').value,
-    target_min: $('e-min').value, target_max: $('e-max').value, rest: $('e-rest').value, focus: $('e-focus').value,
-    tip: $('e-tip').value, per_side: $('e-side').checked, assisted: $('e-ass').checked, green: !!(editEx && editEx.green)};
+  const D = EFD || {};
+  const d = {name: $('e-name').value, grp: grpValue(), kind: D.kind || 'weight', sets: D.sets, target_min: $('e-min').value, target_max: $('e-max').value, rest: D.rest,
+    focus: $('e-focus').value, tip: $('e-tip').value, per_side: !!D.per_side, assisted: D.kind === 'weight' && !!D.assisted, green: !!(editEx && editEx.green)};
   const id = editEx.id;
-  act(async () => { await (id ? api('PUT', `/api/exercises/${id}`, d) : api('POST', '/api/exercises', d)); editEx = null; }, id ? 'Exercice modifié' : 'Exercice créé');
+  act(async () => { const r = await (id ? api('PUT', `/api/exercises/${id}`, d) : api('POST', '/api/exercises', d)); editEx = null; EFD = null; viewEx = id ? (EFROM ? id : null) : null; EFROM = null; }, id ? 'Exercice modifié' : 'Exercice créé');
 }
 function archEx(id, flag) {
   if (flag) {
     const progs = WO.filter(w => w.items.includes(id)).map(w => w.name);
     if (!confirm(`Archiver cet exercice ?${progs.length ? ' Il sera retiré de : ' + progs.join(', ') + '.' : ''} Son historique est conservé.`)) return;
   }
-  act(async () => { await api('POST', `/api/exercises/${id}/archive`, {archived: flag}); editEx = null; progDraft = null; }, flag ? 'Exercice archivé' : 'Exercice restauré');
+  act(async () => { await api('POST', `/api/exercises/${id}/archive`, {archived: flag}); editEx = null; EFD = null; EFROM = null; progDraft = null; }, flag ? 'Exercice archivé' : 'Exercice restauré');
 }
 function delEx(id) {
   if (!confirm('Supprimer définitivement cet exercice (jamais utilisé) ?')) return;
-  act(async () => { await api('DELETE', `/api/exercises/${id}`); editEx = null; progDraft = null; }, 'Exercice supprimé');
+  act(async () => { await api('DELETE', `/api/exercises/${id}`); editEx = null; EFD = null; EFROM = null; progDraft = null; }, 'Exercice supprimé');
 }
 
-/* ------------------------------------------------------------------ vue Programmes */
+/* ------------------------------------------------------------------ vue Programmes
+   Changements en attente (lot 3) : chaque programme modifié garde son brouillon (PDR, clé muscu-prog-attente) quand on change
+   d'onglet ou de programme ; rien n'est appliqué aux séances avant « Enregistrer ». « Annuler » efface le brouillon. */
+let PDR = recall('muscu-prog-attente') || {};
+const progSnap = w => JSON.stringify({name: w.name, items: w.items, settings: progSettings({items: w.items, settings: w.settings || {}})});
+function progKeep() {   // brouillon enregistré seulement s'il diffère du programme enregistré
+  const D = progDraft; if (!D) return;
+  if (progChanged()) PDR[D.id] = {id: D.id, name: D.name, items: D.items, settings: D.settings, base: D.base}; else delete PDR[D.id];
+  store('muscu-prog-attente', PDR);
+}
+function progPending(wid) {   // vrai si le programme wid a des changements en attente (jamais pour un programme disparu)
+  const d = PDR[wid], w = WO.find(x => x.id === wid);
+  return !!(d && w && progSnap({name: d.name, items: d.items, settings: d.settings}) !== progSnap(w));
+}
+/* séance lancée depuis un programme modifié mais pas enregistré : elle suit la version enregistrée, et l'écran Séance le dit */
+function progPendLine() {
+  const w = F && F.mode === 'new' && F.wid && WO.find(x => x.id === F.wid);
+  return w && progPending(w.id) ? `<p class="m pend">${esc(w.name)} modifié, pas enregistré : séance faite avec la version enregistrée.</p>` : '';
+}
 function vProg() {
+  Object.keys(PDR).forEach(k => { if (!WO.some(w => w.id === +k)) delete PDR[k]; });
   if (progW !== null && !WO.some(w => w.id === progW)) { progW = null; progDraft = null; }
   if (progW === null && WO.length) progW = WO[0].id;
-  let h = '<div class="tabs">' + WO.map(w => `<button class="${w.id === progW ? 'on' : ''}" onclick="selProg(${w.id})">${esc(w.name)}</button>`).join('')
-    + `<button onclick="newProg()">+ Nouveau</button></div>`;
-  if (progW === null) return h + '<p class="empty">Aucun programme. Crée-en un.</p>';
+  let h = `<div class="l3"><div class="scroller" style="margin-top:4px" role="group" aria-label="Programme">` + WO.map(w => { const pd = w.id !== progW && progPending(w.id);
+    return `<button class="chip" aria-pressed="${w.id === progW}" onclick="selProg(${w.id})"${pd ? ` aria-label="${esc(w.name)}, pas encore enregistré"` : ''}>${esc(w.name)}${pd ? '<i class="dot"></i>' : ''}</button>`; }).join('')
+    + `<button class="chip" onclick="newProg()">${ico3('plus')}Nouveau</button></div>`;
+  if (progW === null) return h + '<p class="m" style="margin-top:16px">Aucun programme. Crée-en un.</p></div>';
   const w = WO.find(x => x.id === progW);
-  if (!progDraft || progDraft.id !== w.id) progDraft = {id: w.id, name: w.name, items: [...w.items], settings: JSON.parse(JSON.stringify(w.settings || {})), open: null};
-  const D = progDraft;
-  h += `<div class="card"><label>Nom du programme<input id="p-name" value="${esc(D.name)}" oninput="progDraft.name=this.value"></label>`;
-  if (!D.items.length) h += '<p class="empty">Programme vide.</p>';
-  else h += '<p class="m" style="margin-top:8px">« Régler » change les séries, la cible et le repos d’un exercice pour ce programme seulement.</p>';
-  D.items.forEach((id, i) => {
-    const e0 = EX[id]; if (!e0) return;
-    const e = exIn(e0, D), op = D.open === id;
-    h += `<div class="li"><div class="n"><b>${i + 1}. ${esc(e.name)}</b><p class="m">${esc(target(e))}${e.rest && e.kind !== 'cardio' ? ' · repos ' + e.rest + ' s' : ''}${ownTag(e)}</p>
-      <button class="sm" onclick="cfgProg(${id})" aria-expanded="${op}" aria-label="Régler ${esc(e.name)} dans ce programme">Régler</button></div>
-      <button class="sm mv" ${i ? '' : 'disabled'} onclick="mvProg(${i},-1)" aria-label="Monter">↑</button>
-      <button class="sm mv" ${i < D.items.length - 1 ? '' : 'disabled'} onclick="mvProg(${i},1)" aria-label="Descendre">↓</button>
-      <button class="sm danger mv" onclick="rmProg(${i})" aria-label="Retirer">✕</button></div>`;
-    if (op) h += cfgBox(e0, D.settings[id] || {});
-  });
-  h += `<div class="row" style="grid-template-columns:1fr auto;margin-top:10px"><select id="p-add"><option value="">Ajouter un exercice…</option>${exOptions(D.items)}</select><button class="sm" onclick="addProg()">Ajouter</button></div>
-    ${progChanged() ? '<p class="sug">Modifications non enregistrées.</p>' : ''}<button class="go" onclick="saveProg()">Enregistrer le programme</button>
-    <div class="acts"><button class="sm" onclick="progDraft=null;R()">Annuler les changements</button>
-    <button class="sm" onclick="mvWorkout(-1)">◀ Déplacer</button><button class="sm" onclick="mvWorkout(1)">Déplacer ▶</button>
-    <button class="sm danger" onclick="delProg()">Supprimer le programme</button></div>
-    <p class="m" style="margin-top:8px">Supprimer un programme ne supprime ni les exercices ni l'historique des séances.</p></div>`;
+  if (!progDraft || progDraft.id !== w.id) {
+    const d = PDR[w.id];
+    progDraft = d ? {id: w.id, name: d.name, items: d.items.filter(i => EX[i] && !EX[i].archived), settings: d.settings || {}, base: d.base, open: null}
+      : {id: w.id, name: w.name, items: [...w.items], settings: JSON.parse(JSON.stringify(w.settings || {})), base: progSnap(w), open: null};
+  }
+  const D = progDraft, ch = progChanged();
+  if (ch) h += '<p class="m" style="font-size:13px;margin-top:4px">Gardé si tu changes d’onglet ou de programme.</p>';
+  h += `<div style="display:flex;align-items:flex-start;gap:4px;margin-top:12px"><div style="flex:1;min-width:0"><h1 class="title">${esc(D.name)}</h1>${scribSvg(130)}</div><button class="ib" onclick="renProg()" aria-label="Renommer le programme">${ico3('pen')}</button></div>`;
+  h += `<p class="m num" style="margin:6px 0 12px">${D.items.length} exercice${D.items.length > 1 ? 's' : ''}</p>`;
+  if (ch && D.base !== progSnap(w)) h += '<p class="m">Ce programme a changé depuis. « Enregistrer » garde tes changements.</p>';
+  if (!D.items.length) h += '<p class="m">Programme vide.</p>';
+  else h += '<div class="list">' + D.items.map((id, i) => {
+    const e0 = EX[id]; if (!e0) return '';
+    const e = exIn(e0, D), op = D.open === id, card = e.kind === 'cardio';
+    let r = `<div class="pitem"><button class="lrow" aria-expanded="${op}" onclick="cfgProg(${id})"><span class="n">${i + 1}</span><span class="d"><b>${esc(e.name)}</b><span class="num">${esc(targetLine(e))}</span></span>${CHEV}</button>`;
+    if (op) r += `<div class="pedit">${card ? '' : stepper('Séries', e.sets, '', `pSets.bind(null,${id})`, 'c-sets', ['Une série de moins', 'Une série de plus'])}
+      <div class="frow"><span>${UNIT[e.kind]}</span><div class="range"><input id="c-min" class="inp mini" inputmode="numeric" value="${e.target_min ?? ''}" aria-label="Cible, minimum" onchange="pRange(${id})"><span class="m">à</span><input id="c-max" class="inp mini" inputmode="numeric" value="${e.target_max ?? ''}" aria-label="Cible, maximum" onchange="pRange(${id})"></div></div>
+      ${card ? '' : stepper('Repos', e.rest, 's', `pRest.bind(null,${id})`, 'c-rest', ['15 secondes de moins', '15 secondes de plus'])}
+      <p class="def">Pour ce programme seulement.${e.own ? '' : ' Valeurs de l’exercice.'}</p>
+      <div class="acts"><button class="ib" onclick="mvProg(${i},-1)" aria-label="Monter ${esc(e.name)}" ${i ? '' : 'disabled'}>${ico3('up')}</button><button class="ib" onclick="mvProg(${i},1)" aria-label="Descendre ${esc(e.name)}" ${i < D.items.length - 1 ? '' : 'disabled'}>${ico3('dn')}</button>${e.own ? `<button class="btn-t" onclick="cfgReset(${id})">Valeurs de l’exercice</button>` : ''}<span style="flex:1"></span><button class="btn-t btn-d" onclick="rmProg(${i})">${ico3('trash')}Retirer</button></div></div>`;
+    return r + '</div>';
+  }).join('') + '</div>';
+  h += `<label class="fld" style="margin-top:12px"><span class="sr">Ajouter un exercice</span><div class="selw"><select id="p-add" class="inp" style="font-weight:700" onchange="addProg()"><option value="">+ Ajouter un exercice</option>${exOptions(D.items)}</select>${ico3('down')}</div></label>`;
+  h += `<section class="card" style="margin-top:20px;padding-top:4px;padding-bottom:8px">${det3(`<p class="m">Supprimer un programme ne supprime ni les exercices ni l’historique.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-left:-8px"><button class="btn-t" onclick="mvWorkout(-1)">Déplacer avant</button><button class="btn-t" onclick="mvWorkout(1)">Déplacer après</button><button class="btn-t btn-d" onclick="delProg()">${ico3('trash')}Supprimer le programme</button></div>`, 'Autres actions')}</section></div>`;
+  const other = WO.find(x => x.id !== D.id && progPending(x.id));
+  if (ch) h += `<div class="actbar"><span class="info">Pas encore enregistré</span><button class="btn-t" onclick="progCancel()">Annuler</button><button class="btn btn-p" style="flex:none" onclick="saveProg()">Enregistrer</button></div>`;
+  else if (other) h += `<div class="actbar"><span class="info">${esc(other.name)}${NB}: pas encore enregistré</span><button class="btn btn-s" style="flex:none" onclick="selProg(${other.id})">Voir</button></div>`;
   return h;
 }
-function cfgBox(e, s) {   // réglage d'un exercice dans le programme : vide = valeur de l'exercice
-  const u = {time: 's', cardio: 'min'}[e.kind] || 'reps', card = e.kind === 'cardio', v = k => s[k] == null ? '' : s[k];
-  const f = (id, lab, k, min, max, step) => `<label>${lab}<input id="${id}" type="number" inputmode="numeric" min="${min}" max="${max}" step="${step}" value="${v(k)}" placeholder="${e[k] ?? ''}"></label>`;
-  return `<div class="cfg"><p class="m">Pour ce programme seulement. Une case vide garde la valeur de l’exercice.</p><p class="m">Valeurs de l’exercice : <b>${esc(target(e))}${e.rest && !card ? ', repos ' + e.rest + ' s' : ''}</b></p>
-    ${card ? '' : `<div class="g2">${f('c-sets', 'Séries', 'sets', 1, 10, 1)}${f('c-rest', 'Repos (s)', 'rest', 0, 600, 15)}</div>`}
-    <div class="g2">${f('c-min', `Cible min (${u})`, 'target_min', 1, 1000, 1)}${f('c-max', `Cible max (${u})`, 'target_max', 1, 1000, 1)}</div>
-    <div class="acts"><button class="sm" onclick="cfgOk(${e.id})">Valider</button><button class="sm" onclick="cfgReset(${e.id})">Revenir aux valeurs de l’exercice</button><button class="sm" onclick="progDraft.open=null;R()">Fermer</button></div></div>`;
-}
 function cfgProg(id) { progDraft.open = progDraft.open === id ? null : id; R(); }
-function cfgOk(id) {
-  const rd = (k, lo, hi) => { const el = $(k); if (!el || el.value.trim() === '') return null; const n = Math.trunc(num(el.value)); return isFinite(n) ? Math.max(lo, Math.min(hi, n)) : null; };
-  let mn = rd('c-min', 1, 1000), mx = rd('c-max', 1, 1000);
-  if (mn == null) mn = mx; if (mx == null) mx = mn; if (mn && mx && mx < mn) [mn, mx] = [mx, mn];   // mêmes règles que le serveur
-  const s = {sets: rd('c-sets', 1, 10), target_min: mn, target_max: mx, rest: rd('c-rest', 0, 600)};
-  if (ITEM_KEYS.some(k => s[k] != null)) progDraft.settings[id] = s; else delete progDraft.settings[id];
-  progDraft.open = null; R();
+function pSet(id, k, v) {   // un réglage propre au programme ; vide (null) = valeur de l'exercice
+  const s = progDraft.settings[id] = Object.assign({sets: null, target_min: null, target_max: null, rest: null}, progDraft.settings[id]);
+  s[k] = v; progKeep(); R();
 }
-function cfgReset(id) { delete progDraft.settings[id]; progDraft.open = null; R(); }
-function progSettings(D) { const o = {}; D.items.forEach(id => { if (D.settings[id]) o[id] = D.settings[id]; }); return o; }
+function pSets(id, d) { const e = exIn(EX[id], progDraft); pSet(id, 'sets', Math.max(1, Math.min(10, e.sets + d))); }
+function pRest(id, d) { const e = exIn(EX[id], progDraft); pSet(id, 'rest', Math.max(0, Math.min(600, (e.rest || 0) + 15 * d))); }
+function pRange(id) {   // mêmes règles que le serveur : une seule cible = les deux, cibles inversées remises dans l'ordre
+  const rd = k => { const v = $(k).value.trim(); if (v === '') return null; const n = Math.trunc(num(v)); return isFinite(n) ? Math.max(1, Math.min(1000, n)) : null; };
+  let mn = rd('c-min'), mx = rd('c-max');
+  if (mn == null) mn = mx; if (mx == null) mx = mn; if (mn && mx && mx < mn) [mn, mx] = [mx, mn];
+  const s = progDraft.settings[id] = Object.assign({sets: null, target_min: null, target_max: null, rest: null}, progDraft.settings[id]);
+  s.target_min = mn; s.target_max = mx; progKeep(); R();
+}
+function cfgReset(id) { delete progDraft.settings[id]; progKeep(); R(); }
+function progSettings(D) { const o = {}; D.items.forEach(id => { if (D.settings[id] && ITEM_KEYS.some(k => D.settings[id][k] != null)) o[id] = D.settings[id]; }); return o; }
 function progChanged() {
   const D = progDraft, w = D && WO.find(x => x.id === D.id); if (!w) return false;
-  return D.name !== w.name || JSON.stringify(D.items) !== JSON.stringify(w.items) || JSON.stringify(progSettings(D)) !== JSON.stringify(progSettings({items: w.items, settings: w.settings || {}}));
+  return progSnap({name: D.name, items: D.items, settings: D.settings}) !== progSnap(w);
 }
-function selProg(id) { progW = id; progDraft = null; R(); }
-function mvProg(i, d) { const a = progDraft.items; [a[i], a[i + d]] = [a[i + d], a[i]]; R(); }
-function rmProg(i) { const [id] = progDraft.items.splice(i, 1); delete progDraft.settings[id]; if (progDraft.open === id) progDraft.open = null; R(); }
-function addProg() { const id = +$('p-add').value; if (id) { progDraft.items.push(id); R(); } }
+function selProg(id) { progW = id; progDraft = null; R(); window.scrollTo(0, 0); }   // le brouillon du programme quitté reste dans PDR
+function mvProg(i, d) { const a = progDraft.items; [a[i], a[i + d]] = [a[i + d], a[i]]; progKeep(); R(); }
+function rmProg(i) { const [id] = progDraft.items.splice(i, 1); delete progDraft.settings[id]; if (progDraft.open === id) progDraft.open = null; progKeep(); R(); }
+function addProg() { const id = +$('p-add').value; if (id) { progDraft.items.push(id); progKeep(); R(); } }
+function renProg() { const n = prompt('Nom du programme', progDraft.name); if (n && n.trim()) { progDraft.name = n.trim(); progKeep(); R(); } }
+function progCancel() { delete PDR[progDraft.id]; store('muscu-prog-attente', PDR); progDraft = null; R(); }
 function saveProg() {
-  if (progDraft.open != null && $('c-min')) cfgOk(progDraft.open);   // réglage ouvert mais pas validé : on le garde
   const D = progDraft;
-  act(async () => { await api('PUT', `/api/workouts/${D.id}`, {name: D.name, items: D.items, settings: progSettings(D)}); progDraft = null; if (F && F.mode === 'new' && F.wid === D.id && !hasValues()) F = null; }, 'Programme enregistré');
+  act(async () => { await api('PUT', `/api/workouts/${D.id}`, {name: D.name, items: D.items, settings: progSettings(D)}); delete PDR[D.id]; store('muscu-prog-attente', PDR); progDraft = null; if (F && F.mode === 'new' && F.wid === D.id && !hasValues()) F = null; }, 'Programme enregistré');
 }
 function newProg() {
   const name = prompt('Nom du nouveau programme', `Séance ${String.fromCharCode(65 + WO.length)}`);
@@ -2167,7 +2411,7 @@ function newProg() {
 function delProg() {
   const w = WO.find(x => x.id === progW);
   if (!confirm(`Supprimer le programme « ${w.name} » ?`)) return;
-  act(async () => { await api('DELETE', `/api/workouts/${w.id}`); progW = null; progDraft = null; if (F && F.wid === w.id) F = null; }, 'Programme supprimé');
+  act(async () => { await api('DELETE', `/api/workouts/${w.id}`); delete PDR[w.id]; store('muscu-prog-attente', PDR); progW = null; progDraft = null; if (F && F.wid === w.id) F = null; }, 'Programme supprimé');
 }
 function mvWorkout(d) {
   const ids = WO.map(w => w.id), i = ids.indexOf(progW), j = i + d;
