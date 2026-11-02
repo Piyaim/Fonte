@@ -86,8 +86,8 @@ try:
         plans = pg.evaluate(CALLS, "plan")
         ok(all(c[1] == "" for c in plans), "sans autorisation : aucun plan confié à la coque")
         notifs(pg); t = pg.inner_text("#app")
-        ok("Notifications bloquées" in t and "Android les bloque pour Fonte." in t, "autorisation refusée : carte « Notifications bloquées »")
-        ok(pg.locator("#app .days .chip[disabled]").count() == 7 and pg.locator("#app button:has-text('Envoyer une notification d’essai')").is_disabled(), "autorisation refusée : réglages grisés")
+        ok("Notifications bloquées" in t and "Android les bloque." in t, "autorisation refusée : carte « Notifications bloquées »")
+        ok(pg.locator("#app .ndays .day[disabled]").count() == 7 and pg.locator("#app button:has-text('Envoyer une notification d’essai')").is_disabled(), "autorisation refusée : réglages grisés")
         pg.click("button:has-text('Activer les notifications')"); time.sleep(.2)
         ok(len(pg.evaluate(CALLS, "request")) == 1, "« Activer les notifications » passe par la coque (demande système ou réglages Android)")
         le(pg, J(0)); time.sleep(.6)
@@ -100,16 +100,22 @@ try:
         notifs(pg); t = pg.inner_text("#app")
         on = pg.evaluate("[...document.querySelectorAll('#app [role=switch]')].map(s => s.getAttribute('aria-label') + '=' + s.getAttribute('aria-checked'))")
         ok(on == ["Notifications=true", "Rappel de séance=true", "Fin du repos=false", "Étapes du programme=true", "Bon retour=true", "Bilan du dimanche=true"], f"interrupteurs par défaut : {on}")
-        jours = pg.evaluate("[...document.querySelectorAll('#app .days .chip')].map(c => c.getAttribute('aria-pressed'))")
+        jours = pg.evaluate("[...document.querySelectorAll('#app .ndays .day')].map(c => c.getAttribute('aria-pressed'))")
         ok(jours == ["true", "false", "false", "true", "false", "false", "false"], f"jours du rappel = jours du questionnaire (lundi, jeudi) : {jours}")
         hs = pg.evaluate("[...document.querySelectorAll('#app input[type=time]')].map(i => i.value)")
         ok(hs == ["18:00", "21:00", "08:00"], f"rappel à 18:00, heures calmes de 21:00 à 08:00 : {hs}")
-        ok(pg.locator("#app button:has-text('Son et vibration')").count() == 5, "un bouton « Son et vibration » par type (Android 8 et plus)")
+        # depuis le lot 4 (décision du 30/10/2026) : un seul bouton pour les 3 messages du programme (même canal), donc 3 boutons en tout
+        ok(pg.locator("#app button:has-text('Son et vibration')").count() == 3 and pg.locator("[data-n=programme] button:has-text('Son et vibration de ces 3 messages')").count() == 1,
+           "un bouton « Son et vibration » par canal (Android 8 et plus), un seul pour les 3 messages du programme")
         ok("Son et vibration / Vibration" not in t and pg.locator("#app :text-is('Silencieux')").count() == 0, "plus de choix « Son et vibration / Vibration / Silencieux »")
-        pg.locator("[data-n=repos] button:has-text('Son et vibration')").click(); pg.locator("[data-n=bilan] button:has-text('Son et vibration')").click(); pg.locator("[data-n=rappel] button:has-text('Son et vibration')").click()
+        pg.locator("[data-n=repos] button:has-text('Son et vibration')").click(); pg.locator("[data-n=programme] button:has-text('Son et vibration')").click(); pg.locator("[data-n=rappel] button:has-text('Son et vibration')").click()
         ok([c[1] for c in pg.evaluate(CALLS, "channel")] == ["repos", "programme", "rappels"], "chaque bouton ouvre le réglage Android de son canal")
         # écriture : titre de 6 mots au plus, une phrase de 15 mots au plus, le reste dans « Détails »
-        cartes = pg.evaluate("[...document.querySelectorAll('#app section.card')].map(c => [c.querySelector('h2').textContent, (c.querySelector('h2 + p') || {}).textContent || ''])")
+        # depuis le lot 4, une carte sans h2 a pour titre le libellé de son interrupteur et pour phrase son sous-titre
+        cartes = pg.evaluate("""[...document.querySelectorAll('#app section.card, #app [data-n] > .swrow')].map(c => { const h = c.matches('.swrow') ? c : c.querySelector('h2') || c.querySelector('.swrow');
+          const t = h.matches('.swrow') ? h.querySelector('span').firstChild.textContent : h.textContent, p = h.matches('.swrow') ? (h.querySelector('small') || {}).textContent : (c.querySelector('h2 + p') || {}).textContent;
+          return [t, p || '']; })""")
+        ok(len(cartes) >= 9, f"(témoin) titres et phrases lus : {len(cartes)}")
         ok(all(len(h.split()) <= 6 and len(ph.split()) <= 15 for h, ph in cartes), f"cartes courtes : {[x for x in cartes if len(x[0].split()) > 6 or len(x[1].split()) > 15]}")
         ok(pg.evaluate("[...document.querySelectorAll('#app details')].every(d => !d.open && d.querySelector('summary').getBoundingClientRect().height >= 44)"), "replis « Détails » fermés, 44 px")
         pg.evaluate(OUVRIR); t = pg.inner_text("#app")
@@ -117,7 +123,7 @@ try:
         ok(not petits, f"cibles de 44 px au moins à 390 px : {petits}")
         ok(not INTERDIT.search(t.replace("Aucune notification sur les Esprits ni les jetons.", "")), "page : ni « raté », ni « manqué », ni Esprits (hors la phrase qui dit qu'il n'y en a pas)")
         pg.set_viewport_size({"width": 360, "height": 800}); time.sleep(.2)
-        petits = pg.evaluate("[...document.querySelectorAll('#app .days .chip')].map(e => Math.round(e.getBoundingClientRect().width)).filter(w => w < 44)")
+        petits = pg.evaluate("[...document.querySelectorAll('#app .ndays .day')].map(e => Math.round(e.getBoundingClientRect().width)).filter(w => w < 44)")
         ok(not petits and not pg.evaluate("document.documentElement.scrollWidth > innerWidth"), f"360 px : jours de 44 px, pas de défilement horizontal ({petits})")
         pg.set_viewport_size({"width": 390, "height": 844})
         # notification d'essai

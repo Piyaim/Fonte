@@ -12,6 +12,8 @@
 # 5. Aucune requête ne sort vers un autre domaine que le serveur de test.
 #   python3 tests/migration_v042.py          (ANCIEN_DIR=/chemin/vers/v042 pour prendre le code d'un worktree)
 import base64, io, json, os, shutil, sqlite3, subprocess, sys, tempfile, time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from donnees_ui import importer_texte, lien_export   # écran Données, ancienne et nouvelle interface (lot 4)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT = 5121; TAG = "v0.4.2"
 TMP = tempfile.mkdtemp(prefix="fonte-migration-v042-"); PROFIL_NAV = os.path.join(TMP, "navigateur")
 DBF = os.path.join(TMP, "data", "suivi.db"); DBF_NEUF = os.path.join(TMP, "neuf", "suivi.db"); DBF_RETOUR = os.path.join(TMP, "retour", "suivi.db")
@@ -114,7 +116,7 @@ try:
             return json.loads(open(dl.value.path(), encoding="utf-8").read())
         def importer(pg, data):
             pg.click("button:has-text('J’ai une sauvegarde')"); time.sleep(.3)
-            pg.fill("#bk", json.dumps(data)); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(2000)
+            importer_texte(pg, json.dumps(data), 2000)
 
         # ============================================================ 1. données créées par la 0.4.2
         srv = serveur(os.path.join(OLD, "server"), DBF); ctx = navigateur(); errs = []
@@ -126,8 +128,8 @@ try:
             pg.click("button:has-text('Remplacer')"); pg.wait_for_selector("text=Ton programme est prêt", timeout=8000)
             rep[mode] = pg.evaluate(REMPLIR, [IMG, THUMB]); time.sleep(.5)
             avant[mode] = pg.evaluate(RELEVE)
-            exports[mode] = telecharger(pg, "Télécharger l'export")
-            if mode == "local": exports["photos"] = telecharger(pg, "Télécharger les photos")
+            exports[mode] = telecharger(pg, lien_export(pg))
+            if mode == "local": exports["photos"] = telecharger(pg, lien_export(pg, True))
             pg.close()
         idb0 = ouvrir(ctx, "local", errs).evaluate(BRUT_IDB)
         ctx.close(); arreter(srv)
@@ -167,7 +169,7 @@ try:
         ok(pg.evaluate("[...JSON.parse(localStorage.getItem('muscu-notif')).rappel.days]") == [0, 2, 4], "réglages par défaut : jours du questionnaire (lundi, mercredi, vendredi)")
         b = pg.evaluate(RELEVE)
         ok(b["export"] == avant["local"]["export"] and b["profil"] == avant["local"]["profil"] and b["jeu"] == avant["local"]["jeu"], "coque simulée : export, profil et jeu inchangés")
-        pg.evaluate("go('donnees')"); time.sleep(.3); pg.click("a:has-text(\"Télécharger l'export\")"); time.sleep(1)
+        pg.evaluate("go('donnees')"); time.sleep(.3); pg.click(f"a:has-text(\"{lien_export(pg)}\")"); time.sleep(1)
         sv = [c for c in pg.evaluate("__N.calls") if c[0] == "save"]
         nouvel_export = sans_date(json.loads(sv[-1][2])) if sv else {}
         ok(bool(sv), "coque simulée : export confié à la coque (enregistrement du fichier)")
@@ -187,7 +189,7 @@ try:
             pg = ouvrir(ctx, mode, errs, "#app button:has-text('Commencer')")
             importer(pg, exports[mode])
             if mode == "local":
-                pg.evaluate("go('donnees')"); time.sleep(.3); pg.fill("#bk", json.dumps(exports["photos"])); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(2000)
+                pg.evaluate("go('donnees')"); time.sleep(.3); importer_texte(pg, json.dumps(exports["photos"]), 2000)
             pg.evaluate("go('accueil')"); pg.reload(); pg.wait_for_selector("#app .card, #app .hero", timeout=8000); time.sleep(.6)
             ok(not QUESTIONNAIRE(pg.inner_text("#app")), f"import de l'export 0.4.2, mode {mode} : le questionnaire saute")
             n = pg.evaluate(RELEVE)

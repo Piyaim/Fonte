@@ -6,6 +6,8 @@
 # Les valeurs attendues sont écrites ici en dur (et non relues dans profil.js) : si une règle est faussée dans
 # profil.js, le test doit échouer.
 import json, os, subprocess, sys, time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from donnees_ui import importer_texte, lien_export   # écran Données, ancienne et nouvelle interface (lot 4)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5114
 env = dict(os.environ, DB_PATH="/tmp/profil.db", PYTHONDONTWRITEBYTECODE="1")
 for f in ("/tmp/profil.db", "/tmp/profil.db-wal", "/tmp/profil.db-shm"):
@@ -181,10 +183,11 @@ try:
         pg.reload(); pg.wait_for_selector("#app #qh:text-is('Ton résumé')"); time.sleep(.4)
         pg.evaluate(OUVRIR); tx = pg.inner_text("#app")   # replis ouverts : « IMC » absent de tout l'écran
         ok("Léa, vérifie puis génère ton programme." in tx and "IMC" not in tx and "kcal" not in tx, "résumé, détail santé masqué : ni IMC ni calories, replis ouverts compris")
-        pg.click("button:has-text(\"Afficher le détail santé\")"); time.sleep(.2); tx = pg.inner_text("#app")
-        ok("IMC\u00a0: 22,8" in tx and "Il ne distingue pas le muscle de la graisse" in tx and "kcal" in tx, "détail santé affiché : IMC, message neutre, calories")
+        pg.click("#app [role=switch][aria-label='Détail santé']"); time.sleep(.2); pg.evaluate(OUVRIR); tx = pg.inner_text("#app")
+        # depuis la 0.7.3 (décision du 30/10/2026) : l'IMC n'est plus affiché, même avec le détail santé ; calories, protéines, sommeil
+        ok("IMC" not in tx and not [m for m in CACHE[2:] if m in tx] and "kcal" in tx and "Protéines" in tx and "Sommeil" in tx, "détail santé affiché : calories, protéines, sommeil, sans IMC ni catégorie")
         ok("ne remplace pas un avis médical" in tx and "douleur vive" in tx, "avertissements du cahier des charges affichés")
-        pg.click("button:has-text(\"Masquer le détail santé\")"); time.sleep(.2)
+        pg.click("#app [role=switch][aria-label='Détail santé']"); time.sleep(.2)
         # confirmation : Annuler ne change rien
         avant = ev("fetch('/api/state').then(r => r.json())"); cata0 = ev(CATA)
         pg.click("button:has-text(\"Générer mon programme\")"); time.sleep(.3); pg.evaluate(OUVRIR); tx = pg.inner_text("#app")
@@ -229,18 +232,18 @@ try:
         ok("Reprendre le questionnaire" in pg.inner_text("#app") and ev("JSON.parse(localStorage.getItem('muscu-profil')).answers.objectif") == "force", "quitter : profil inchangé, questionnaire à reprendre")
 
         # ------------------------------------------------------------ export et import
-        ev("go('donnees')"); time.sleep(.3)
+        ev("go('donnees')"); time.sleep(.3); pg.evaluate(OUVRIR)   # depuis le lot 4, la phrase est dans « Détails »
         ok("réponses au questionnaire de santé" in pg.inner_text("#app"), "écran Données : l'export contient les réponses santé")
-        with pg.expect_download() as dl: pg.click("text=Télécharger l'export")
+        with pg.expect_download() as dl: pg.click("text=" + lien_export(pg))
         data = json.load(open(dl.value.path()))
         ok(data.get("profil", {}).get("answers", {}).get("sante", {}).get("tension") is False and data["profil"]["version"] == 1, "l'export contient la clé « profil »")
         ev("localStorage.removeItem('muscu-profil'); localStorage.removeItem('muscu-profil-brouillon')"); pg.reload(); pg.wait_for_selector("#app button:has-text('Commencer')"); time.sleep(.3)
         ok("Bienvenue dans Fonte" in pg.inner_text("#app"), "(profil effacé : questionnaire imposé)")
         pg.click("button:has-text(\"J’ai une sauvegarde\")"); time.sleep(.3)
-        pg.fill("#bk", json.dumps(data)); pg.click("button.go:has-text('Importer')"); time.sleep(.8)
+        importer_texte(pg, json.dumps(data), 800)
         ok(ev("JSON.parse(localStorage.getItem('muscu-profil') || 'null')") == data["profil"] and not ev("PROFIL.imposed()"), "import avec « profil » : profil restauré, questionnaire levé")
         sans = dict(data); sans.pop("profil"); sans.pop("jeu", None)
-        ev("go('donnees')"); time.sleep(.3); pg.fill("#bk", json.dumps(sans)); pg.click("button.go:has-text('Importer')"); time.sleep(.8)
+        ev("go('donnees')"); time.sleep(.3); importer_texte(pg, json.dumps(sans), 800)
         ok(ev("JSON.parse(localStorage.getItem('muscu-profil'))") == data["profil"] and len(ev("fetch('/api/state').then(r => r.json())")["sessions"]) == 1, "import d'un ancien export sans « profil » : accepté, profil actuel inchangé")
         ok(not errs, f"aucune erreur JavaScript (local) {errs[:2]}")
 
@@ -266,12 +269,12 @@ try:
         def cache(nom):
             pg3.evaluate(OUVRIR); t = pg3.inner_text("#app"); vus = [m for m in CACHE if m in t]
             ok(not vus, f"IMC caché, écran {nom} : aucun de {CACHE} ({vus})"); return t
-        t = cache("résumé"); ok("Cardio à faible impact, sans sauts" in t, "IMC caché : l'adaptation est écrite sans sa raison")
+        t = cache("résumé"); ok("Repos un peu plus longs et cardio plus doux, d’après ta taille et ton poids." in t, "IMC caché : l'adaptation est écrite par une phrase neutre")
         pg3.click("button:has-text('Générer mon programme')"); time.sleep(.3); cache("confirmation")
         pg3.click("button:has-text('Remplacer')"); pg3.wait_for_selector("text=Ton programme est prêt"); cache("« Ton programme est prêt »")
         pg3.evaluate("go('profil')"); time.sleep(.3); cache("« Mon profil »")
-        pg3.click("button:has-text('Afficher le détail santé')"); time.sleep(.2)
-        ok("IMC\u00a0: 32" in pg3.inner_text("#app") and "Obésité modérée" in pg3.inner_text("#app"), "témoin : détail affiché, l'IMC et sa tranche apparaissent")
+        pg3.click("#app [role=switch][aria-label='Détail santé']"); time.sleep(.2); pg3.evaluate(OUVRIR); t = pg3.inner_text("#app")
+        ok("kcal" in t and not [m for m in CACHE if m != "kcal" and m in t], "détail affiché (témoin : les calories apparaissent) : toujours ni IMC ni tranche")
         ok(not errs3, f"aucune erreur JavaScript (blessures, IMC caché) {errs3[:2]}")
 
         # ------------------------------------------------------------ « Garder mes programmes »

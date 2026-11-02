@@ -10,6 +10,8 @@
 # - écran allumé (coque simulée : FonteApp.keepScreenOn) en mode « un exercice à la fois » et pendant un repos, réglage du menu.
 #   FONTCONFIG_FILE=/home/PM/Claude-applications/Fonte-appli/Fonte/tests/polices-chromium.conf .venv/bin/python tests/seance.py
 import json, os, subprocess, sys, time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from donnees_ui import importer_texte, lien_export   # écran Données, ancienne et nouvelle interface (lot 4)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5161
 DB = "/tmp/seance_test.db"
 for f in (DB, DB + "-wal", DB + "-shm"):
@@ -102,7 +104,7 @@ try:
             pg2 = ctx2.new_page(); pg2.on("dialog", lambda d: d.accept())
             pg2.goto(url.replace("127.0.0.1", "localhost")); pg2.wait_for_selector("#app .hero", timeout=8000)
             pg2.evaluate("go('donnees')"); time.sleep(.2)
-            pg2.fill("#bk", json.dumps(ex)); pg2.click("button:has-text('Importer')"); time.sleep(1.2)
+            importer_texte(pg2, json.dumps(ex), 1200)
             st2 = pg2.evaluate("fetch('/api/state').then(r => r.json())")
             got = sorted(json.dumps(e["sets"]) for s in st2["sessions"] for e in s["entries"])
             want = sorted(json.dumps(e["sets"]) for s in pg.evaluate("fetch('/api/state').then(r => r.json())")["sessions"] for e in s["entries"])
@@ -207,8 +209,8 @@ try:
             ok(s1 == [True] and s2 == [True, False] and s3 == [True, False, True] and s4 == [True, False, True, False],
                f"{M} · écran allumé en mode « un exercice à la fois » et pendant un repos, puis rendu : {s4}")
             pg.evaluate("openMenu()"); time.sleep(.3)
-            ok("Garder l’écran allumé" in pg.inner_text("#drawer") and pg.get_attribute("#dscreen .sw2", "aria-checked") == "true", f"{M} · menu : « Garder l’écran allumé », activé par défaut")
-            pg.click("#dscreen .sw2"); pg.evaluate("closeMenu(); window.__scr = []"); demarrer(); pg.evaluate("TM(30)"); time.sleep(.1)
+            ok("Garder l’écran allumé" in pg.inner_text("#drawer") and pg.get_attribute("#dscreen [role=switch]", "aria-checked") == "true", f"{M} · menu : « Garder l’écran allumé », activé par défaut")
+            pg.click("#dscreen [role=switch]"); pg.evaluate("closeMenu(); window.__scr = []"); demarrer(); pg.evaluate("TM(30)"); time.sleep(.1)
             ok(pg.evaluate("window.__scr") == [] and pg.evaluate("localStorage.getItem('muscu-ecran')") == "false", f"{M} · réglage coupé : l'écran n'est plus gardé allumé, réglage mémorisé")
             pg.evaluate("TMskip(); setScreen(true); exitFocus()")
             ok(not errs, f"{M} · aucune erreur JavaScript {errs[:2]}")

@@ -34,7 +34,11 @@ function accentPick() {
   var el = document.getElementById('daccent'), lg = document.getElementById('lg');
   if (lg) lg.src = icoUrl(192);
   if (!el) return;
-  el.innerHTML = '<p class="m">Couleur de l’appli</p><div class="sws">' + ACC.map(function (x) { return '<button class="sw' + (ACCENT === x[0] ? ' on' : '') + '" style="background:' + x[2] + '" onclick="setAccent(\'' + x[0] + '\')" aria-label="' + x[1] + '" aria-pressed="' + (ACCENT === x[0]) + '"></button>'; }).join('') + '</div>' + (hasAppIcon() ? '<p class="m">La couleur change l’interface et l’icône de l’écran d’accueil. Selon ton lanceur, l’icône peut mettre quelques secondes à changer.</p>' : window.FONTE_LOCAL ? '<p class="m">La couleur change l’interface de l’appli. L’icône sur l’écran d’accueil du téléphone reste orange.</p>' : '<p class="m">Sur l’écran d’accueil du téléphone, le logo d’une appli déjà installée ne change qu’en la réinstallant.</p>');
+  var why = hasAppIcon() ? '<p class="m">La couleur change l’interface et l’icône de l’écran d’accueil.</p><p class="m">Selon ton lanceur, l’icône peut mettre quelques secondes à changer.</p>'
+    : window.FONTE_LOCAL ? '<p class="m">La couleur change l’interface de l’appli.</p><p class="m">L’icône sur l’écran d’accueil du téléphone reste orange.</p>'
+    : '<p class="m">Sur l’écran d’accueil du téléphone, le logo d’une appli déjà installée ne change qu’en la réinstallant.</p>';
+  el.innerHTML = '<p class="dlab">Couleur de l’appli</p><div class="swcs" role="group" aria-label="Couleur de l’appli">' + ACC.map(function (x) { return '<button class="swc" style="background:' + x[2] + '" onclick="setAccent(\'' + x[0] + '\')" aria-label="' + x[1] + '" aria-pressed="' + (ACCENT === x[0]) + '"></button>'; }).join('') + '</div>'
+    + '<details class="det"><summary>Détails</summary><div>' + why + '</div></details>';
 }
 applyAccent();
 </script>
@@ -53,10 +57,10 @@ h3{font-size:15px;margin:14px 0 4px;color:var(--m);text-transform:uppercase;lett
 p{margin:4px 0}.m{color:var(--m);font-size:13px}
 nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 nav button{flex:1 1 auto;padding:9px 10px;border:2px solid var(--l);background:var(--c);color:var(--t);border-radius:10px;font:inherit;font-size:14px;font-weight:700}
-nav button.on{background:var(--a);border-color:var(--a);color:var(--on)}
+nav button.on{background:var(--sel-bg);border-color:var(--sel-b);color:var(--t);box-shadow:inset 0 0 0 2px var(--sel-b)}
 .tabs{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
 .tabs button{flex:1 1 0;min-width:90px;padding:11px;border:2px solid var(--l);background:var(--c);color:var(--t);border-radius:10px;font:inherit;font-weight:700}
-.tabs button.on{background:var(--a);border-color:var(--a);color:var(--on)}
+.tabs button.on{background:var(--sel-bg);border-color:var(--sel-b);color:var(--t);box-shadow:inset 0 0 0 2px var(--sel-b)}
 .card{background:var(--c);border:1px solid var(--l);border-radius:12px;padding:12px;margin:10px 0}
 .top{display:flex;gap:12px;align-items:flex-start}
 .top svg{width:120px;flex:none;background:var(--bg);border-radius:8px}
@@ -108,7 +112,7 @@ details{margin:8px 0}summary{font-weight:700;cursor:pointer;min-height:44px;padd
 .body .z.on{fill:var(--a);fill-opacity:.95;stroke:var(--a);stroke-opacity:1}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 .chip{padding:8px 12px;min-height:44px;border:2px solid var(--l);background:var(--bg);color:var(--t);border-radius:999px;font:inherit;font-size:14px}
-.chip.on{background:var(--a);border-color:var(--a);color:var(--on)}
+.chip.on{background:var(--sel-bg);border-color:var(--sel-b);color:var(--t);box-shadow:inset 0 0 0 2px var(--sel-b)}
 .chip small{opacity:.7}
 
 .tot{display:flex;gap:12px;align-items:center;background:var(--c);border:1px solid var(--l);border-radius:12px;padding:10px;margin:8px 0}
@@ -135,9 +139,9 @@ details{margin:8px 0}summary{font-weight:700;cursor:pointer;min-height:44px;padd
 .pm:active{background:var(--l)}
 .feel{margin-top:12px;padding:12px;border-radius:16px;background:var(--c);border:2px solid var(--a)}
 .feelb{display:grid;gap:8px;margin-top:8px}
-.feelb small{display:block;font-size:14px;font-weight:600;color:var(--m);margin-top:2px}.feelb button.on small{color:inherit}
+.feelb small{display:block;font-size:14px;font-weight:600;color:var(--m);margin-top:2px}.feelb button.on small{color:var(--t)}
 .feelb button{min-height:52px;border:2px solid var(--l);border-radius:12px;background:var(--bg);color:var(--t);font:inherit;font-size:17px;font-weight:700}
-.feelb button.on{background:var(--a);border-color:var(--a);color:var(--on)}
+.feelb button.on{background:var(--sel-bg);border-color:var(--sel-b);color:var(--t);box-shadow:inset 0 0 0 2px var(--sel-b)}
 .feel1{display:flex;align-items:center;gap:10px;margin-top:10px}.feel1 .sm{margin-left:auto}
 .aph{display:flex;gap:12px;align-items:center;cursor:pointer}.aph .th{width:72px;flex:none}.aph .th svg{width:72px;display:block;background:var(--bg);border-radius:8px}.aph b{font-size:15px}
 .focus .sug{font-size:18px;font-weight:800;margin:6px 0}
@@ -217,11 +221,6 @@ body.barc main{padding-bottom:calc(var(--tb) + 92px)}
 .scrim.open{opacity:1;pointer-events:auto}
 .drawer{position:fixed;top:0;bottom:0;left:0;width:min(84vw,330px);background:var(--c);z-index:30;transform:translateX(-102%);visibility:hidden;transition:transform .22s ease,visibility 0s .22s;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 18px;overflow:auto;box-shadow:0 0 34px rgba(0,0,0,.45)}
 .drawer.open{transform:none;visibility:visible;transition:transform .22s ease,visibility 0s}
-.dh{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.dh b{flex:1;font-size:20px;font-weight:800;padding-left:6px}
-#dnav button{display:block;width:100%;text-align:left;padding:14px 12px;border:0;border-radius:12px;background:none;color:var(--t);font:inherit;font-size:16px;font-weight:600}
-#dnav button.on{background:var(--bg);color:var(--at)}
-.dstyle{margin-top:18px;border-top:1px solid var(--l);padding-top:12px}
 @media (prefers-reduced-motion:reduce){.drawer,.scrim{transition:none}}
 
 .card{border-radius:18px;padding:14px;box-shadow:var(--sh)}
@@ -274,25 +273,22 @@ svg.fig{width:100%;display:block}
 /* ---- couleur de l'appli (patch F) ---- */
 :root{--g1:#c25008;--g2:#b5470a}   /* --g1, --g2 : couleurs des confettis du record (celebrate) ; l'ancien dégradé de l'accueil (--g3, --gs) n'existe plus */
 .lg{width:36px;height:36px;border-radius:9px;margin-left:2px}
-.sws{display:flex;gap:12px;margin:10px 2px 8px}
-.sw{width:42px;height:42px;border-radius:50%;border:3px solid var(--c);box-shadow:0 0 0 2px var(--l);padding:0}
-.sw.on{box-shadow:0 0 0 3px var(--t)}
-:root[data-accent="blue"]{--a:#1971c2;--at:#1864ab;--on:#fff;--g1:#1a73c4;--g2:#1864ab;--cta-b:#135a9c}
-@media(prefers-color-scheme:dark){:root[data-accent="blue"]:not([data-theme="light"]){--a:#4dabf7;--at:#4dabf7;--on:#06131f}}
-:root[data-accent="blue"][data-theme="dark"]{--a:#4dabf7;--at:#4dabf7;--on:#06131f}
-:root[data-accent="green"]{--a:#277c38;--at:#226f32;--on:#fff;--g1:#22803a;--g2:#1f7432;--cta-b:#1b5e28}
-@media(prefers-color-scheme:dark){:root[data-accent="green"]:not([data-theme="light"]){--a:#51cf66;--at:#51cf66;--on:#07170c}}
-:root[data-accent="green"][data-theme="dark"]{--a:#51cf66;--at:#51cf66;--on:#07170c}
-:root[data-accent="violet"]{--a:#7048e8;--at:#6741d9;--on:#fff;--g1:#7a52f0;--g2:#6741d9;--cta-b:#5a35c9}
-@media(prefers-color-scheme:dark){:root[data-accent="violet"]:not([data-theme="light"]){--a:#9775fa;--at:#9775fa;--on:#120a26}}
-:root[data-accent="violet"][data-theme="dark"]{--a:#9775fa;--at:#9775fa;--on:#120a26}
-:root[data-accent="red"]{--a:#e03131;--at:#c92a2a;--on:#fff;--g1:#d63030;--g2:#c92a2a;--cta-b:#a81e1e}
-@media(prefers-color-scheme:dark){:root[data-accent="red"]:not([data-theme="light"]){--a:#ff6b6b;--at:#ff6b6b;--on:#240808}}
-:root[data-accent="red"][data-theme="dark"]{--a:#ff6b6b;--at:#ff6b6b;--on:#240808}
+:root[data-accent="blue"]{--a:#1971c2;--at:#1864ab;--on:#fff;--g1:#1a73c4;--g2:#1864ab;--cta-b:#135a9c;--sel-bg:#e1e8ec;--sel-b:#1971c2}
+@media(prefers-color-scheme:dark){:root[data-accent="blue"]:not([data-theme="light"]){--a:#4dabf7;--at:#4dabf7;--on:#06131f;--sel-bg:#2a414e;--sel-b:#4dabf7}}
+:root[data-accent="blue"][data-theme="dark"]{--a:#4dabf7;--at:#4dabf7;--on:#06131f;--sel-bg:#2a414e;--sel-b:#4dabf7}
+:root[data-accent="green"]{--a:#277c38;--at:#226f32;--on:#fff;--g1:#22803a;--g2:#1f7432;--cta-b:#1b5e28;--sel-bg:#e2eadd;--sel-b:#277c38}
+@media(prefers-color-scheme:dark){:root[data-accent="green"]:not([data-theme="light"]){--a:#51cf66;--at:#51cf66;--on:#07170c;--sel-bg:#2b4831;--sel-b:#51cf66}}
+:root[data-accent="green"][data-theme="dark"]{--a:#51cf66;--at:#51cf66;--on:#07170c;--sel-bg:#2b4831;--sel-b:#51cf66}
+:root[data-accent="violet"]{--a:#7048e8;--at:#6741d9;--on:#fff;--g1:#7a52f0;--g2:#6741d9;--cta-b:#5a35c9;--sel-bg:#ebe4f2;--sel-b:#7048e8}
+@media(prefers-color-scheme:dark){:root[data-accent="violet"]:not([data-theme="light"]){--a:#9775fa;--at:#9775fa;--on:#120a26;--sel-bg:#39364f;--sel-b:#9775fa}}
+:root[data-accent="violet"][data-theme="dark"]{--a:#9775fa;--at:#9775fa;--on:#120a26;--sel-bg:#39364f;--sel-b:#9775fa}
+:root[data-accent="red"]{--a:#e03131;--at:#c92a2a;--on:#fff;--g1:#d63030;--g2:#c92a2a;--cta-b:#a81e1e;--sel-bg:#f8e1db;--sel-b:#e03131}
+@media(prefers-color-scheme:dark){:root[data-accent="red"]:not([data-theme="light"]){--a:#ff6b6b;--at:#ff6b6b;--on:#240808;--sel-bg:#4d3432;--sel-b:#ff6b6b}}
+:root[data-accent="red"][data-theme="dark"]{--a:#ff6b6b;--at:#ff6b6b;--on:#240808;--sel-bg:#4d3432;--sel-b:#ff6b6b}
 /* noir et blanc : noir sur fond clair, blanc sur fond sombre ; logo noir sur fond blanc */
-:root[data-accent="mono"]{--a:#111;--at:#111;--on:#fff;--g1:#4b5157;--g2:#262b30;--cta-b:#111}
-@media(prefers-color-scheme:dark){:root[data-accent="mono"]:not([data-theme="light"]){--a:#f1f3f5;--at:#f1f3f5;--on:#111}}
-:root[data-accent="mono"][data-theme="dark"]{--a:#f1f3f5;--at:#f1f3f5;--on:#111}
+:root[data-accent="mono"]{--a:#111;--at:#111;--on:#fff;--g1:#4b5157;--g2:#262b30;--cta-b:#111;--sel-bg:#e0ddd8;--sel-b:#111111}
+@media(prefers-color-scheme:dark){:root[data-accent="mono"]:not([data-theme="light"]){--a:#f1f3f5;--at:#f1f3f5;--on:#111;--sel-bg:#4b4f4e;--sel-b:#f1f3f5}}
+:root[data-accent="mono"][data-theme="dark"]{--a:#f1f3f5;--at:#f1f3f5;--on:#111;--sel-bg:#4b4f4e;--sel-b:#f1f3f5}
 [data-accent="mono"] .lg{box-shadow:0 0 0 1px var(--l)}
 /* bord du bouton principal (--cta-b) : une teinte plus foncée de l'accent en clair, l'accent lui-même en sombre (aucun bord visible) */
 @media(prefers-color-scheme:dark){:root[data-accent]:not([data-theme="light"]){--cta-b:var(--a)}}
@@ -304,10 +300,10 @@ body.onb main{padding-bottom:40px}
 .qt{font-size:22px;line-height:1.25;margin:2px 0 6px;outline:none}
 .qprog{margin:4px 2px 8px}
 .qopt{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;text-align:left;margin-top:8px;padding:12px 14px;border:2px solid var(--l);border-radius:14px;background:var(--bg);color:var(--t);font:inherit;font-size:16px}
-.qopt.on{border-color:var(--a);box-shadow:inset 0 0 0 1px var(--a)}
+.qopt.on{border-color:var(--sel-b);background:var(--sel-bg);box-shadow:inset 0 0 0 1px var(--sel-b)}
 .qck{flex:none;width:24px;height:24px;display:grid;place-items:center;border:2px solid var(--m);border-radius:50%;font-size:14px;font-weight:800;color:var(--on)}
 .qck.qsq{border-radius:7px}
-.qopt.on .qck{background:var(--a);border-color:var(--a)}
+.qopt.on .qck{background:var(--sel-b);border-color:var(--sel-b)}
 .qlab{margin-top:12px;font-size:14px}
 .qinp{font-size:22px;padding:14px 12px;margin-top:6px}
 .qnum{display:flex;align-items:center;gap:10px}.qnum b{font-size:18px;color:var(--m)}
@@ -320,10 +316,10 @@ body.onb main{padding-bottom:40px}
 .qyn:first-of-type{border-top:0}
 .qynb{display:flex;gap:6px;flex:none}
 .qynb button{min-width:62px;min-height:46px;border:2px solid var(--l);border-radius:12px;background:var(--bg);color:var(--t);font:inherit;font-weight:700}
-.qynb button.on{background:var(--a);border-color:var(--a);color:var(--on)}
+.qynb button.on{background:var(--sel-bg);border-color:var(--sel-b);color:var(--t);box-shadow:inset 0 0 0 2px var(--sel-b)}
 .qchips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
 .qchip{min-height:44px;padding:8px 12px;border:2px solid var(--l);border-radius:999px;background:var(--bg);color:var(--t);font:inherit;font-size:14px;text-align:left}
-.qchip.on{background:var(--a);border-color:var(--a);color:var(--on)}
+.qchip.on{background:var(--sel-bg);border-color:var(--sel-b);color:var(--t);box-shadow:inset 0 0 0 2px var(--sel-b)}
 .qrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--l)}
 .qrow:first-of-type{border-top:0}
 .qrow>div{min-width:0}.qrow p{margin:2px 0;overflow-wrap:anywhere}
@@ -351,7 +347,7 @@ details.card.det>summary{color:var(--t);font-size:17px;font-weight:700}
 .sw2{flex:none;position:relative;width:56px;height:44px;border:0;background:none;padding:0}
 .sw2::before{content:"";position:absolute;left:2px;top:9px;width:52px;height:26px;border-radius:13px;background:var(--l);transition:background .15s}
 .sw2::after{content:"";position:absolute;left:5px;top:12px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:left .15s}
-.sw2[aria-checked="true"]::before{background:var(--a)}.sw2[aria-checked="true"]::after{left:31px;background:var(--on)}
+.sw2[aria-checked="true"]::before{background:var(--sel-b)}.sw2[aria-checked="true"]::after{left:31px;background:var(--c)}
 @media (prefers-reduced-motion:reduce){.sw2::before,.sw2::after{transition:none}}
 .card.off{opacity:.5}
 .days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin:10px -12px 6px}   /* 7 jours de 44 px à 360 px */
@@ -452,8 +448,8 @@ body.foc.rest-on .fnavb{position:static;background:none;border:0;padding:12px 0 
 .feel .feelb{display:grid;gap:8px}
 .feel .feelb button{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:52px;padding:0 16px;border:0;border-radius:var(--r-btn);background:var(--f);color:var(--t);font:inherit;font-weight:700;font-size:17px}
 .feel .feelb button small{display:inline;font-weight:400;font-size:15px;color:var(--t);margin:0}
-.feel .feelb button.on{background:var(--a);color:var(--on)}
-.feel .feelb button.on small{color:var(--on)}
+.feel .feelb button.on{background:var(--sel-bg);color:var(--t);box-shadow:inset 0 0 0 2px var(--sel-b)}
+.feel .feelb button.on small{color:var(--t)}
 
 /* barre de repos : feuille posée sur le contenu ; démonstration de l'exercice suivant après sa dernière série */
 .bar{background:var(--c);border:1px solid var(--l);box-shadow:var(--sh-bar)}
@@ -616,7 +612,7 @@ body.fin-on main{padding-top:calc(4px + env(safe-area-inset-top,0px))}
 .cal .cd.on i{background:var(--a);color:var(--on);font-weight:800}
 .cal .cd.today i{box-shadow:inset 0 0 0 2px var(--t)}
 .cal .cd.on.today i{box-shadow:inset 0 0 0 2px var(--t),inset 0 0 0 4px var(--c)}
-.cal .cd.sel i{outline:2px solid var(--t);outline-offset:2px}
+.cal .cd.sel i{outline:2px solid var(--sel-b);outline-offset:2px}
 .cal .cd.out{color:var(--m)}
 .pg .calf{margin:8px 4px 0;color:var(--m);font-size:15px}
 .daysel{margin-top:12px;border-top:1px solid var(--l);padding-top:4px}
@@ -649,7 +645,7 @@ h2+.recl{margin-top:4px}
 .pg details.det[open]>summary::before{transform:rotate(90deg)}
 .pg .chips{gap:8px;margin:12px 0 0}
 .pg .chip{min-height:44px;padding:0 14px;color:var(--t);font-weight:700;font-size:15px}
-.pg .chip[aria-pressed="true"]{background:var(--t);color:var(--bg)}   /* période choisie : à l'encre, pas en orange */
+.pg .chip[aria-pressed="true"]{background:var(--sel-bg);color:var(--t);box-shadow:inset 0 0 0 2px var(--sel-b)}   /* période choisie : teintée (règle de sélection du 30/10/2026) */
 .pg .opt-l{font-family:var(--ff-text);font-weight:400;font-size:15px;color:var(--m)}
 .pg .inl{display:flex;gap:8px;margin-top:12px}
 .pg .stk{display:grid;gap:8px;margin-top:12px}
@@ -691,7 +687,7 @@ details.card.opt[open]{padding-bottom:16px}
 .sd .dacts .btn-t{font-size:17px}
 .btn-t.danger{color:var(--danger)}   /* « Supprimer la séance » : lien rouge (.btn-t, plus bas dans la feuille, imposait l'encre) */
 /* ---- refonte, lot 3 : questionnaire, Exercices, fiche, formulaire, Programmes, Zones (maquette validée le 29/10/2026) ----
-   Règles limitées à .l3 (écrans du lot 3) : une action orange au plus, dans la barre d'action sous le pouce ; choix sélectionné à l'encre ;
+   Règles limitées à .l3 (écrans du lot 3) : une action orange au plus, dans la barre d'action sous le pouce ; choix sélectionné teinté de l'accent (--sel-bg, --sel-b : règle du 30/10/2026) ;
    zones en patine ; liens « danger » en framboise avec une icône (jamais pris pour une action orange). */
 .l3 .scrib{width:130px}
 .l3 h1.title{margin-top:8px}
@@ -727,20 +723,20 @@ body.onb.has-act.act2 main{padding-bottom:180px}
 body.has-act .toast{bottom:calc(var(--tb) + 96px)}
 /* signes */
 .l3 .chip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border:0;border-radius:999px;background:var(--f);color:var(--t);font:inherit;font-weight:700;font-size:15px;cursor:pointer}
-.l3 .chip[aria-pressed="true"]{background:var(--t);color:var(--bg)}
+.l3 .chip[aria-pressed="true"]{background:var(--sel-bg);color:var(--t);box-shadow:inset 0 0 0 2px var(--sel-b)}
 .l3 .chip.z[aria-pressed="true"]{background:var(--pat);color:var(--bg)}
 .l3 .chip:disabled{opacity:.5;cursor:default}
 .l3 .chip small{font-family:var(--ff-title);font-stretch:85%;font-size:15px;font-weight:600}
 .l3 .chip svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
 .l3 .chip .dot{width:8px;height:8px;border-radius:50%;background:var(--t);display:inline-block}
-.l3 .chip[aria-pressed="true"] .dot{background:var(--bg)}
+.l3 .chip[aria-pressed="true"] .dot{background:var(--sel-b)}
 .l3 .chips{display:flex;gap:8px;flex-wrap:wrap;margin:0}
 .l3 .scroller{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:2px 16px 4px;scrollbar-width:none}
 .l3 .scroller::-webkit-scrollbar{display:none}
 .l3 .scroller .chip{flex:none}
 .l3 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--s2);border-radius:var(--r-tile);padding:4px;gap:4px}
 .l3 .seg button{min-height:44px;border:0;background:none;border-radius:calc(var(--r-tile) - 4px);font:inherit;font-weight:700;font-size:15px;color:var(--t);cursor:pointer;padding:0 4px}
-.l3 .seg button[aria-pressed="true"]{background:var(--t);color:var(--bg)}
+.l3 .seg button[aria-pressed="true"]{background:var(--sel-bg);color:var(--t);box-shadow:inset 0 0 0 2px var(--sel-b)}
 .l3 details.det{margin:4px 0 0}
 .l3 details.det>summary{min-height:44px;display:flex;align-items:center;font-weight:700;font-size:15px;color:var(--t);cursor:pointer;list-style:none}
 .l3 details.det>summary::-webkit-details-marker{display:none}
@@ -785,8 +781,8 @@ body.has-act .toast{bottom:calc(var(--tb) + 96px)}
 .l3 .swrow>span{flex:1;font-weight:700}
 .l3 .sw{position:relative;width:52px;height:32px;border-radius:16px;background:var(--ctl);flex:none}
 .l3 .sw::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:var(--c);transition:transform var(--t-fast)}
-.l3 .swrow[aria-checked="true"] .sw{background:var(--t)}
-.l3 .swrow[aria-checked="true"] .sw::after{transform:translateX(20px);background:var(--bg)}
+.l3 .swrow[aria-checked="true"] .sw{background:var(--sel-b)}
+.l3 .swrow[aria-checked="true"] .sw::after{transform:translateX(20px);background:var(--c)}
 @media (prefers-reduced-motion:reduce){.l3 .sw::after{transition:none}}
 /* questionnaire */
 .l3 .qcount{font-size:15px;color:var(--m);font-weight:700}
@@ -799,8 +795,8 @@ body.has-act .toast{bottom:calc(var(--tb) + 96px)}
 .l3 .qo .mk{width:24px;height:24px;flex:none;border:2px solid var(--ck);border-radius:50%;display:grid;place-items:center}
 .l3 .qo.multi .mk{border-radius:6px}
 .l3 .qo .mk svg{width:16px;height:16px;opacity:0;fill:none;stroke:var(--bg);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-.l3 .qo[aria-pressed="true"]{border:2px solid var(--t);background:var(--s2);font-weight:700;padding:7.5px 13.5px}
-.l3 .qo[aria-pressed="true"] .mk{background:var(--t);border-color:var(--t)}
+.l3 .qo[aria-pressed="true"]{border:2px solid var(--sel-b);background:var(--sel-bg);font-weight:700;padding:7.5px 13.5px}
+.l3 .qo[aria-pressed="true"] .mk{background:var(--sel-b);border-color:var(--sel-b)}
 .l3 .qo[aria-pressed="true"] .mk svg{opacity:1}
 .l3 .qfld{display:flex;align-items:center;gap:8px;margin-top:20px;border:1.5px solid var(--ctl);border-radius:var(--r-tile);background:var(--c);padding:0 16px;min-height:64px}
 .l3 .qfld input{flex:1;min-width:0;border:0;background:none;color:var(--t);font-size:32px;font-weight:800;font-family:var(--ff-title);font-stretch:85%;outline:none;padding:0;margin:0}
@@ -868,6 +864,94 @@ body.has-act .toast{bottom:calc(var(--tb) + 96px)}
 .l3 .qwarn p{margin:0}.l3 .qwarn p+p{margin-top:6px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .pend{font-size:15px;margin:4px 0 8px}
+/* ---- refonte, lot 4 : menu ☰, Mon profil, Données, Notifications (maquette validée le 30/10/2026) ----
+   Écrans dans .l3.l4 (composants du lot 3) ; aucune action orange sauf « Exporter mes séances », « Accepter » d'une proposition,
+   « Remplir le questionnaire » et « Activer les notifications » ; l'import n'est jamais orange (framboise, après l'avertissement). */
+.drawer.l4{background:var(--c);width:min(88vw,340px);padding:env(safe-area-inset-top,0px) 16px 24px}
+.l4 .dhead{display:flex;align-items:center;gap:10px;height:56px;margin-right:-12px}
+.l4 .dhead .lg{width:32px;height:32px;margin:0}
+.l4 .dhead b{flex:1;font-family:var(--ff-title);font-weight:800;font-stretch:90%;font-size:22px}
+.l4 .dgrp{font-size:13px;font-weight:700;color:var(--m);margin:14px 0 2px}
+.l4 .ditem{display:flex;align-items:center;gap:14px;min-height:48px;padding:0 12px;margin:0 -12px;width:calc(100% + 24px);border:0;background:none;border-radius:var(--r-tile);font:inherit;font-size:17px;font-weight:600;text-align:left;color:var(--t);cursor:pointer}
+.l4 .ditem svg,.l4 .chan svg,.l4 .ib svg,.l4 .file svg,.l4 .warn h3 svg{flex:none;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.l4 .ditem svg{width:22px;height:22px}
+.l4 .ditem[aria-current="page"]{background:var(--sel-bg);font-weight:800;box-shadow:inset 4px 0 0 var(--sel-b)}
+.l4 .dsec{border-top:1px solid var(--l);margin-top:14px;padding-top:6px}
+.l4 .dlab{font-size:15px;font-weight:700;margin:8px 0;color:var(--t)}
+.l4 .swcs{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;justify-items:center;padding:4px 0}
+.l4 .swc{width:100%;max-width:48px;aspect-ratio:1;min-height:44px;border-radius:50%;border:1.5px solid var(--ctl);padding:0;cursor:pointer}
+.l4 .swc[aria-pressed="true"]{box-shadow:inset 0 0 0 3px var(--sel-b),inset 0 0 0 6px var(--c)}
+.l3 .swrow>span small{display:block;font-weight:400;font-size:13px;color:var(--m)}
+.drawer.l4 .swrow{min-height:60px}
+.drawer.l4 #dvib,.drawer.l4 #dtabs:not(:empty){border-top:1px solid var(--l)}
+/* Mon profil */
+.l4 .sub{font-size:15px;color:var(--m);margin:4px 0 0}
+.l4 .btns{display:grid;gap:8px;margin-top:12px}
+.l4 .btns .btn-t{justify-self:center;text-align:center}
+.l4 .pdays{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.l4 .pday{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:64px;max-width:120px;min-height:52px;padding:0 8px;border-radius:var(--r-tile);background:var(--s2);font-size:13px;color:var(--m)}
+.l4 .pday b{font-size:17px;color:var(--t);font-family:var(--ff-title);font-stretch:90%;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.l4 .pday.today{box-shadow:inset 0 0 0 2px var(--t)}
+.l4 .bw{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;margin-top:6px}
+.l4 .bw b{font-family:var(--ff-title);font-stretch:85%;font-variant-numeric:tabular-nums;font-size:30px;font-weight:800}
+.l4 .bw span{color:var(--m);font-size:15px}
+.l4 .add{display:flex;align-items:center;gap:8px;margin-top:12px}
+.l4 .add .step{flex:1;display:flex;align-items:center;gap:6px}
+.l4 .add .inp{width:76px;flex:none;text-align:center;font-family:var(--ff-title);font-stretch:85%;font-weight:800;font-size:20px;padding:0 4px}
+.l4 .add .u{color:var(--m);font-size:15px}
+.l4 .wrow{display:flex;align-items:center;gap:8px;min-height:48px}
+.l4 .wrow+.wrow{border-top:1px solid var(--l)}
+.l4 .wrow .d{flex:1}
+.l4 .wrow .k{font-weight:800;font-size:17px;font-variant-numeric:tabular-nums}
+.l4 .ib{width:48px;height:48px;display:grid;place-items:center;border:0;border-radius:50%;background:none;color:var(--t);flex:none;cursor:pointer;padding:0}
+.l4 .ib svg{width:22px;height:22px}
+.l4 .ib.btn-d{color:var(--danger)}
+.l4 .sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.l4 .sum div{background:var(--c);border:1px solid var(--l);border-radius:var(--r-tile);padding:12px 6px;text-align:center}
+.l4 .sum b{display:block;font-family:var(--ff-title);font-stretch:85%;font-size:26px;font-weight:800;line-height:1.05}
+.l4 .sum span{display:block;font-size:13px;color:var(--m);margin-top:2px}
+.l4 .ul{padding-left:20px;margin:0}.l4 .ul li{padding:2px 0}
+.l4 .hsante{padding:4px 0 8px}.l4 .hsante p{margin:4px 0}
+.l4 .offer .acts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.l4 .offer .acts .btn-p{flex:1}
+/* Données */
+.l4 .warn h3{font-family:var(--ff-title);font-size:17px;font-weight:800;color:var(--danger);display:flex;align-items:center;gap:8px;margin:0 0 6px;text-transform:none;letter-spacing:0}
+.l4 .warn h3 svg{width:20px;height:20px}
+.l4 .file{display:flex;gap:12px;align-items:center;background:var(--s2);border-radius:var(--r-tile);padding:12px;margin-top:12px}
+.l4 .file svg{width:28px;height:28px;color:var(--t)}
+.l4 .file b{display:block;font-size:16px;word-break:break-all}
+.l4 .file span{font-size:15px;color:var(--m)}
+.l4 .note{border-left:4px solid var(--t);padding:4px 0 4px 12px;margin-top:12px;font-size:16px}
+.l4 .btn-s.btn-d{border:2px solid var(--danger)}
+.l4 label.btn{cursor:pointer}
+/* Notifications */
+.l4 .ncard{padding:4px 16px 12px}
+.l4 .ncard h2{margin-top:12px}
+.l4 .ngrp{font-size:13px;font-weight:700;color:var(--m);margin:4px 0 4px}
+.l4 .ndays{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.l4 .day{min-height:44px;border:0;border-radius:var(--r-tile);background:var(--f);font:inherit;font-weight:700;font-size:15px;color:var(--t);cursor:pointer}
+.l4 .day[aria-pressed="true"]{background:var(--sel-bg);box-shadow:inset 0 0 0 2px var(--sel-b)}
+.l4 .ntrow{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:60px}
+.l4 .ntrow+.ntrow{border-top:1px solid var(--l)}
+.l4 .ntrow>span{font-weight:700}
+.l4 .ntrow .step{display:flex;align-items:center;gap:6px}
+.l4 .tval{width:104px;min-height:48px;border:0;background:none;color:var(--t);font-family:var(--ff-title);font-stretch:85%;font-variant-numeric:tabular-nums;font-size:26px;font-weight:800;text-align:center;padding:0;text-decoration:underline dotted 2px;text-underline-offset:6px;text-decoration-color:var(--ctl)}
+.l4 .tval::-webkit-calendar-picker-indicator{display:none}
+.l4 .chan{display:flex;align-items:center;gap:10px;min-height:48px;width:100%;text-align:left;font:inherit;font-weight:700;color:var(--t);background:none;border:0;border-top:1px solid var(--l);padding:0;cursor:pointer}
+.l4 .chan svg{width:22px;height:22px}
+.l4 .chan span{flex:1}
+.l4 .chan .chev{width:20px;height:20px;color:var(--m)}
+.l4 .blk{border:2px solid var(--t)}
+.l4 .noff .sw,.l4 .noff .swrow[aria-checked="true"] .sw{background:none;box-shadow:inset 0 0 0 2px var(--ctl)}
+.l4 .noff .sw::after,.l4 .noff .swrow[aria-checked="true"] .sw::after{background:var(--ctl)}
+.l4 .noff .day{background:none;box-shadow:inset 0 0 0 1.5px var(--l)}
+.l4 .noff .day[aria-pressed="true"]{background:none;box-shadow:inset 0 0 0 2px var(--t)}
+.l4 .noff .pm{background:none;box-shadow:inset 0 0 0 1.5px var(--l)}
+.l4 .noff .tval{text-decoration:none}
+.l4 :disabled{cursor:default}
+/* mouvement réduit : aucune transition, pseudo-éléments compris (des règles plus précises, comme :root .go ou .pm, l'emportaient sur
+   les anciennes règles ciblées ; constaté au lot 4). Les animations restent coupées une par une, là où elles sont définies. */
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
 </style>
 </head>
 <body>
@@ -884,14 +968,12 @@ body.has-act .toast{bottom:calc(var(--tb) + 96px)}
 <div class="bar" role="region" aria-label="Minuteur de repos"></div>
 <div class="tabbar" id="tabs" role="navigation" aria-label="Navigation principale"></div>
 <div class="scrim" id="scrim" onclick="closeMenu()"></div>
-<aside class="drawer" id="drawer" aria-hidden="true" aria-label="Menu">
-  <div class="dh"><img id="lg" class="lg" alt="" width="36" height="36"><b>Fonte</b><button class="ib" onclick="closeMenu()" aria-label="Fermer le menu"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-  <div id="dnav"></div>
-  <div class="dstyle" id="daccent"></div>
-  <div class="dstyle" id="dgender"></div>
-  <div class="dstyle" id="dscreen"></div>
-  <div class="dstyle" id="dvib"></div>
-  <div class="dstyle" id="dtabs"></div>
+<aside class="drawer l3 l4" id="drawer" aria-hidden="true" aria-label="Menu">
+  <div class="dhead"><img id="lg" class="lg" alt="" width="32" height="32"><b>Fonte</b><button class="ib" onclick="closeMenu()" aria-label="Fermer le menu"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <nav id="dnav" aria-label="Écrans"></nav>
+  <div class="dsec" id="daccent"></div>
+  <div class="dsec" id="dgender"></div>
+  <div class="dsec"><div id="dscreen"></div><div id="dvib"></div><div id="dtabs"></div></div>
 </aside>
 <script>
 'use strict';
@@ -1209,6 +1291,15 @@ const IC = {
   historique: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
   jeu: '<svg viewBox="0 0 24 24"><path d="M12 3c4 0 7 3 7 7 0 3-1 5-2 7-1 2-3 4-5 4s-4-2-5-4c-1-2-2-4-2-7 0-4 3-7 7-7z"/><path d="M9.5 11v1M14.5 11v1M10 15c1 1 3 1 4 0"/></svg>'
 };
+/* menu ☰ (lot 4) : écrans en 3 groupes, avec une icône chacun */
+const DGRP = [['Entraînement', ['accueil', 'seance', 'zones', 'programmes', 'exercices']], ['Suivi', ['progres', 'historique', 'jeu']], ['Réglages', ['profil', 'notifications', 'donnees']]];
+const IC_D = {
+  accueil: '<path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/>', seance: '<path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/>', zones: '<circle cx="12" cy="5" r="2.5"/><path d="M12 8v7M7 10l5 1 5-1M9 21l3-6 3 6"/>',
+  programmes: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/>', exercices: '<path d="M9 6h11M9 12h11M9 18h11M4 6h.5M4 12h.5M4 18h.5"/>',
+  progres: '<path d="M4 17l6-6 4 4 6-7"/>', historique: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>', jeu: '<circle cx="12" cy="12" r="8"/><path d="M9 10v1M15 10v1M9 15c2 1.5 4 1.5 6 0"/>',
+  profil: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>', notifications: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+  donnees: '<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>'
+};
 const IC_MENU = '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
 const IC_CLOSE = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 function nav() {
@@ -1221,7 +1312,8 @@ function nav() {
   $('tb-r').hidden = !RIGHT; $('tb-r').textContent = RIGHT ? RIGHT[0] : '';
   document.body.classList.toggle('onb', !!(window.PROFIL && PROFIL.imposed()));
   $('tabs').innerHTML = tabsNow().map(k => `<button class="${k === here ? 'on' : ''}" onclick="go('${k}')" ${k === here ? 'aria-current="page"' : ''}><span class="ic">${IC[k]}</span>${VL[k]}</button>`).join('');
-  $('dnav').innerHTML = VIEWS.filter(([k]) => k !== 'jeu' || window.JEU).map(([k, t]) => `<button class="${k === view ? 'on' : ''}" onclick="go('${k}');closeMenu()">${t}</button>`).join('');
+  $('dnav').innerHTML = DGRP.map(([g, l]) => `<p class="dgrp">${g}</p>` + l.filter(k => k !== 'jeu' || window.JEU)
+    .map(k => `<button class="ditem" onclick="go('${k}');closeMenu()"${k === view ? ' aria-current="page"' : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${IC_D[k]}</svg>${VL[k]}</button>`).join('')).join('');
   document.body.dataset.view = view;
   document.body.classList.toggle('foc', inFocus());
   document.body.classList.toggle('fin-on', view === 'fin');
@@ -1234,12 +1326,13 @@ function backNow(det) {
   if (view === 'exercices' && editEx) return ['Annuler et revenir', exCancel];
   if (view === 'exercices' && viewEx) return ['Retour aux exercices', closeEx];
   if (view === 'profil' && window.PROFIL) return PROFIL.backBtn();
+  if (view === 'donnees' && window.PROFIL && PROFIL.imposed()) return ['Retour au questionnaire', () => go('profil')];
   return null;
 }
 function doBack() { if (BACK) BACK[1](); }
 function doRight() { if (RIGHT) RIGHT[1](); }
 function genderPick() {
-  $('dgender').innerHTML = '<p class="m">Personnage des animations</p><div class="chips">' + [['m', 'Homme'], ['f', 'Femme']].map(([k, t]) => `<button class="chip ${GENDER === k ? 'on' : ''}" onclick="setGender('${k}')" aria-pressed="${GENDER === k}">${t}</button>`).join('') + '</div>';
+  $('dgender').innerHTML = '<p class="dlab">Personnage des animations</p><div class="seg" role="group" aria-label="Personnage des animations">' + [['m', 'Homme'], ['f', 'Femme']].map(([k, t]) => `<button onclick="setGender('${k}')" aria-pressed="${GENDER === k}">${t}</button>`).join('') + '</div>';
 }
 function setGender(k) { GENDER = k; window.FIG_GENDER = k; store('muscu-gender', k); genderPick(); R(); }
 function openMenu() {
@@ -1252,7 +1345,7 @@ function closeMenu() {
   $('drawer').setAttribute('aria-hidden', 'true'); $('menu-btn').setAttribute('aria-expanded', 'false');
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
-function go(v) { viewEx = null; HDET = null; ANIMK = null; view = v; BARX = false; store('muscu-view', v); if (v === 'profil' && window.PROFIL) PROFIL.enter(); R(); window.scrollTo(0, 0); }
+function go(v) { if (v !== 'donnees') IMP = null; viewEx = null; HDET = null; ANIMK = null; view = v; BARX = false; store('muscu-view', v); if (v === 'profil' && window.PROFIL) PROFIL.enter(); R(); window.scrollTo(0, 0); }
 function R() {
   if (window.PROFIL && PROFIL.imposed() && view !== 'profil' && view !== 'donnees') view = 'profil';   // questionnaire imposé tant que le profil n'existe pas
   if (view === 'seance') ensureForm();
@@ -2007,7 +2100,7 @@ function vSeance() {
   h += `<div class="g2"><label>Date<input id="f-day" type="date" value="${esc(F.day)}" onchange="syncForm()"></label><div></div></div>`;
   const ids = F.ids.filter(i => EX[i]);
   if (!ids.length) h += '<p class="empty">Aucun exercice. Ajoute-en ci-dessous, ou compose un programme dans l\'onglet Programmes.</p>';
-  if (F.mode === 'new' && ids.length) h += '<button class="go" onclick="startFocus()">Un exercice à la fois</button>';
+  if (F.mode === 'new' && ids.length) h += '<button class="sm" style="width:100%;min-height:52px" onclick="startFocus()">Un exercice à la fois</button>';   // secondaire : « Enregistrer la séance » est la seule action pleine
   ids.forEach(id => h += exCard(exF(id)));
   h += `<div class="card"><h2>Ajouter un exercice à cette séance</h2><p class="m">Pour aujourd'hui seulement. Pour l'ajouter à chaque fois, passe par Programmes.</p>
     <div class="row" style="grid-template-columns:1fr auto"><select id="f-add"><option value="">Choisir…</option>${exOptions(ids)}</select><button class="sm" onclick="addToForm()">Ajouter</button></div></div>`;
@@ -2421,35 +2514,64 @@ function mvWorkout(d) {
 }
 
 /* ------------------------------------------------------------------ vue Données */
-function vData() {
-  const last = BW.length ? BW[BW.length - 1].kg : '';
-  let h = window.PROFIL && PROFIL.imposed() ? `<button class="sm w" onclick="go('profil')">‹ Retour au questionnaire</button>` : '';
-  h += `<div class="card"><h2>Poids de corps</h2><div class="row" style="grid-template-columns:1fr auto"><input id="pw" type="number" inputmode="decimal" step="0.1" placeholder="kg" value="${last}"><button class="sm" onclick="addBW()">Ajouter</button></div>
-    ${spark(BW.slice(-12).map(a => a.kg), 'Poids, ' + Math.min(BW.length, 12) + ' pesées')}`;
-  if (BW.length) h += '<table>' + BW.slice(-6).reverse().map(b => `<tr><td>${frDate(b.day)}</td><td>${fmt(b.kg)} kg</td><td style="text-align:right"><button class="sm danger" onclick="delBW(${b.id})" aria-label="Supprimer">✕</button></td></tr>`).join('') + '</table>';
-  h += `</div><div class="card"><h2>Sauvegarde</h2>
-    <p class="m">${window.FONTE_LOCAL ? 'Tes données sont stockées sur ce téléphone, dans l’appli : si tu la désinstalles ou effaces ses données, elles disparaissent. Exporte-les régulièrement ; séances et photos sont dans deux fichiers séparés. L’export contient aussi ton profil, y compris tes réponses au questionnaire de santé : garde ce fichier pour toi.' : 'La base est sur le serveur. L’export sert de copie manuelle. Ton profil (questionnaire de départ) reste dans ce navigateur et n’est pas dans cet export.'}</p>
-    <a class="sm" style="display:inline-block;text-decoration:none;margin-top:6px" href="/api/export" onclick="return exportClick('data')">Télécharger l'export (JSON)</a>${window.FONTE_LOCAL ? ' <a class="sm" style="display:inline-block;text-decoration:none;margin-top:6px" href="#" onclick="return exportClick(\'photos\')">Télécharger les photos (JSON)</a>' : ''}
-    <h3>Importer</h3>
-    <p class="m">• Export de l'ancienne appli (bouton « Exporter » puis copier) : les séances sont <b>ajoutées</b>, les doublons ignorés.<br>• Export de ce service : <b>remplace toute la base</b>.${window.FONTE_LOCAL ? '<br>• Export des photos : les photos sont <b>ajoutées</b>.' : ''}</p>
-    <textarea id="bk" placeholder="Colle le JSON ici"></textarea>
-    <p class="m">ou</p><input type="file" id="bkf" accept="application/json,.json" onchange="readFile(this)">
-    <button class="go" onclick="doImport()">Importer</button></div>`;
-  return h;
+/* Données (lot 4) : la sauvegarde d'abord ; l'import ensuite, toujours après l'avertissement framboise, jamais en orange.
+   Le fichier choisi (ou le texte collé) est d'abord LU et décrit (IMP) ; rien n'est importé avant « Remplacer mes données »
+   (ou « Ajouter … ») puis la confirmation, comme avant. */
+let IMP = null;   // {name, text, o, kind: remplace | photos | ancien | null, err}
+const IC4 = {down: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>', file: '<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/>', warn: '<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/>',
+  trash: '<path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13"/>', sound: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>', bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>', minus: '<path d="M5 12h14"/>', plus: '<path d="M12 5v14M5 12h14"/>'};
+const ico4 = (k, cls) => `<svg viewBox="0 0 24 24" aria-hidden="true"${cls ? ` class="${cls}"` : ''}>${IC4[k]}</svg>`;
+window.ico4 = ico4;
+function impRead(name, text) {   // décrit le fichier sans rien importer
+  let o = null; try { o = JSON.parse(text); } catch (e) {}
+  const kind = !o || typeof o !== 'object' ? null : o.format === 'suivi-muscu' ? 'remplace' : o.format === 'fonte-photos' ? 'photos' : Array.isArray(o.L) ? 'ancien' : null;
+  IMP = {name, text, o, kind, err: kind ? '' : o ? 'Ce fichier n’est pas une sauvegarde de Fonte.' : 'Ce fichier n’est pas lisible (JSON invalide).'};
+  R();
 }
-function addBW() { const kg = num($('pw').value); if (!kg) return; act(() => api('POST', '/api/bodyweight', {kg}), 'Pesée ajoutée'); }
+function readFile(inp) { const f = inp.files[0]; if (!f) return; f.text().then(t => impRead(f.name, t)); inp.value = ''; }
+function readText() { const t = ($('bk') || {}).value || ''; if (t.trim()) impRead('', t); }
+const nb = (n, w, ws) => `${n} ${n > 1 ? (ws || w + 's') : w}`;
+function impCard() {
+  const local = window.FONTE_LOCAL, pick = t => `<label class="btn ${t ? 'btn-t' : 'btn-s w'}">${t ? '' : ico4('file')}${t || 'Choisir un fichier'}<input type="file" id="bkf" accept="application/json,.json" hidden onchange="readFile(this)"></label>`;
+  let h = `<section class="card"><h2>Importer une sauvegarde</h2><div class="warn" role="note"><h3>${ico4('warn')}L’import remplace toutes tes données</h3><p>Exercices, programmes, séances et pesées actuels sont effacés.</p><p>Exporte d’abord tes données actuelles.</p></div>`;
+  const I = IMP;
+  if (I) {
+    const o = I.o || {}, desc = I.kind === 'remplace' ? `Sauvegarde Fonte · ${nb((o.sessions || []).length, 'séance')} · ${nb((o.workouts || []).length, 'programme')} · ${nb((o.bodyweight || []).length, 'pesée')}`
+      : I.kind === 'photos' ? `Export de photos · ${nb((o.photos || []).length, 'photo')}` : I.kind === 'ancien' ? 'Export de l’ancienne appli' : '';
+    h += `<div class="file">${ico4('file')}<div><b>${esc(I.name || 'Texte collé')}</b>${desc ? `<span>${esc(desc)}</span>` : ''}</div></div>`;
+    if (I.err) h += `<p class="qerr">${esc(I.err)}</p><div class="btns">${pick('Choisir un autre fichier')}</div>`;
+    else if (I.kind === 'remplace') h += `<p style="margin-top:12px"><b>${SESS.length ? `Tes ${nb(SESS.length, 'séance')} actuelle${SESS.length > 1 ? 's' : ''} ${SESS.length > 1 ? 'seront remplacées' : 'sera remplacée'} par ${(o.sessions || []).length > 1 ? 'les ' + (o.sessions || []).length : (o.sessions || []).length ? 'la séance' : 'aucune séance'} de ce fichier.` : 'Tes exercices et programmes actuels seront remplacés par ceux de ce fichier.'}</b></p>
+      <div class="btns"><button class="btn btn-s btn-d w" onclick="doImport()">${ico4('trash')}Remplacer mes données</button>${pick('Choisir un autre fichier')}</div>`;
+    else h += `<p class="note">${I.kind === 'photos' ? 'Ces photos s’ajoutent aux tiennes. Rien n’est remplacé.' : 'Les séances de ce fichier s’ajoutent aux tiennes. Les doublons sont ignorés.'}</p>
+      <div class="btns"><button class="btn btn-s w" onclick="doImport()">${I.kind === 'photos' ? `Ajouter ${(o.photos || []).length > 1 ? 'les ' + (o.photos || []).length + ' photos' : 'la photo'}` : 'Ajouter les séances'}</button>${pick('Choisir un autre fichier')}</div>`;
+  } else h += `<div class="btns">${pick()}</div>` + det3('<label class="fld"><span>Texte de la sauvegarde</span><textarea id="bk" class="inp" placeholder="Colle le texte ici"></textarea></label><button class="btn btn-s w" style="margin-top:8px" onclick="readText()">Lire ce texte</button>', 'Coller le texte');
+  return h + det3(`<p class="m">Export de l’ancienne appli : les séances sont ajoutées, les doublons ignorés.</p>${local ? '<p class="m">Export des photos : les photos sont ajoutées, rien n’est remplacé.</p>' : ''}<p class="m">Une confirmation est toujours demandée avant de remplacer.</p>`, 'Autres fichiers') + '</section>';
+}
+function expCard(second) {
+  const local = window.FONTE_LOCAL;
+  return `<section class="card"><h2>Faire une sauvegarde</h2><p class="sub">${local ? 'Tes données restent sur ce téléphone. Garde une copie ailleurs.' : 'Tes données sont sur ton serveur Fonte. Garde une copie ailleurs.'}</p>
+    <div class="btns"><a class="btn ${second ? 'btn-s' : 'btn-p'} w" style="text-decoration:none" href="/api/export" onclick="return exportClick('data')">${ico4('down')}Exporter mes séances</a>${local ? `<a class="btn btn-s w" style="text-decoration:none" href="#" onclick="return exportClick('photos')">${ico4('down')}Exporter mes photos</a>` : ''}</div>`
+    + det3(local ? '<p class="m">Séances et photos sont dans deux fichiers séparés.</p><p class="m">Si tu désinstalles l’appli ou effaces ses données, elles disparaissent.</p><p class="m">L’export contient aussi ton profil et tes réponses au questionnaire de santé : garde ce fichier pour toi.</p><p class="m">Les réglages des notifications restent sur le téléphone.</p>'
+      : '<p class="m">La base est sur le serveur ; l’export en est une copie manuelle.</p><p class="m">Ton profil (questionnaire de départ) reste dans ce navigateur : il n’est pas dans cet export.</p>') + '</section>';
+}
+function vData() {
+  const imposed = !!(window.PROFIL && PROFIL.imposed());   // ouvert depuis « Bienvenue » : l'import d'abord, rien en orange
+  return `<div class="l3 l4">${imposed ? impCard() + expCard(true) : expCard(false) + impCard()}</div>`;
+}
+function addBW() { const kg = num(($('pw') || {}).value); if (!kg) return; act(() => api('POST', '/api/bodyweight', {kg}), 'Pesée ajoutée'); }
 function delBW(id) { if (confirm('Supprimer cette pesée ?')) act(() => api('DELETE', `/api/bodyweight/${id}`)); }
-function readFile(inp) { const f = inp.files[0]; if (!f) return; f.text().then(t => $('bk').value = t); }
 function doImport() {
-  let o; try { o = JSON.parse($('bk').value); } catch (e) { return toast('JSON invalide'); }
-  if (o && o.format === 'suivi-muscu' && !confirm('Cet export va REMPLACER toute la base actuelle (exercices, programmes, séances, pesées). Continuer ?')) return;
+  if (!IMP || !IMP.kind) return;
+  const o = IMP.o;
+  if (o.format === 'suivi-muscu' && !confirm('Cet export va REMPLACER toute la base actuelle (exercices, programmes, séances, pesées). Continuer ?')) return;
   const imposed = !!(window.PROFIL && PROFIL.imposed());
   act(async () => {
     const r = await api('POST', '/api/import', o);
-    F = null; progDraft = null; store(draftKey());
+    F = null; progDraft = null; IMP = null; store(draftKey());
     if (window.PROFIL) PROFIL.afterImport(o);   // import réussi : le questionnaire saute (un import annulé ou refusé n'arrive jamais ici)
     if (imposed) { view = 'accueil'; store('muscu-view', view); }
-    alert('Import terminé\u00a0: ' + Object.entries(r).map(([k, v]) => `${k}\u00a0: ${v}`).join(', '));
+    alert('Import terminé : ' + Object.entries(r).map(([k, v]) => `${k} : ${v}`).join(', '));
   });
 }
 
@@ -2576,17 +2698,18 @@ function tabsPick() {   // l'onglet Esprits dans la barre du bas : l'interrupteu
   const el = $('dtabs'); if (!el) return;
   if (!window.JEU) { el.innerHTML = ''; return; }
   const on = jeuOn();
-  el.innerHTML = `<div class="ntg"><div><p class="m">Onglets</p><b>Afficher l’onglet Esprits dans la barre du bas</b></div><button class="sw2" role="switch" aria-checked="${on}" aria-label="Afficher l’onglet Esprits dans la barre du bas" onclick="JEU.setHidden(${on});tabsPick()"></button></div>`;
+  el.innerHTML = menuSw('Onglet Esprits', 'Dans la barre du bas', 'Afficher l’onglet Esprits dans la barre du bas', on, `JEU.setHidden(${on});tabsPick()`);
 }
+const menuSw = (t, sub, aria, on, fn) => `<button class="swrow" role="switch" aria-checked="${!!on}" aria-label="${aria}" onclick="${fn}"><span>${t}<small>${sub}</small></span><i class="sw" aria-hidden="true"></i></button>`;
 function setVib(on) { VIB = on; store('muscu-vibration', on); vibPick(); }
 function vibPick() {
   const el = $('dvib'); if (!el) return;
-  el.innerHTML = `<div class="ntg"><div><p class="m">Toute l’appli</p><b>Vibrations</b></div><button class="sw2" role="switch" aria-checked="${VIB}" aria-label="Vibrations" onclick="setVib(${!VIB})"></button></div>`;
+  el.innerHTML = menuSw('Vibrations', 'Toute l’appli', 'Vibrations', VIB, `setVib(${!VIB})`);
 }
 function setScreen(on) { SCREEN = on; store('muscu-ecran', on); SCRON = null; screenSync(); screenPick(); }
 function screenPick() {
   const el = $('dscreen'); if (!el) return;
-  el.innerHTML = `<div class="ntg"><div><p class="m">Pendant la séance</p><b>Garder l’écran allumé</b></div><button class="sw2" role="switch" aria-checked="${SCREEN}" aria-label="Garder l’écran allumé pendant la séance" onclick="setScreen(${!SCREEN})"></button></div>`;
+  el.innerHTML = menuSw('Garder l’écran allumé', 'Pendant la séance', 'Garder l’écran allumé pendant la séance', SCREEN, `setScreen(${!SCREEN})`);
 }
 
 
@@ -2652,7 +2775,7 @@ function forgetWorkouts(ids) {
   curW = null; progW = null; progDraft = null; FOC = null;
 }
 function pendingDraft() { const d = recall(draftKey()); return XS.length > 0 || !!(d && d.dirty) || !!(F && F.mode === 'new' && F.dirty); }
-window.APPX = {vib, dureeMin, SESS: () => SESS, EX: () => EX, WO: () => WO, zonesOf, mondayOf, today, get WGOAL() { return WGOAL; }, computePRs, figSvg, toast, R, go, nav, api, load, forgetWorkouts, pendingDraft, nextWorkout, view: () => view};
+window.APPX = {vib, dureeMin, SESS: () => SESS, BW: () => BW, EX: () => EX, WO: () => WO, zonesOf, mondayOf, today, get WGOAL() { return WGOAL; }, computePRs, figSvg, toast, R, go, nav, api, load, forgetWorkouts, pendingDraft, nextWorkout, view: () => view};
 
 /* ------------------------------------------------------------------ démarrage */
 if (!window.FONTE_LOCAL && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});

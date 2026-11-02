@@ -159,8 +159,11 @@ try:
         details_fermes(pg, "accueil avec carte de phase")
         pg.evaluate("go('profil')"); time.sleep(.3)
         carte_ok(pg, "[data-offer=phase]", "Mon profil, carte de phase")
-        puces = pg.locator("#app .card:has(h2:text-is('Ton programme')) > ul.qul > li").count()
-        ok(1 <= puces <= 3 and pg.locator("#app details:has(summary:text-is('Tes réponses'))").count() == 1, f"Mon profil : {puces} puces, « Tes réponses » en repli")
+        # depuis le lot 4 (maquette validée le 30/10/2026) : « Ton programme » = 3 tuiles, toutes les explications dans « Détails »
+        carte = "#app .card:has(> h2:text-is('Ton programme'))"
+        tuiles, libres = pg.locator(carte + " > .sum > div").count(), pg.locator(carte + " > ul, " + carte + " > p:not(.qmiss)").count()
+        ok(tuiles == 3 and libres == 0 and pg.locator(carte + " > details.det li").count() >= 1 and pg.locator("#app details:has(summary:text-is('Tes réponses'))").count() == 1,
+           f"Mon profil : « Ton programme » en {tuiles} tuiles, {libres} ligne hors « Détails », « Tes réponses » en repli")
         details_fermes(pg, "Mon profil")
         pg.evaluate("go('accueil')"); time.sleep(.2); pg.click("[data-offer=phase] button:has-text('Plus tard')"); time.sleep(.3)
         le(pg, J(35)); carte_ok(pg, "[data-offer=allegee]", "carte « Semaine légère ? »")

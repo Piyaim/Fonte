@@ -10,11 +10,15 @@
 #   l'étiquette de zone, la marque de l'onglet actif, le trait des records, le choix du ressenti sélectionné ; lot 2 : pastilles des
 #   jours de séance, courbes (charge, poids de corps) et leurs points, traits des records, bord des étiquettes « record », chevrons,
 #   période choisie, bords du choix d'exercice et des champs.
+# Lot 4 (0.7.3) : menu ☰, Mon profil (détail santé affiché), Données (et fichier lu avant l'import), Notifications (fausse coque), notifications
+#   bloquées ; non textuel : piste de l'interrupteur activé, bord des pastilles de couleur, des champs, des choix sélectionnés (bord --sel-b),
+#   trait de l'écran courant du menu, icônes « danger », trait framboise de l'avertissement.
+# Choix sélectionné (règle du 30/10/2026) : fond pâle teinté de la couleur ; c'est son bord (--sel-b) qui doit atteindre 3:1.
 # Les lignes de graduation et les bords des cartes sont décoratifs (valeurs écrites ; cartes distinguées par leur fond) : non comptés.
 # Les boutons secondaires sans bord (V3) sont identifiés par leur texte (contrôlé comme du texte) ; les boutons désactivés sont exclus.
 # Témoin : FONTE_ROOT=dossier du code du commit 08f52a0 : « Démarrer la séance » blanc sur papier en « Noir et blanc » doit échouer.
 #   FONTCONFIG_FILE=/home/PM/Claude-applications/Fonte-appli/Fonte/tests/polices-chromium.conf .venv/bin/python tests/contrastes.py
-import os, subprocess, sys, tempfile, time
+import json, os, subprocess, sys, tempfile, time
 from playwright.sync_api import sync_playwright
 ROOT = os.environ.get("FONTE_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP = os.path.join(ROOT, "server"); PORT = 5182
@@ -24,6 +28,10 @@ def ok(c, m):
     print(("OK    " if c else "ÉCHEC "), m)
     if not c: fails.append(m)
 NON = {k: False for k in ["poitrine", "vertiges", "coeur", "tension", "articulaire", "traitement", "autre"]}
+COQUE = """window.__N = Object.assign({perm: 'granted', exact: true, exactNeeded: true, sdk: 34, sent: []}, JSON.parse(sessionStorage.getItem('__N') || '{}'));
+window.FonteApp = {notifStatus: () => JSON.stringify({sdk: __N.sdk, perm: __N.perm, exact: __N.exact, exactNeeded: __N.exactNeeded, channels: __N.sdk >= 26, sent: __N.sent}),
+  notifAskOnce: () => 0, notifRequest: () => 0, notifPlan: () => 0, notifTest: () => 0, restStart: () => true, restCancel: () => 0, openChannel: () => 0, exactRequest: () => 0,
+  saveFile: () => {}, setIcon: () => {}, keepScreenOn: () => {}};"""   # fausse coque Android : page Notifications (lot 4)
 REP = {"prenom": "Léo", "age": 35, "sexe": "f", "taille": 178, "poids": 75, "objectif": "athletique", "objectifs2": ["forme"], "niveau": "reprise",
        "passe": ["aucun"], "seances": 3, "duree": 60, "lieu": "complete", "blessures": ["aucune"], "sante": NON, "eviter": [], "jours": ["lun", "mer", "ven"], "detail": "non"}
 
@@ -66,7 +74,10 @@ MESURE = r"""() => {
   obj('.zchip i', el => cr(over(bgc(el), bgOf(el.parentElement)), bgOf(el.parentElement)), "point de l'étiquette de zone");
   obj('.tabbar button.on', el => { const c = parse(getComputedStyle(el, '::before').backgroundColor); return c ? cr(over(c, bgOf(el)), bgOf(el)) : 0; }, "marque de l'onglet actif");
   obj('.fin .rec i', el => cr(over(bgc(el), bgOf(el.parentElement)), bgOf(el.parentElement)), 'trait du record');
-  obj('.feelb button.on', el => cr(over(bgc(el), bgOf(el.parentElement)), bgOf(el.parentElement)), 'ressenti choisi');
+  // choix sélectionné (règle du 30/10/2026) : fond pâle teinté, c'est le bord de la couleur (--sel-b, ombre intérieure) qui doit atteindre 3:1
+  const selB = el => { const m = getComputedStyle(el).boxShadow.match(/rgba?\([^)]+\)/); return m ? parse(m[0]) : null; };
+  const bord = el => { const c = selB(el); return c ? Math.min(cr(over(c, bgOf(el.parentElement)), bgOf(el.parentElement)), cr(over(c, bgc(el)), over(bgc(el), bgOf(el.parentElement)))) : 0; };
+  obj('.feelb button.on', bord, 'ressenti choisi (bord)');
   // lot 2
   const svgc = (el, prop) => parse(getComputedStyle(el)[prop]), card = el => bgOf(el.closest('.card,section,div'));
   obj('.cal .cd.on i', el => cr(over(bgc(el), bgOf(el.parentElement)), bgOf(el.parentElement)), 'pastille du jour de séance');
@@ -75,12 +86,20 @@ MESURE = r"""() => {
   obj('.chart .p1, .chart .pb', el => cr(over(svgc(el, 'fill'), card(el)), card(el)), 'point de la courbe');
   obj('.tag.rec', el => cr(over(parse(getComputedStyle(el).borderTopColor), bgOf(el)), bgOf(el)), 'bord de l’étiquette « record »');
   obj('svg.chev', el => cr(over(svgc(el, 'stroke'), bgOf(el.parentElement)), bgOf(el.parentElement)), 'chevron');
-  obj('.pg .chip[aria-pressed="true"]', el => cr(over(bgc(el), bgOf(el.parentElement)), bgOf(el.parentElement)), 'période choisie');
+  obj('.pg .chip[aria-pressed="true"]', bord, 'période choisie (bord)');
+  // lot 4 : interrupteur activé (piste --sel-b), bord des pastilles de couleur et des champs, choix sélectionnés du lot 4, corbeille, trait de l'avertissement
+  obj('.l4 [role="switch"][aria-checked="true"]:not(:disabled) .sw', el => cr(over(bgc(el), bgOf(el.closest('[role=switch]'))), bgOf(el.closest('[role=switch]'))), 'interrupteur activé');
+  obj('.l4 .swc', el => cr(over(parse(getComputedStyle(el).borderTopColor), bgOf(el.parentElement)), bgOf(el.parentElement)), 'bord de la pastille de couleur');
+  obj('.l4 .seg button[aria-pressed="true"], .l4 .day[aria-pressed="true"]:not(:disabled)', bord, 'choix sélectionné (bord)');
+  obj('.l4 .ditem[aria-current]', bord, 'écran courant du menu (trait)');
+  obj('.l4 .inp, .l4 textarea', el => cr(over(parse(getComputedStyle(el).borderTopColor), bgOf(el.parentElement)), bgOf(el.parentElement)), 'bord du champ (lot 4)');
+  obj('.l4 .ib.btn-d svg, .l4 .btn-d svg', el => { const b = el.closest('button,label'); return cr(over(parse(getComputedStyle(b).color), bgOf(b)), bgOf(b)); }, 'icône « danger »');
+  obj('.l4 .warn', el => cr(over(parse(getComputedStyle(el).borderLeftColor), bgOf(el.parentElement)), bgOf(el.parentElement)), "trait de l'avertissement");
   obj('.pg select, .pg input', el => cr(over(parse(getComputedStyle(el).borderTopColor), bgOf(el.parentElement)), bgOf(el.parentElement)), 'bord du champ');
   const n = sel => [...document.querySelectorAll(sel)].filter(vis).length;
   return {texte: [...new Set(texte)], petit: [...new Set(petit)], objets: [...new Set(objets)],
           vus: {go: n('.go'), tally: n('.tally i'), act: n('.frow.act'), tick: n('.tick svg'), pbar: n('.bar .pbar i'), zchip: n('.zchip i'), onglet: n('.tabbar button.on'), rec: n('.fin .rec i'), feel: n('.feelb button.on'),
-                pastille: n('.cal .cd.on i'), recl: n('.recl i'), courbe: n('.chart .l1'), poids: n('.chart .lb'), etiquette: n('.tag.rec'), chevron: n('svg.chev'), periode: n('.pg .chip[aria-pressed="true"]'), champ: n('.pg select, .pg input')}};
+                pastille: n('.cal .cd.on i'), recl: n('.recl i'), l4sw: n('.l4 [role="switch"][aria-checked="true"] .sw'), l4swc: n('.l4 .swc'), l4sel: n('.l4 .seg button[aria-pressed="true"], .l4 .day[aria-pressed="true"]'), l4warn: n('.l4 .warn'), courbe: n('.chart .l1'), poids: n('.chart .lb'), etiquette: n('.tag.rec'), chevron: n('svg.chev'), periode: n('.pg .chip[aria-pressed="true"]'), champ: n('.pg select, .pg input')}};
 }"""
 
 srv = subprocess.Popen([sys.executable, "-c", f"import app;app.init_db();app.app.run(port={PORT})"], cwd=APP, env=dict(os.environ, DB_PATH=os.path.join(TMP, "s.db"), PYTHONDONTWRITEBYTECODE="1"),
@@ -141,7 +160,22 @@ try:
                 pg.evaluate("go('historique')"); mesure("Historique", M)
                 pg.evaluate("openSess(SESS.find(s => (computePRs().bySession[s.id] || []).length).id, 'historique')"); mesure("détail d’une séance", M)
                 pg.evaluate("go('accueil')")
-        ok(all(vus.get(k, 0) > 0 for k in ("go", "tally", "act", "tick", "pbar", "zchip", "onglet", "rec", "pastille", "recl", "courbe", "poids", "etiquette", "chevron", "periode", "champ")), f"(témoin) chaque élément non textuel a bien été mesuré {vus}")
+        # lot 4 : menu ☰, Mon profil (détail santé affiché, replis ouverts), Données (fichier lu), Notifications (fausse coque), notifications bloquées
+        pg.add_init_script(COQUE); pg.reload(); pg.wait_for_selector("#app .hero", timeout=8000)
+        fic = os.path.join(TMP, "sauvegarde.json"); open(fic, "w", encoding="utf-8").write(json.dumps({"format": "suivi-muscu", "version": 1, "exercises": [], "workouts": [], "sessions": [], "bodyweight": []}))
+        OUV = "document.querySelectorAll('#app details, #drawer details').forEach(d => d.open = true)"
+        for scheme, tn in (("light", "clair"), ("dark", "sombre")):
+            pg.emulate_media(color_scheme=scheme)
+            for acc in ("orange", "blue", "green", "violet", "red", "mono"):
+                M = f"{tn} · {acc}"; pg.evaluate(f"setAccent('{acc}')"); pg.evaluate("sessionStorage.removeItem('__N'); __N.perm = 'granted'")
+                pg.evaluate("go('accueil'); openMenu()"); pg.evaluate(OUV); mesure("menu ☰", M); pg.evaluate("closeMenu()"); pg.wait_for_timeout(300)
+                pg.evaluate("go('profil')"); pg.evaluate("PROFIL.setDetail(true)"); pg.evaluate(OUV); mesure("Mon profil, détail santé", M)
+                pg.evaluate("go('donnees')"); pg.evaluate(OUV); mesure("Données", M)
+                pg.set_input_files("#bkf", fic); pg.wait_for_selector("#app .file"); pg.evaluate(OUV); mesure("Données, fichier lu", M)
+                pg.evaluate("go('notifications')"); pg.evaluate(OUV); mesure("Notifications", M)
+                pg.evaluate("__N.perm = 'ask'; go('notifications')"); pg.evaluate(OUV); mesure("Notifications bloquées", M)
+        pg.evaluate("__N.perm = 'granted'; go('accueil')")
+        ok(all(vus.get(k, 0) > 0 for k in ("go", "tally", "act", "tick", "pbar", "zchip", "onglet", "rec", "pastille", "recl", "courbe", "poids", "etiquette", "chevron", "periode", "champ", "l4sw", "l4swc", "l4sel", "l4warn")), f"(témoin) chaque élément non textuel a bien été mesuré {vus}")
         ok(not errs, f"aucune erreur JavaScript {errs[:2]}")
         b.close()
 finally:

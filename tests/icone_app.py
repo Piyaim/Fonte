@@ -55,8 +55,9 @@ with sync_playwright() as p:
         pg = ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
         pg.goto(f"https://{HOST}/"); pg.wait_for_selector(".tabbar button"); time.sleep(.4)
         pg.evaluate("openMenu()"); time.sleep(.3)
+        pg.evaluate("document.querySelectorAll('#daccent details').forEach(d => d.open = true)")   # depuis le lot 4, l'explication est dans « Détails »
         txt = pg.inner_text("#daccent")
-        pg.click('.sw[aria-label="Bleu"]'); pg.click('.sw[aria-label="Rouge"]'); pg.click('.sw[aria-label="Noir et blanc"]'); time.sleep(.2)
+        pg.click('.swc[aria-label="Bleu"]'); pg.click('.swc[aria-label="Rouge"]'); pg.click('.swc[aria-label="Noir et blanc"]'); time.sleep(.2)
         got = pg.evaluate("window.__icons || null")
         if avec:
             ok(got == ["blue", "red", "mono"], f"pont présent : setIcon reçoit les couleurs choisies ({got})")

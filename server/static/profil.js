@@ -207,7 +207,7 @@
     {k: 'eviter', t: 'eviter', q: 'Y a-t-il des exercices que tu veux éviter ?', h: 'Facultatif. Touche un exercice pour l’écarter.', opt: true, s: 'Exercices à éviter'},
     {k: 'jours', t: 'multi', q: 'Quels jours es-tu disponible ?', s: 'Jours disponibles', o: JOURS},
     {k: 'detail', t: 'one', q: 'Veux-tu voir le détail santé ?', s: 'Détail santé',
-      h: 'IMC, calories, protéines. Modifiable dans « Mon profil ».', o: [['non', 'Non, juste mon programme'], ['oui', 'Oui, montre-moi le détail']]}
+      h: 'Calories, protéines, sommeil. Modifiable dans « Mon profil ».', o: [['non', 'Non, juste mon programme'], ['oui', 'Oui, montre-moi le détail']]}
   ];
   const QI = Object.fromEntries(QS.map((q, i) => [q.k, i]));
 
@@ -244,7 +244,7 @@
 
   /* ------------------------------------------------------------------ IMC et indicateurs */
   function bmiOf(kg, cm) { const m = cm / 100; return Math.round(kg / (m * m) * 10 + 1e-9) / 10; }   // arrondi à une décimale
-  function bmiBand(b) {
+  function bmiBand(b) {   // plus affiché nulle part (décision du 30/10/2026) ; gardé pour les tests du calcul
     if (b < 18.5) return {k: 'insuf', t: 'Insuffisance pondérale', fx: 'Cardio à la durée basse. La prise de muscle est conseillée en priorité, avec une légère hausse calorique.'};
     if (b < 25) return {k: 'normal', t: 'Corpulence normale', fx: 'Aucun ajustement lié à l’IMC.'};
     if (b < 30) return {k: 'surpoids', t: 'Surpoids', fx: 'Cardio à faible impact en premier choix, progression des charges habituelle.'};
@@ -371,16 +371,14 @@
     if (phase === 2) return 'Phase 2 : progression. 1 à 2 répétitions en réserve ; ajoute de la charge dès que toutes les séries sont réussies.';
     return 'Phase 3 : hybride. Chaque séance a son rôle : force, volume et endurance, ou puissance et cardio (montée rapide avec une charge modérée).';
   }
-  function adaptations(pl) {   // ce que l'appli adapte, sans jugement ; l'IMC n'est nommé que si le détail santé est affiché
-    const x = pl.x, a = x.a, out = [], show = a.detail === 'oui';
+  function adaptations(pl) {   // ce que l'appli adapte, sans jugement ; l'IMC n'est jamais affiché (décision du 30/10/2026), seul son effet est dit
+    const x = pl.x, a = x.a, out = [];
     out.push(phaseTxt(x.phase, a.niveau));
     if (x.phase < 3) out.push('Le passage à la phase suivante te sera proposé sur l’accueil, au bon moment : rien ne change sans ton accord.');
     if (x.phase === 3) out.push(pl.workouts.map(w => `${w.name}\u00a0: ${TYPE_TXT[w.type]}`).join(' ; ') + '.');
     if (x.sante) out.push('Programme allégé (2 séries par exercice), sans effort maximal, sans intervalles ni course.');
     if (x.minor) out.push('Charges légères et technique d’abord, sans répétitions maximales, cardio continu et facile.');
-    if (x.bmi >= 30 && !x.sante) out.push(show ? 'IMC de 30 ou plus : cardio à faible impact, sans sauts ni course.' : 'Cardio à faible impact, sans sauts ni course.');
-    else if (x.bmi < 18.5 && show) out.push('IMC sous 18,5 : cardio à la durée basse.');
-    if (x.bmi >= 30) out.push(show ? 'IMC de 30 ou plus : repos allongés de 30 s (3 min au plus).' : 'Repos allongés de 30 s (3 min au plus).');
+    if (x.bmi >= 30) out.push('Repos un peu plus longs et cardio plus doux, d’après ta taille et ton poids.');
     const notes = [...new Set(pl.workouts.flatMap(w => w.notes))];
     notes.forEach(t => out.push(t.startsWith('à la place') ? 'Blessure ou douleur : ' + t : t));
     if ((a.blessures || []).includes('autre')) out.push(`Pour la douleur « ${a.blessures_autre || 'autre'} », l’appli ne peut pas adapter le programme toute seule : écarte les exercices concernés à la question « Exercices à éviter » et demande conseil à un professionnel de santé.`);
@@ -400,17 +398,17 @@
   const MINOR_WARN = '<div class="qwarn"><p><b>Tu as moins de 18 ans.</b> Demande l’accord d’un parent. Charges légères, technique d’abord.</p></div>';
   // repli « Détails », fermé par défaut : explications, exemples et réglages
   const det = inner => inner ? `<details class="det"><summary>Détails</summary>${inner}</details>` : '';
-  function healthBlock(a0) {
-    const a = clean(a0), b = bmiOf(a.poids, a.taille), band = bmiBand(b), en = energy(a);
-    let h = `<div class="card"><h2>Détail santé</h2><p class="qbig"><b>IMC : ${dec(b)}</b> · ${band.t}</p><p class="m">L’IMC est un repère général. Il ne distingue pas le muscle de la graisse.</p><p>Ce que l’appli adapte : ${esc(band.fx)}</p>`;
+  function healthBlock(a0) {   // contenu du détail santé : calories, protéines, sommeil (l'IMC n'est plus affiché, décision du 30/10/2026)
+    const a = clean(a0), en = energy(a);
+    let h = '<div class="hsante">';
     if (en) {
-      h += `<p>Dépense de base estimée : <b>${kcal(en.mb)} kcal</b> par jour. Besoin quotidien estimé : <b>${kcal(en.need)} kcal</b> (${a.seances} séances par semaine).</p>`;
+      h += `<p>Dépense de base estimée : <b>${kcal(en.mb)} kcal</b> par jour.</p><p>Besoin quotidien estimé : <b>${kcal(en.need)} kcal</b>.</p>`;
       const g = {muscle: [200, 300, 1], gras: [300, 500, -1]}[a.objectif];
       if (g) h += `<p>${g[2] > 0 ? 'Prise de muscle : légère hausse' : 'Perte de gras : léger déficit'} d’environ ${g[0]} à ${g[1]} kcal, soit ${kcal(en.need + g[2] * g[0])} à ${kcal(en.need + g[2] * g[1])} kcal par jour.</p>`;
       else if (a.objectif === 'forme') h += '<p>Remise en forme : calories d’équilibre, autour de ton besoin quotidien.</p>';
     } else h += '<p class="m">Sans réponse sur le sexe, l’appli n’estime pas le besoin calorique.</p>';
-    h += `<p>Protéines : 1,6 à 2 g par kg de poids de corps et par jour, soit ${Math.round(a.poids * 1.6)} à ${Math.round(a.poids * 2)} g.</p><p>Sommeil : vise 7 à 8 heures par nuit.</p>`;
-    return h + '<p class="m">Les recommandations nutritionnelles sont des repères généraux, pas un régime personnalisé.</p></div>';
+    h += `<p>Protéines : ${Math.round(a.poids * 1.6)} à ${Math.round(a.poids * 2)} g par jour.</p><p>Sommeil : 7 à 8 heures par nuit.</p>`;
+    return h + det(`${en ? `<p class="m">Besoin calculé pour ${a.seances} séances par semaine (formule de Mifflin-St Jeor).</p>` : ''}<p class="m">Protéines : 1,6 à 2 g par kg de poids de corps.</p><p class="m">Les recommandations nutritionnelles sont des repères généraux, pas un régime personnalisé.</p>`) + '</div>';
   }
   function answerTxt(q, a) {
     const v = a[q.k], lab = val => (q.o.find(o => o[0] === val) || [, ''])[1];
@@ -592,7 +590,7 @@
   /* cartes : accueil (sous le bouton de séance) et « Mon profil » */
   /* une idée par carte : titre de 6 mots au plus, une phrase de 15 mots au plus, le reste dans « Détails » */
   const rangeTxt = s => `${s.sets} × ${s.target_min === s.target_max ? s.target_min : s.target_min + '-' + s.target_max}`;
-  function offerCard(f, o) {
+  function offerCard(f, o, main) {   // main : « Accepter » en action pleine (« Mon profil », première proposition)
     let title, line, more;
     if (f.k === 'reprise') { title = 'Bon retour !'; line = 'On reprend à 80\u00a0% pendant 7 jours.'; more = '<p>Environ 80\u00a0% de tes dernières charges. Ensuite, la progression reprend normalement.</p>'; }
     else if (f.k === 'allegee') {
@@ -620,6 +618,7 @@
           + '<p class="m">Seuls les réglages de tes séances changent (séries, répétitions, repos) : tes exercices et ton historique restent les mêmes.</p>';
       }
     }
+    if (main) return `<section class="card offer" data-offer="${f.k}"><h2>${esc(title)}</h2><p>${esc(line)}</p><div class="acts"><button class="btn btn-p" onclick="PROFIL.accept('${f.k}')">Accepter</button><button class="btn btn-t" onclick="PROFIL.later('${f.k}')">Plus tard</button></div>${det(more)}</section>`;
     return `<section class="card offer" data-offer="${f.k}"><h2>${esc(title)}</h2><p>${esc(line)}</p><div class="offb"><button class="sm" onclick="PROFIL.accept('${f.k}')">Accepter</button><button class="btn-t" onclick="PROFIL.later('${f.k}')">Plus tard</button>${det(more)}</div></section>`;   // « Détails » sur la ligne des boutons
   }
   function lightCard(l) {   // une ligne : « Semaine légère jusqu'au dim. 13/12 : −20 % »
@@ -631,19 +630,39 @@
     const t = todayIso(), l = lightNow(o, t); if (l) return lightCard(l);
     const f = offers(t)[0]; return f ? offerCard(f, o) : '';
   }
-  function progressHtml(o) {   // bloc « Ta progression » de « Mon profil »
+  function progressHtml(o) {   // « Mon profil » : propositions (la première en action pleine), semaine légère ou reprise, phase et semaine
     const t = todayIso(), p = managed(o), l = lightNow(o, t), fs = offers(t), sch = schedule(t);
-    let h = '<div class="card"><h2>Ta progression</h2>';
+    let h = fs.map((f, i) => offerCard(f, o, i === 0)).join('') + (l ? lightCard(l) : '');
     if (p) {
-      const wk = Math.floor((dn(t) - dn(p.phase_start || p.start)) / 7) + 1;
-      h += `<p><b>Phase ${p.phase} · semaine ${wk}</b></p>`;
-      if (sch) h += `<p>Cette semaine : ${sch.week.map(s => `${esc(frDay(s.day, {weekday: 'short', day: undefined, month: undefined}))} ${esc((A().WO().find(w => w.id === s.wid) || {}).name || '')}`).join(', ')}.</p>`;
-      h += det(`<p class="m">Depuis le ${esc(frDay(p.phase_start || p.start, {weekday: undefined}))}. ${esc(phaseTxt(p.phase, o.answers.niveau))}</p>`
-        + (p.phase === 3 ? `<p class="m">${p.ids.map((id, i) => { const w = A().WO().find(v => v.id === id); return `${esc(w.name)}\u00a0: ${TYPE_TXT[typeOf(i, 3)]}`; }).join(' ; ')}.</p>` : ''));
-    } else h += '<p class="m">Phases et placement : avec un programme généré par l’appli.</p>';
-    h += '</div>';
-    if (l) h += lightCard(l);
-    return h + fs.map(f => offerCard(f, o)).join('');
+      const wk = Math.floor((dn(t) - dn(p.phase_start || p.start)) / 7) + 1, short = n => String(n || '').replace(/^Séance /, '');
+      h += `<section class="card"><h2>Phase ${p.phase} · semaine ${wk}</h2><p class="sub">Depuis le ${esc(frDay(p.phase_start || p.start, {weekday: undefined}))}.</p>`;
+      if (sch) h += `<div class="pdays" role="list" aria-label="Cette semaine">${sch.week.map(s => { const n = (A().WO().find(w => w.id === s.wid) || {}).name || '';
+        return `<span class="pday${s.day === t ? ' today' : ''}" role="listitem" aria-label="${esc(frDay(s.day, {month: undefined}))} : ${esc(n)}${s.day === t ? ', aujourd’hui' : ''}">${esc(frDay(s.day, {weekday: 'short', day: undefined, month: undefined}))}<b>${esc(short(n))}</b></span>`; }).join('')}</div>`;
+      h += det(`<p class="m">${esc(phaseTxt(p.phase, o.answers.niveau))}</p>`
+        + (sch ? `<p class="m">Cette semaine : ${sch.week.map(s => `${esc(frDay(s.day, {weekday: 'short', day: undefined, month: undefined}))} ${esc((A().WO().find(w => w.id === s.wid) || {}).name || '')}`).join(', ')}.</p>` : '')
+        + (p.phase === 3 ? `<p class="m">${p.ids.map((id, i) => { const w = A().WO().find(v => v.id === id); return `${esc(w.name)} : ${TYPE_TXT[typeOf(i, 3)]}`; }).join(' ; ')}.</p>` : '')) + '</section>';
+    } else h += '<section class="card"><p class="m">Phases et placement : avec un programme généré par l’appli.</p></section>';
+    return h;
+  }
+  function programTiles(pl, title) {   // « Ton programme » : 3 tuiles, le reste dans « Détails » ; alertes toujours visibles
+    const x = pl.x, a = x.a, wk = x.phase === 1 ? (a.niveau === 'debutant' ? 2 : 4) : 0, miss = missingTxt(pl), all = adaptations(pl);
+    let h = `<section class="card"><h2>${title}</h2><div class="sum"><div><b>${a.seances}</b><span>séances par semaine</span></div><div><b>${a.duree}</b><span>min par séance</span></div><div><b>${wk || x.phase}</b><span>${wk ? 'semaines de phase 1' : 'phase'}</span></div></div>`;
+    h += all.filter(isAlert).map(t => `<p class="qmiss">${esc(t)}</p>`).join('');
+    if (miss.length) h += `<p class="qmiss">Manquants : ${esc(miss.join(' ; '))}.</p>`;
+    return h + det(`<ul class="ul">${[...bullets(pl), ...all.filter(t => !isAlert(t))].map(t => `<li>${esc(t)}</li>`).join('')}</ul>`) + '</section>';
+  }
+  function weightHtml() {   // poids de corps : facultatif, à l'encre, sans objectif ni variation ; la courbe est dans Progrès
+    const BW = A().BW(), last = BW[BW.length - 1], d = iso => frDay(iso, {weekday: 'short', day: 'numeric', month: 'short'});
+    let h = `<section class="card"><h2>Poids de corps</h2><p class="sub">Facultatif. La courbe est dans Progrès.</p>`;
+    if (last) h += `<div class="bw"><b>${dec(last.kg)} kg</b><span>dernière pesée, ${esc(d(last.day))}</span></div>`;
+    h += `<div class="add"><div class="step"><button class="pm" onclick="PROFIL.bwStep(-1)" aria-label="Moins 0,1 kg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><input id="pw" class="inp" inputmode="decimal" value="${last ? dec(last.kg) : ''}" placeholder="kg" aria-label="Nouvelle pesée en kg"><span class="u">kg</span><button class="pm" onclick="PROFIL.bwStep(1)" aria-label="Plus 0,1 kg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div><button class="btn btn-s" onclick="addBW()">Ajouter</button></div>`;
+    if (BW.length) h += `<details class="det"><summary>Toutes les pesées · ${BW.length}</summary><div>${BW.slice().reverse().map(b => `<div class="wrow"><span class="d">${esc(d(b.day))}</span><span class="k">${dec(b.kg)} kg</span><button class="ib btn-d" onclick="delBW(${b.id})" aria-label="Supprimer la pesée du ${esc(d(b.day))}">${window.ico4 ? ico4('trash') : '✕'}</button></div>`).join('')}</div></details>`;
+    return h + '</section>';
+  }
+  function bwStep(k) {   // − et + de 0,1 kg sur la pesée à ajouter (jamais sous 0)
+    const el = document.getElementById('pw'); if (!el) return;
+    const v = parseFloat(String(el.value).replace(',', '.')), base = isNaN(v) ? ((A().BW().slice(-1)[0] || {}).kg || 0) : v;
+    el.value = dec(Math.max(0, Math.round((base + k * .1) * 10) / 10));
   }
 
   /* ------------------------------------------------------------------ état de l'écran */
@@ -876,8 +895,8 @@
     const open = editable && QS.some(q => check(q, a));
     return `<details class="card det"${open ? ' open' : ''}><summary>Tes réponses</summary>${QS.map((q, i) => { const bad = editable && check(q, a); return `<div class="qrow"><div><span class="m">${esc(q.s)}</span><p${bad ? ' class="qerr"' : ''}>${esc(answerTxt(q, a))}</p></div>${editable ? `<button class="sm" onclick="PROFIL.edit(${i})" aria-label="Modifier : ${esc(q.s)}">Modifier</button>` : ''}</div>`; }).join('')}</details>`;
   }
-  function detailToggle(on) {
-    return `<button class="sm w qtog" onclick="PROFIL.setDetail(${!on})" aria-pressed="${on}">${on ? 'Masquer le détail santé' : 'Afficher le détail santé'}</button>`;
+  function detailToggle(on, a) {   // interrupteur « Détail santé », et son contenu dessous quand il est activé
+    return `<section class="card ncard"><button class="swrow" role="switch" aria-checked="${on}" aria-label="Détail santé" onclick="PROFIL.setDetail(${!on})"><span>Détail santé<small>Calories, protéines, sommeil</small></span><i class="sw" aria-hidden="true"></i></button>${on && a ? healthBlock(a) : ''}</section>`;
   }
   function vResume() {
     const a = D.answers, ok = !QS.some(q => check(q, a)), x = ok ? context(a) : null;
@@ -888,7 +907,7 @@
     }
     if (x && x.sante) h += SANTE_WARN;
     if (x && x.minor) h += MINOR_WARN;
-    if (ok) { h += programPreview(plan(a, phaseFor(a))); h += detailToggle(a.detail === 'oui'); if (a.detail === 'oui') h += healthBlock(a); }
+    if (ok) { h += programPreview(plan(a, phaseFor(a))); h += detailToggle(a.detail === 'oui', a); }
     h += WARN + answersHtml(a, true);
     if (!ok) h += `<p class="qerr">Complète les réponses marquées avant de générer le programme.</p>`;
     if (D.redo) h += `<button class="btn-t" style="margin:8px 0 0 -8px" onclick="PROFIL.quit()">Quitter et garder mes réponses</button>`;
@@ -925,24 +944,19 @@
   function vHome() {
     const o = profile();
     if (!o) return vIntro();
-    const a = o.answers, pl = currentPlan(), d = draft();
-    if (o.imported) {   // sauvegarde importée sans profil : le questionnaire est proposé, jamais imposé
-      let h = `<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">Mon profil</h2><p>Sauvegarde importée le ${new Date(o.created).toLocaleDateString('fr-FR')}, programmes gardés.</p>
-        <p class="m">Questionnaire non rempli. Rien ne change sans ta confirmation.</p>`;
-      h += d && d.redo ? `<button class="go" onclick="PROFIL.redo()">Reprendre le questionnaire</button><button class="sm w" onclick="PROFIL.dropDraft()">Abandonner les réponses en cours</button>`
-        : `<button class="go" onclick="PROFIL.redo()">Remplir le questionnaire</button>`;
-      return h + '</div>' + WARN;
-    }
-    let h =`<div class="card qcard"><h2 id="qh" tabindex="-1" class="qt">${a.prenom ? esc(a.prenom) : 'Mon profil'}</h2><p class="m">Profil créé le ${new Date(o.created).toLocaleDateString('fr-FR')}${o.program ? ', programme généré le ' + new Date(o.program.generated).toLocaleDateString('fr-FR') : ''}.</p>`;
-    h += d && d.redo ? `<button class="go" onclick="PROFIL.redo()">Reprendre le questionnaire</button><button class="sm w" onclick="PROFIL.dropDraft()">Abandonner les réponses en cours</button>`
-      : `<button class="go" onclick="PROFIL.redo()">Refaire le questionnaire</button><button class="sm w" onclick="PROFIL.regen()">Générer un programme à partir de ce profil</button>`;
-    if (!o.program) h += '<p class="m">Tu as gardé tes propres programmes.</p>';
-    h += '</div>';
+    const a = o.answers, pl = currentPlan(), d = draft(), resume = d && d.redo;
+    const qcard = (main) => `<section class="card"><h2>${o.imported ? 'Questionnaire non rempli' : 'Questionnaire'}</h2><p class="sub">Rien ne change sans ta confirmation.</p><div class="btns">`
+      + (resume ? `<button class="btn ${main ? 'btn-p' : 'btn-s'} w" onclick="PROFIL.redo()">Reprendre le questionnaire</button><button class="btn btn-t btn-d" onclick="PROFIL.dropDraft()">${window.ico4 ? ico4('trash') : ''}Abandonner les réponses en cours</button>`
+        : o.imported ? `<button class="btn btn-p w" onclick="PROFIL.redo()">Remplir le questionnaire</button>`
+        : `<button class="btn btn-s w" onclick="PROFIL.redo()">Refaire le questionnaire</button><button class="btn btn-t" onclick="PROFIL.regen()">Générer un programme à partir de ce profil</button>`) + '</div>'
+      + (o.imported || resume ? '' : det('<p class="m">« Refaire le questionnaire » : de nouvelles réponses, puis l’écran « Remplacer tes programmes ? ».</p><p class="m">« Générer un programme » : à partir de tes réponses actuelles, avec la même confirmation.</p>')) + '</section>';
+    const day = iso => new Date(iso).toLocaleDateString('fr-FR');
+    if (o.imported) return `<div class="l3 l4"><section><h1 id="qh" tabindex="-1" class="title">Mon profil</h1>${scrib(110)}<p class="sub">Sauvegarde importée le ${day(o.created)}, programmes gardés.</p></section>${qcard(true)}${weightHtml()}${WARN}</div>`;
+    let h = `<div class="l3 l4"><section><h1 id="qh" tabindex="-1" class="title">${a.prenom ? esc(a.prenom) : 'Mon profil'}</h1>${scrib(90)}<p class="sub">${o.program ? 'Programme généré le ' + day(o.program.generated) : 'Profil créé le ' + day(o.created) + '. Tu as gardé tes propres programmes'}.</p></section>`;
     h += progressHtml(o);
-    if (pl) h += programPreview(pl, o.program ? 'Ton programme' : 'Programme proposé (non appliqué)');
-    h += detailToggle(a.detail === 'oui');
-    if (a.detail === 'oui' && pl) h += healthBlock(a);
-    return h + WARN + answersHtml(a, false);
+    if (pl) h += programTiles(pl, o.program ? 'Ton programme' : 'Programme proposé (non appliqué)');
+    h += weightHtml() + detailToggle(a.detail === 'oui', a) + qcard(false) + WARN + answersHtml(a, false);
+    return h + '</div>';
   }
   // espace insécable avant « ? », « ! », « ; », « : » et à l'intérieur des guillemets, dans le texte seulement (jamais dans une balise)
   const typo = h => h.replace(/>([^<]+)</g, (m, t) => '>' + t.replace(/ ([?!;:»])/g, '\u00a0$1').replace(/« /g, '«\u00a0') + '<');
@@ -972,7 +986,7 @@
     init, enter, title, view, phaseLine, backBtn, imposed: () => !profile(), filled: () => filled(profile()), afterImport,
     schedule, coach, offers, homeCards, accept, later,
     cycleKey: () => { const o = profile(); return o ? cycleStart(o) : null; },   // début du cycle en cours (notifications : une seule « semaine légère » par cycle)
-    start, typed, typedOther, pick, tog, yn, togEv, next, back, edit, setDetail, generate, apply, keep, regen, redo, quit, dropDraft,
+    start, typed, typedOther, pick, tog, yn, togEv, next, back, edit, setDetail, generate, apply, keep, regen, redo, quit, dropDraft, bwStep,
     cancel: () => { P.plan = null; to('resume'); }, home: () => { P.mode = 'home'; },
     exportState: () => profile(),
     // matériel : true si l'exercice du catalogue se fait au poids du corps, null s'il est absent de la table (exercice créé)

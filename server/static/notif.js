@@ -138,41 +138,44 @@
     } catch (e) {}
   }
 
-  /* ---------------------------------------------------------------- page */
-  const SW = (on, lab, fn, dis) => `<button class="sw2" role="switch" aria-checked="${on}" aria-label="${esc(lab)}" onclick="${fn}"${dis ? ' disabled' : ''}></button>`;
-  const det = inner => `<details class="det"><summary>Détails</summary>${inner}</details>`;
-  function card(k, t, phrase, on, dis, extra, more, ch) {
-    const st = status();
-    return `<section class="card${dis ? ' off' : ''}" data-n="${k}"><div class="ntg"><div><h2>${t}</h2><p class="m">${phrase}</p></div>${SW(on, t, `NOTIF.tog('${k}')`, dis)}</div>${extra || ''}`
-      + (ch && st && st.channels ? `<button class="sm nfull" onclick="NOTIF.channel('${ch}')"${dis ? ' disabled' : ''}>Son et vibration</button>` : '') + (more ? det(more) : '') + '</section>';
-  }
+  /* ---------------------------------------------------------------- page (refonte, lot 4) */
+  // interrupteurs en lignes entières, jours en 4 colonnes, heures en − et + (15 min) ou au clavier ; bloquées : réglages en attente, lisibles
+  const ic = k => window.ico4 ? window.ico4(k) : '';
+  const SW = (on, lab, sub, fn, dis) => `<button class="swrow" role="switch" aria-checked="${!!on}" aria-label="${esc(lab)}" onclick="${fn}"${dis ? ' disabled' : ''}><span>${esc(lab)}<small>${esc(sub)}</small></span><i class="sw" aria-hidden="true"></i></button>`;
+  const det = inner => `<details class="det"><summary>Détails</summary><div>${inner}</div></details>`;
+  const CHAN = (ch, t, dis) => { const st = status(); return st && st.channels ? `<button class="chan" onclick="NOTIF.channel('${ch}')"${dis ? ' disabled' : ''}>${ic('sound')}<span>${t}</span>${window.ico4 ? window.ico4('chev', 'chev') : ''}</button>` : ''; };
+  const TIME = (k, v, lab, dis) => `<div class="step"><button class="pm" onclick="NOTIF.shift('${k}',-15)" aria-label="${lab} : moins 15 minutes"${dis ? ' disabled' : ''}>${ic('minus')}</button>`
+    + `<input type="time" class="tval" value="${esc(v)}" aria-label="${lab}" onchange="NOTIF.${k === 'rappel' ? 'time(this.value)' : `calme('${k}',this.value)`}"${dis ? ' disabled' : ''}>`
+    + `<button class="pm" onclick="NOTIF.shift('${k}',15)" aria-label="${lab} : plus 15 minutes"${dis ? ' disabled' : ''}>${ic('plus')}</button></div>`;
   function view() {
     const f = app();
-    if (!f) return '<section class="card"><h2>Notifications</h2><p class="m">Disponibles seulement dans l’appli Android.</p>'
-      + det('<p class="m">Un navigateur ne peut pas envoyer de rappel fiable quand Fonte est fermée. L’appli Android le fait sans réseau.</p>') + '</section>';
+    if (!f) return '<div class="l3 l4"><section class="card"><h2>Notifications</h2><p class="sub">Disponibles seulement dans l’appli Android.</p>'
+      + det('<p class="m">Un navigateur ne peut pas envoyer de rappel fiable quand Fonte est fermée. L’appli Android le fait sans réseau.</p>') + '</section></div>';
     ST = null;
     const st = status() || {}, s = settings(), ok = st.perm === 'granted', off = !ok || !s.on, err = quiet(mins(s.rappel.time), s.calme);
-    let h = '';
-    if (!ok) h += '<section class="card nwarn"><h2>Notifications bloquées</h2><p class="m">Android les bloque pour Fonte.</p><button class="go" onclick="NOTIF.enable()">Activer les notifications</button></section>';
-    h += card('on', 'Notifications', 'Rappels et messages de Fonte.', s.on, !ok, '', '<p class="m">Une notification par jour au plus, hors fin du repos.</p><p class="m">Jamais de relance si tu ne réagis pas.</p>'
-      + '<p class="m">Aucune notification sur les Esprits ni les jetons.</p><p class="m">Tout reste sur ton téléphone, sans réseau.</p>');
-    const days = '<div class="days">' + JOURS.map((j, i) => { const on = s.rappel.days.includes(i); return `<button class="chip${on ? ' on' : ''}" aria-label="${j}" aria-pressed="${on}" onclick="NOTIF.day(${i})"${off ? ' disabled' : ''}>${j[0].toUpperCase()}</button>`; }).join('') + '</div>';
-    h += card('rappel', 'Rappel de séance', 'Le jour prévu, à l’heure choisie.', s.rappel.on, off,
-      days + `<div class="trow"><span>Heure</span><input type="time" value="${esc(s.rappel.time)}" aria-label="Heure du rappel" onchange="NOTIF.time(this.value)"${off ? ' disabled' : ''}></div>`
-      + (err ? '<p class="qerr">Cette heure tombe dans les heures calmes.</p>' : ''),
-      '<p class="m">Exemple : « Séance B prête : 6 exercices ».</p><p class="m">Après 7 jours sans séance, les rappels s’arrêtent jusqu’à ta prochaine séance.</p>', 'rappels');
+    const C = `card ncard${ok ? '' : ' noff'}`, C2 = `card ncard${off ? ' noff' : ''}`;
+    let h = '<div class="l3 l4">';
+    if (!ok) h += '<section class="card blk nwarn"><h2>Notifications bloquées</h2><p class="sub">Android les bloque. Tes réglages sont gardés.</p><div class="btns"><button class="btn btn-p w" onclick="NOTIF.enable()">Activer les notifications</button></div>'
+      + det('<p class="m">Si Android ne pose plus la question, le bouton ouvre les réglages de Fonte.</p>') + '</section>';
+    h += `<section class="${C}" data-n="on">${SW(s.on, 'Notifications', 'Une par jour au plus', "NOTIF.tog('on')", !ok)}`
+      + det('<p class="m">Une notification par jour au plus, hors fin du repos.</p><p class="m">Jamais de relance si tu ne réagis pas.</p><p class="m">Aucune notification sur les Esprits ni les jetons.</p><p class="m">Tout reste sur ton téléphone, sans réseau.</p>') + '</section>';
+    const days = '<p class="ngrp">Jours</p><div class="ndays" role="group" aria-label="Jours du rappel">' + JOURS.map((j, i) => { const on = s.rappel.days.includes(i); return `<button class="day" aria-label="${j}" aria-pressed="${on}" onclick="NOTIF.day(${i})"${off ? ' disabled' : ''}>${j.slice(0, 3)}.</button>`; }).join('') + '</div>';
+    h += `<section class="${C2}" data-n="rappel">${SW(s.rappel.on, 'Rappel de séance', 'Les jours choisis, à l’heure choisie', "NOTIF.tog('rappel')", off)}${days}`
+      + `<div class="ntrow"><span>Heure</span>${TIME('rappel', s.rappel.time, 'Heure du rappel', off)}</div>` + (err ? '<p class="qerr">Cette heure tombe dans les heures calmes.</p>' : '')
+      + CHAN('rappels', 'Son et vibration', off) + det('<p class="m">Exemple : « Séance B prête : 6 exercices ».</p><p class="m">Après 7 jours sans séance, les rappels s’arrêtent jusqu’à ta prochaine séance.</p>') + '</section>';
     const noExact = s.repos.on && st.exactNeeded && !st.exact;
-    h += card('repos', 'Fin du repos', 'Te prévient même écran verrouillé.', s.repos.on, off,
-      noExact && !off ? '<p class="qmiss">Autorisation « Alarmes et rappels » refusée : la fin du repos reste dans l’appli.</p><button class="sm nfull" onclick="NOTIF.exact()">Autoriser les alarmes</button>' : '',
-      '<p class="m">Demande l’autorisation « Alarmes et rappels » pour sonner à la seconde près.</p><p class="m">Sans elle, le minuteur de l’appli marche comme avant.</p><p class="m">Seule notification permise pendant les heures calmes.</p>', 'repos');
-    h += card('etapes', 'Étapes du programme', 'Phase suivante ou semaine légère prête.', s.etapes.on, off, '', '<p class="m">Un seul message par étape. Rien ne change sans « Accepter » dans l’appli.</p>', 'programme');
-    h += card('retour', 'Bon retour', 'Un seul message après 7 jours sans séance.', s.retour.on, off, '', '<p class="m">« Bon retour quand tu veux ». Un seul par pause, puis plus rien.</p>', 'programme');
-    h += card('bilan', 'Bilan du dimanche', 'Ce que tu as fait dans la semaine.', s.bilan.on, off, '', '<p class="m">Envoyé à l’heure du rappel. Rien si tu n’as fait aucune séance.</p>', 'programme');
-    h += `<section class="card${off ? ' off' : ''}"><h2>Heures calmes</h2><p class="m">Rien n’est envoyé pendant ces heures.</p><div class="trow"><span>De</span>`
-      + `<input type="time" value="${esc(s.calme.from)}" aria-label="Début des heures calmes" onchange="NOTIF.calme('from',this.value)"${off ? ' disabled' : ''}><span>à</span>`
-      + `<input type="time" value="${esc(s.calme.to)}" aria-label="Fin des heures calmes" onchange="NOTIF.calme('to',this.value)"${off ? ' disabled' : ''}></div></section>`;
-    h += `<button class="sm nfull" onclick="NOTIF.test()"${off ? ' disabled' : ''}>Envoyer une notification d’essai</button>`;
-    return h;
+    h += `<section class="${C2}" data-n="repos">${SW(s.repos.on, 'Fin du repos', 'Même écran verrouillé', "NOTIF.tog('repos')", off)}`
+      + (noExact && !off ? '<p class="note">« Alarmes et rappels » refusée : la fin du repos reste dans l’appli.</p><div class="btns"><button class="btn btn-s w" onclick="NOTIF.exact()">Autoriser les alarmes</button></div>' : '')
+      + CHAN('repos', 'Son et vibration', off) + det('<p class="m">Demande l’autorisation « Alarmes et rappels » pour sonner à la seconde près.</p><p class="m">Sans elle, le minuteur de l’appli marche comme avant.</p><p class="m">Seule notification permise pendant les heures calmes.</p>') + '</section>';
+    h += `<section class="${C2}" data-n="programme"><div data-n="etapes">${SW(s.etapes.on, 'Étapes du programme', 'Phase suivante ou semaine légère prête', "NOTIF.tog('etapes')", off)}</div>`
+      + `<div data-n="retour">${SW(s.retour.on, 'Bon retour', 'Un seul message après 7 jours sans séance', "NOTIF.tog('retour')", off)}</div>`
+      + `<div data-n="bilan">${SW(s.bilan.on, 'Bilan du dimanche', 'Ce que tu as fait dans la semaine', "NOTIF.tog('bilan')", off)}</div>`
+      + CHAN('programme', 'Son et vibration de ces 3 messages', off)
+      + det('<p class="m">Un seul message par étape. Rien ne change sans « Accepter » dans l’appli.</p><p class="m">« Bon retour quand tu veux » : un seul par pause, puis plus rien.</p><p class="m">Bilan envoyé à l’heure du rappel. Rien si tu n’as fait aucune séance.</p>') + '</section>';
+    h += `<section class="${C2}"><h2>Heures calmes</h2><p class="sub">Rien n’est envoyé pendant ces heures.</p>`
+      + `<div class="ntrow"><span>Début</span>${TIME('from', s.calme.from, 'Début des heures calmes', off)}</div><div class="ntrow"><span>Fin</span>${TIME('to', s.calme.to, 'Fin des heures calmes', off)}</div></section>`;
+    h += `<button class="btn btn-s w" onclick="NOTIF.test()"${off ? ' disabled' : ''}>${ic('bell')}Envoyer une notification d’essai</button>`;
+    return h + '</div>';
   }
   function change(fn) { const s = settings(); fn(s); save(s); A().R(); }
   function tog(k) {
@@ -183,10 +186,15 @@
   function day(i) { change(s => { const d = new Set(s.rappel.days); d.has(i) ? d.delete(i) : d.add(i); s.rappel.days = [...d].sort(); }); }
   function time(v) { if (mins(v) == null) return A().R(); change(s => { s.rappel.time = v; }); }
   function calme(k, v) { if (mins(v) == null) return A().R(); change(s => { s.calme[k] = v; }); }
+  function shift(k, d) {   // − et + : 15 minutes, sur 24 h
+    const s = settings(), v = k === 'rappel' ? s.rappel.time : s.calme[k], m = mins(v); if (m == null) return;
+    const n = ((m + d) % 1440 + 1440) % 1440, hm = String(Math.floor(n / 60)).padStart(2, '0') + ':' + String(n % 60).padStart(2, '0');
+    if (k === 'rappel') time(hm); else calme(k, hm);
+  }
   function test() { const f = app(); if (f) try { f.notifTest('Notification d’essai', 'Les notifications de Fonte fonctionnent.'); } catch (e) {} }
 
   window.NOTIF = {
-    view, sync, onStatus, rest, tog, day, time, calme, test,
+    view, sync, onStatus, rest, tog, day, time, calme, shift, test,
     enable: () => { const f = app(); if (f) try { f.notifRequest(); } catch (e) {} },
     channel: id => { const f = app(); if (f) try { f.openChannel(id); } catch (e) {} },
     exact: () => { const f = app(); if (f) try { f.exactRequest(); } catch (e) {} },

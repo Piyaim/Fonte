@@ -7,6 +7,8 @@
 # Témoins : /home/PM/Claude-applications/Fonte-appli/fonte-travail/refonte/lot3/temoins_typo.py (FONTE_ROOT = copie faussée).
 #   FONTCONFIG_FILE=/home/PM/Claude-applications/Fonte-appli/Fonte/tests/polices-chromium.conf .venv/bin/python tests/typographie_donnees.py
 import json, os, subprocess, sys, tempfile, time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from donnees_ui import importer_texte, lien_export   # écran Données, ancienne et nouvelle interface (lot 4)
 from playwright.sync_api import sync_playwright
 ROOT = os.environ.get("FONTE_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server")
 P1, P2 = 5193, 5194
@@ -29,7 +31,7 @@ def serveur(port, nom):
     return pr
 def telecharger(pg):
     pg.evaluate("go('donnees')"); time.sleep(.3)
-    with pg.expect_download() as dl: pg.click("text=Télécharger l'export")
+    with pg.expect_download() as dl: pg.click("text=" + lien_export(pg))
     return open(dl.value.path(), "rb").read()
 def sans_date(o): return {k: v for k, v in o.items() if k != "exported_at"}
 def propre(octets, quoi, m):   # chaque texte présent tel quel (UTF-8), aucune espace insécable, ni brute ni échappée
@@ -77,7 +79,7 @@ try:
             ctx = b.new_context(viewport={"width": 390, "height": 844}, service_workers="block"); pg = ctx.new_page()
             pg.on("pageerror", lambda e: errs.append(str(e))); pg.on("dialog", lambda d: d.accept())
             pg.goto(f"http://127.0.0.1:{P2}/{q}"); pg.wait_for_selector(BV, timeout=8000)
-            pg.click("button:has-text('J’ai une sauvegarde')"); time.sleep(.3); pg.fill("#bk", ex1.decode()); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(2000)
+            pg.click("button:has-text('J’ai une sauvegarde')"); time.sleep(.3); importer_texte(pg, ex1.decode(), 2000)
             pg.evaluate("go('accueil')"); pg.reload(); pg.wait_for_selector("#app .hero", timeout=8000)
             for v in ("historique", "programmes", "profil"): pg.evaluate(f"go('{v}')"); time.sleep(.2)
             ex2 = telecharger(pg)

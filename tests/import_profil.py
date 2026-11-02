@@ -7,6 +7,8 @@
 # Chaque cas est joué depuis l'écran « Bienvenue » (bouton « J'ai une sauvegarde ») et depuis l'écran Données.
 #   python3 tests/import_profil.py
 import json, os, subprocess, sys, time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from donnees_ui import importer_texte, lien_export   # écran Données, ancienne et nouvelle interface (lot 4)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5117
 env = dict(os.environ, DB_PATH="/tmp/import_profil.db", PYTHONDONTWRITEBYTECODE="1")
 for f in ("/tmp/import_profil.db", "/tmp/import_profil.db-wal", "/tmp/import_profil.db-shm"):
@@ -56,7 +58,7 @@ try:
             else: pg.evaluate("go('donnees')")
             time.sleep(.3)
         def importer(pg, texte):
-            pg.fill("#bk", texte); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(1500)   # wait_for_timeout laisse passer la boîte « Import terminé » (time.sleep la bloque)
+            importer_texte(pg, texte, 1500)   # wait_for_timeout laisse passer la boîte « Import terminé » (time.sleep la bloque)
         def recharger(pg):
             pg.reload(); pg.wait_for_selector("#app .hero, #app #qh", timeout=8000); time.sleep(.4); return pg.inner_text("#app")
         prof = lambda pg: pg.evaluate("JSON.parse(localStorage.getItem('muscu-profil') || 'null')")

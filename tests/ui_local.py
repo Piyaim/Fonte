@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Parcours dans l'interface en mode local (/?local=1) : accueil, séance, photo, export, import, rechargement.
 import base64, io, json, os, subprocess, sys, time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from donnees_ui import importer_texte, lien_export   # écran Données, ancienne et nouvelle interface (lot 4)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5112
 env = dict(os.environ, DB_PATH="/tmp/ui.db", PYTHONDONTWRITEBYTECODE="1")
 for f in ("/tmp/ui.db", "/tmp/ui.db-wal", "/tmp/ui.db-shm"):
@@ -35,23 +37,23 @@ with sync_playwright() as p:
         ok(src.startswith("blob:") and w > 0, f"vignette chargée depuis le stockage local (blob, largeur {w})")
     # export
     pg.evaluate("go('donnees')"); time.sleep(.3)
-    with pg.expect_download() as d: pg.click("text=Télécharger l'export")
+    with pg.expect_download() as d: pg.click("text=" + lien_export(pg))
     data = json.load(open(d.value.path())); ok(data["format"] == "suivi-muscu" and len(data["sessions"]) == 1, f"export séances : {len(data['sessions'])} séance(s), {len(data['exercises'])} exercices")
-    with pg.expect_download() as d2: pg.click("text=Télécharger les photos")
+    with pg.expect_download() as d2: pg.click("text=" + lien_export(pg, True))
     ph = json.load(open(d2.value.path())); ok(ph["format"] == "fonte-photos" and len(ph["photos"]) == 1 and ph["photos"][0]["full"].startswith("data:image/jpeg"), "export photos : 1 photo en JPEG")
     # tout supprimer puis réimporter séances + photos
     pg.evaluate("indexedDB.deleteDatabase('fonte')"); 
     ctx2 = b.new_context(viewport={"width": 390, "height": 844}, accept_downloads=True); ctx2.add_init_script(PROFIL_FAIT); pg2 = ctx2.new_page(); pg2.on("dialog", lambda d: d.accept())
     pg2.goto(f"http://127.0.0.1:{PORT}/?local=1"); pg2.wait_for_selector(".tabbar button"); pg2.evaluate("go('donnees')"); time.sleep(.3)
-    pg2.fill("#bk", json.dumps(data)); pg2.click("text=Importer le JSON") if pg2.locator("text=Importer le JSON").count() else pg2.evaluate("doImport()"); time.sleep(.8)
-    pg2.fill("#bk", json.dumps(ph)); pg2.evaluate("doImport()"); time.sleep(1)
+    importer_texte(pg2, json.dumps(data), 800)
+    importer_texte(pg2, json.dumps(ph), 1000)
     st = pg2.evaluate("fetch('/api/state').then(r=>r.json())"); phs = pg2.evaluate("fetch('/api/photos').then(r=>r.json())")
     ok(len(st["sessions"]) == 1 and len(phs) == 1, f"import dans une base neuve : {len(st['sessions'])} séance, {len(phs)} photo")
     pg2.reload(); pg2.wait_for_selector(".tabbar button"); pg2.evaluate("go('progres')"); time.sleep(.8)
     ok(pg2.evaluate("document.querySelectorAll('.phgrid img').length") == 1, "la photo importée survit au rechargement")
     # couleurs
-    pg2.click("#menu-btn"); time.sleep(.3); txt = pg2.inner_text("#drawer"); ok("icône sur l’écran d’accueil du téléphone reste orange" in txt, "mention honnête sur l'icône dans le menu")
-    pg2.click('.sw[aria-label="Vert"]'); time.sleep(.2); lg = pg2.evaluate("document.getElementById('lg').src"); time.sleep(.3)
+    pg2.click("#menu-btn"); time.sleep(.3); pg2.evaluate("document.querySelectorAll('#drawer details').forEach(d => d.open = true)"); txt = pg2.inner_text("#drawer"); ok("icône sur l’écran d’accueil du téléphone reste orange" in txt, "mention honnête sur l'icône dans le menu")
+    pg2.click('.swc[aria-label="Vert"]'); time.sleep(.2); lg = pg2.evaluate("document.getElementById('lg').src"); time.sleep(.3)
     ok(lg.endswith("/static/icons/logo-green.svg") and pg2.evaluate("document.getElementById('lg').naturalWidth") > 0, f"logo du menu à la couleur choisie, affiché ({lg[-30:]})")
     ok(not errs, f"erreurs JavaScript : {errs}")
     ext = [u for u in reqs if not u.startswith(f"http://127.0.0.1:{PORT}") and not u.startswith("blob:") and not u.startswith("data:")]

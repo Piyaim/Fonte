@@ -18,6 +18,8 @@
 # Témoins : tests/lot3_temoins.py (une règle faussée à la fois dans une copie du code, FONTE_ROOT) : chaque contrôle doit échouer.
 #   FONTCONFIG_FILE=/home/PM/Claude-applications/Fonte-appli/Fonte/tests/polices-chromium.conf .venv/bin/python tests/lot3.py
 import json, os, subprocess, sys, tempfile, time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from donnees_ui import importer_texte, lien_export   # écran Données, ancienne et nouvelle interface (lot 4)
 from playwright.sync_api import sync_playwright
 ROOT = os.environ.get("FONTE_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TAG = "v0.7.1"; P1, P2 = 5191, 5192
@@ -177,7 +179,7 @@ try:
                 ctx = b.new_context(viewport={"width": 390, "height": 844}, service_workers="block"); surveiller(ctx); pg = ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
                 pg.goto(MODES[mode]); pg.wait_for_selector("#app .btn-t", timeout=10000)
                 pg.click("button:has-text('J’ai une sauvegarde')"); pg.wait_for_timeout(300)
-                pg.fill("#bk", json.dumps(dict(avant[mode]["export"], jeu=json.loads(avant[mode]["jeu"])) if mode == "local" else avant[mode]["export"])); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(2000)
+                importer_texte(pg, json.dumps(dict(avant[mode]["export"], jeu=json.loads(avant[mode]["jeu"])) if mode == "local" else avant[mode]["export"]), 2000)
                 n = pg.evaluate(RELEVE)["export"]
                 ok({k: n[k] for k in ("exercises", "workouts", "sessions")} == {k: avant[mode]["export"][k] for k in ("exercises", "workouts", "sessions")}, f"mode {mode} : export de la 0.7.1 importé à l'identique")
                 ctx.close()

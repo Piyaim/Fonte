@@ -9,6 +9,8 @@
 # 4. Dans l'autre sens : un export du code actuel s'importe dans le code de 64e77a8 (profil accepté, données identiques).
 #   python3 tests/migration_lot2b.py
 import json, os, shutil, sqlite3, subprocess, sys, tempfile, time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from donnees_ui import importer_texte, lien_export   # écran Données, ancienne et nouvelle interface (lot 4)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT = 5119; ANCIEN = "64e77a8"
 TMP = tempfile.mkdtemp(prefix="fonte-migration-2b-"); DBF = os.path.join(TMP, "data", "suivi.db"); PROFIL_NAV = os.path.join(TMP, "navigateur")
 fails = []
@@ -95,7 +97,8 @@ try:
         pg = ouvrir(ctx, "local", errs)
         ok(pg.evaluate("PROFIL.coach().phase") == 1 and pg.evaluate("PROFIL.schedule() !== null"), "phases et placement actifs sur les données migrées")
         pg.evaluate("go('profil')"); time.sleep(.3); t = pg.inner_text("#app")
-        ok("Phase 1" in t and "Cette semaine" in t, "« Mon profil » : phase et semaine de séances affichées")
+        # depuis le lot 4 : la semaine est une rangée de pastilles « Cette semaine » (jour et séance), le détail en repli
+        ok("Phase 1" in t and pg.locator("#app [aria-label='Cette semaine'] .pday").count() >= 1, "« Mon profil » : phase et semaine de séances affichées")
         pg.evaluate("go('accueil')"); time.sleep(.2)
         ok(pg.evaluate("document.querySelector('#app').firstElementChild.classList.contains('hero') && document.querySelector('#app button').textContent.trim()") == "Démarrer la séance",
            "accueil : « Démarrer la séance » en tête")
@@ -108,7 +111,7 @@ try:
         # ------------------------------------------------------------ 2 bis. export du lot 2A (profil sans les champs du lot 2B) importé dans le code actuel
         srv = serveur(os.path.join(ROOT, "server"), os.path.join(TMP, "data3", "suivi.db")); ctx = navigateur(os.path.join(TMP, "navigateur3"))
         pg = ouvrir(ctx, "local", errs, "#app button:has-text('Commencer')"); pg.click("button:has-text('J’ai une sauvegarde')"); time.sleep(.3)
-        pg.fill("#bk", json.dumps(a["export"])); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(1500)
+        importer_texte(pg, json.dumps(a["export"]), 1500)
         ok(pg.evaluate("PROFIL.coach().phase") == 1 and pg.evaluate("JSON.parse(localStorage.getItem('muscu-profil')).program.ids").__len__() == 2,
            "export du lot 2A importé dans le code actuel : programmes suivis retrouvés tout de suite, phase 1 active")
         ctx.close(); arreter(srv)
@@ -117,7 +120,7 @@ try:
         srv = serveur(os.path.join(OLD, "server"), os.path.join(TMP, "data2", "suivi.db")); ctx = navigateur(os.path.join(TMP, "navigateur2")); errs2 = []
         pg = ouvrir(ctx, "local", errs2, "#app button:has-text('Commencer')")
         ok("Bienvenue dans Fonte" in pg.inner_text("#app"), "(code du lot 2A, appareil neuf : questionnaire affiché)")
-        pg.click("button:has-text('J’ai une sauvegarde')"); time.sleep(.3); pg.fill("#bk", json.dumps(nouvel_export)); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(1500)
+        pg.click("button:has-text('J’ai une sauvegarde')"); time.sleep(.3); importer_texte(pg, json.dumps(nouvel_export), 1500)
         pg.reload(); pg.wait_for_selector(".tabbar button", timeout=8000); time.sleep(.4)
         r = pg.evaluate(RELEVE)
         ok(r["profil"] == pb and "Bienvenue" not in pg.inner_text("#app"), "code du lot 2A : le nouvel export s'importe, profil accepté tel quel, pas de questionnaire")

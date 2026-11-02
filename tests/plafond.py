@@ -4,6 +4,8 @@
 # une séance, jamais à l'ouverture de l'onglet Esprits), les règles affichées, l'export et l'import (mode local).
 # Témoin : échoue sur le code de la 0.7.0 (FONTE_ROOT=dossier sorti par `git archive v0.7.0`).
 import json, os, re, subprocess, sys, time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from donnees_ui import importer_texte, lien_export   # écran Données, ancienne et nouvelle interface (lot 4)
 ROOT = os.environ.get("FONTE_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP = os.path.join(ROOT, "server"); PORT = 5117; DB = "/tmp/plafond.db"
 env = dict(os.environ, DB_PATH=DB, PYTHONDONTWRITEBYTECODE="1")
@@ -71,15 +73,15 @@ try:
         ok(f"{pd} jeton{'s' if pd > 1 else ''} de quête en attente" in pg.inner_text("#app"), "onglet Esprits : les jetons en attente sont affichés")
         # export puis import (mode local) : l'attente suit
         ev("go('donnees')"); pg.wait_for_timeout(300)
-        with pg.expect_download() as dl: pg.click("text=Télécharger l'export")
+        with pg.expect_download() as dl: pg.click("text=" + lien_export(pg))
         data = json.load(open(dl.value.path(), encoding="utf-8"))
         ok(data.get("jeu", {}).get("pend") == pd, f"export : jetons en attente dans la clé jeu ({data.get('jeu', {}).get('pend')})")
         ev("JEU._.reset()"); ok(attente() == 0, "(état effacé)")
-        pg.fill("#bk", json.dumps(data)); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(1000)
+        importer_texte(pg, json.dumps(data), 1000)
         ok(attente() == pd and ev("JEU.state().tokens") == tk, f"import : {attente()} jetons en attente et solde {ev('JEU.state().tokens')} restaurés")
         # export de la 0.7.0 (clé jeu sans « pend ») : import sans erreur, rien en attente, solde gardé tel quel
         ancien = json.loads(json.dumps(data)); ancien["jeu"].pop("pend", None); ancien["jeu"]["tokens"] = 9
-        pg.fill("#bk", json.dumps(ancien)); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(1000)
+        importer_texte(pg, json.dumps(ancien), 1000)
         ok(attente() == 0 and ev("JEU.state().tokens") == 9, "export 0.7.0 sans jetons en attente : importé, solde de 9 gardé tel quel (ni recalculé ni retiré)")
         ev("(d) => JEU.importState(d)", data["jeu"]); ok(attente() == pd, "(état avec jetons en attente remis)")
         # séance suivante, un autre jour (place libre) : l'attente est créditée, dans la limite du jour

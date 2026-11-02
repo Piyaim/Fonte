@@ -61,7 +61,7 @@ try:
 
         # ======================================================= 1. onglet Esprits masqué : seulement dans la barre du bas
         barre = lambda: pg.inner_text(".tabbar"); menu = lambda: [t.strip() for t in pg.locator("#dnav button").all_text_contents()]
-        inter = lambda: pg.get_attribute("#dtabs .sw2", "aria-checked") if pg.locator("#dtabs .sw2").count() else None
+        inter = lambda: pg.get_attribute("#dtabs [role=switch]", "aria-checked") if pg.locator("#dtabs [role=switch]").count() else None
         ok("Esprits" in barre() and "Esprits" in menu(), "(témoin) au départ : Esprits dans la barre du bas et dans le menu")
         def clic(sel):   # ne bloque pas si l'élément manque (ancien code) : le contrôle suivant échoue
             if pg.locator(sel).count(): pg.click(sel, timeout=3000); time.sleep(.2)
@@ -71,16 +71,16 @@ try:
         ok("Esprits" not in barre(), "masqué depuis les Réglages du jeu : plus d'onglet Esprits dans la barre du bas")
         ok("Esprits" in menu(), f"masqué : « Esprits » reste dans le menu de gauche {menu()}")
         pg.evaluate("openMenu()"); time.sleep(.3)
-        ok(pg.locator("#dtabs").is_visible() and "Afficher l’onglet Esprits dans la barre du bas" in pg.inner_text("#dtabs") and inter() == "false",
+        ok(pg.locator("#dtabs").is_visible() and "Afficher l’onglet Esprits dans la barre du bas" in (pg.inner_text("#dtabs") + (pg.get_attribute("#dtabs [role=switch]", "aria-label") or "")) and inter() == "false",
            f"menu : interrupteur « Afficher l’onglet Esprits dans la barre du bas », sur « non » ({inter()})")
-        hs = pg.locator("#dtabs .sw2").bounding_box() if pg.locator("#dtabs .sw2").count() else None
+        hs = pg.locator("#dtabs [role=switch]").bounding_box() if pg.locator("#dtabs [role=switch]").count() else None
         ok(hs and hs["height"] >= 44 and hs["width"] >= 44, f"interrupteur de {hs and round(hs['width'])} × {hs and round(hs['height'])} px (44 au moins)")
         clic("#dnav button:has-text('Esprits')")
         ok(pg.evaluate("view") == "jeu" and pg.locator("#app .card").count() > 0, "menu > Esprits ouvre la collection même quand l'onglet est masqué")
-        pg.evaluate("openMenu()"); time.sleep(.3); clic("#dtabs .sw2")
+        pg.evaluate("openMenu()"); time.sleep(.3); clic("#dtabs [role=switch]")
         ok("Esprits" in barre() and inter() == "true" and not pg.evaluate("JEU.hidden()"), f"interrupteur activé : l'onglet revient dans la barre du bas ({inter()})")
         if pg.evaluate("JEU.hidden()"): pg.evaluate("JEU.opt('hide')")   # ancien code : repartir de « visible » pour la suite
-        clic("#dtabs .sw2")
+        clic("#dtabs [role=switch]")
         ok("Esprits" not in barre() and inter() == "false" and "Esprits" in menu(), "interrupteur coupé : onglet retiré de la barre, toujours dans le menu")
         pg.evaluate("closeMenu(); if (JEU.hidden()) JEU.opt('hide')"); time.sleep(.2); pg.evaluate("openMenu()"); time.sleep(.3)
         ok(inter() == "true" and "Esprits" in barre(), "l'interrupteur suit l'état changé depuis le jeu")

@@ -3,7 +3,7 @@
 # 1. Le code de la 0.3.1 (sorti de Git par le tag, ou pris dans le dossier ANCIEN_DIR s'il est donné) crée de vraies données,
 #    en mode serveur (SQLite + fichiers photo) ET en mode local (IndexedDB + localStorage) : exercice ajouté et exercice modifié,
 #    programmes modifiés, séances avec séries et ressentis, pesées, photos, état du jeu des Esprits (bienvenue, jetons, tirage).
-#    Il fait aussi ses exports, par le lien « Télécharger l'export » de l'écran Données (et celui des photos en mode local).
+#    Il fait aussi ses exports, par le lien d'export de l'écran Données (et celui des photos en mode local).
 # 2. Le code actuel rouvre ces mêmes données (même fichier SQLite, même profil de navigateur, même adresse) :
 #    tout est identique, photos comprises ; le questionnaire de départ s'affiche, sans rien effacer ;
 #    « Garder mes programmes » laisse programmes et exercices intacts ; ensuite le questionnaire ne revient plus.
@@ -12,6 +12,8 @@
 # 4. Aucune requête ne sort vers un autre domaine que le serveur de test.
 #   python3 tests/migration_v031.py          (ANCIEN_DIR=/chemin/vers/v031 pour prendre le code d'un worktree)
 import base64, io, json, os, shutil, sqlite3, subprocess, sys, tempfile, time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from donnees_ui import importer_texte, lien_export   # écran Données, ancienne et nouvelle interface (lot 4)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); PORT = 5120; TAG = "v0.3.1"
 TMP = tempfile.mkdtemp(prefix="fonte-migration-v031-"); PROFIL_NAV = os.path.join(TMP, "navigateur")
 DBF = os.path.join(TMP, "data", "suivi.db"); DBF_NEUF = os.path.join(TMP, "neuf", "suivi.db")
@@ -124,8 +126,8 @@ try:
             pg = ouvrir(ctx, mode, errs)
             rep[mode] = pg.evaluate(REMPLIR, [IMG, THUMB]); time.sleep(.5)
             avant[mode] = pg.evaluate(RELEVE)
-            exports[mode] = telecharger(pg, "Télécharger l'export")
-            if mode == "local": exports["photos"] = telecharger(pg, "Télécharger les photos")
+            exports[mode] = telecharger(pg, lien_export(pg))
+            if mode == "local": exports["photos"] = telecharger(pg, lien_export(pg, True))
             pg.close()
         idb0 = ouvrir(ctx, "local", errs).evaluate(BRUT_IDB)
         ctx.close(); arreter(srv)
@@ -192,9 +194,9 @@ try:
             pg = ouvrir(ctx, mode, errs, "#app button:has-text('Commencer')")
             ok(QUESTIONNAIRE(pg.inner_text("#app")), f"appli neuve, mode {mode} : questionnaire de départ")
             pg.click("button:has-text('J’ai une sauvegarde')"); time.sleep(.3)
-            pg.fill("#bk", json.dumps(exports[mode])); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(2000)
+            importer_texte(pg, json.dumps(exports[mode]), 2000)
             if mode == "local":
-                pg.evaluate("go('donnees')"); time.sleep(.3); pg.fill("#bk", json.dumps(exports["photos"])); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(2000)
+                pg.evaluate("go('donnees')"); time.sleep(.3); importer_texte(pg, json.dumps(exports["photos"]), 2000)
             pg.evaluate("go('accueil')"); pg.reload(); pg.wait_for_selector("#app .card, #app .hero", timeout=8000); time.sleep(.6)
             ok(not QUESTIONNAIRE(pg.inner_text("#app")) and pg.locator(".tabbar").is_visible(), f"import de l'export 0.3.1, mode {mode} : le questionnaire saute (accueil rouvert)")
             pr = pg.evaluate("JSON.parse(localStorage.getItem('muscu-profil'))")

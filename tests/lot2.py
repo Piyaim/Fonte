@@ -17,6 +17,8 @@
 #    Supprimer revient à la liste) ; aucune action orange ; ni « manqué » ni « semaines d'affilée » ; aucune requête sortante.
 #   FONTCONFIG_FILE=/home/PM/Claude-applications/Fonte-appli/Fonte/tests/polices-chromium.conf .venv/bin/python tests/lot2.py
 import base64, io, json, os, subprocess, sys, tempfile, time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from donnees_ui import importer_texte, lien_export   # écran Données, ancienne et nouvelle interface (lot 4)
 from playwright.sync_api import sync_playwright
 ROOT = os.environ.get("FONTE_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TAG = "v0.6.1"; P1, P2 = 5184, 5185
@@ -129,7 +131,7 @@ try:
         U2 = f"http://127.0.0.1:{P2}/"; new = serveur(os.path.join(ROOT, "server"), os.path.join(TMP, "b", "suivi.db"), P2)
         for mode, ex, url in (("serveur", exS, U2), ("local", exL, U2 + "?local=1")):
             ctx = b.new_context(viewport={"width": 390, "height": 844}); pg, errs = nouvelle(ctx, U2); ouvrir(pg, url)
-            pg.evaluate("go('donnees')"); pg.fill("#bk", json.dumps(ex)); pg.click("#app button:has-text('Importer')"); pg.wait_for_timeout(1500)
+            pg.evaluate("go('donnees')"); importer_texte(pg, json.dumps(ex), 1500)
             verifier(pg, f"export 0.6.1 importé, mode {mode}", False)
             ok(not errs, f"export 0.6.1 importé, mode {mode} : aucune erreur JavaScript {errs[:2]}"); ctx.close()
         arreter(new)

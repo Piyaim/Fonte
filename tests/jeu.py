@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Mini-jeu « Esprits » : règles (garanties, plafonds, idempotence), niveaux, export/import, rendu des 27 esprits, parcours dans l'interface.
 import json, os, subprocess, sys, time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from donnees_ui import importer_texte, lien_export   # écran Données, ancienne et nouvelle interface (lot 4)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5113
 env = dict(os.environ, DB_PATH="/tmp/jeu.db", PYTHONDONTWRITEBYTECODE="1")
 for f in ("/tmp/jeu.db", "/tmp/jeu.db-wal", "/tmp/jeu.db-shm"):
@@ -90,11 +92,11 @@ try:
         ok(ev("JEU.state().equip.muscle") is None, "garde-robe : objet non possédé refusé")
         # export / import
         ev("go('donnees')"); time.sleep(.3)
-        with pg.expect_download() as dl: pg.click("text=Télécharger l'export")
+        with pg.expect_download() as dl: pg.click("text=" + lien_export(pg))
         data = json.load(open(dl.value.path()))
         ok(data.get("jeu") and data["jeu"]["items"].get("t-violet") == 1, "l'export contient l'état du jeu")
         ev("JEU._.reset()"); ok(ev("JEU.state().items['t-violet']") is None, "(état effacé)")
-        pg.fill("#bk", json.dumps(data)); pg.click("button.go:has-text('Importer')"); time.sleep(.8)
+        importer_texte(pg, json.dumps(data), 800)
         ok(ev("JEU.state().items['t-violet']") == 1 and ev("JEU.state().equip.tenue") == "t-violet", "l'import restaure le jeu et la tenue")
         # interface
         ev("go('jeu')"); time.sleep(.3)

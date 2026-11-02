@@ -8,6 +8,8 @@
 # Les valeurs attendues sont écrites ici en dur : une règle faussée dans le code doit faire échouer le test.
 #   python3 tests/lot2b.py
 import itertools, json, os, re, subprocess, sys, time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from donnees_ui import importer_texte, lien_export   # écran Données, ancienne et nouvelle interface (lot 4)
 from datetime import date, timedelta
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); APP = os.path.join(ROOT, "server"); PORT = 5118
 env = dict(os.environ, DB_PATH="/tmp/lot2b.db", PYTHONDONTWRITEBYTECODE="1")
@@ -129,7 +131,7 @@ try:
         ok(exp["profil"]["program"]["phase"] == 3 and exp["profil"]["program"]["ids"][:2] == [wa, wb] and len(exp["profil"]["program"]["ids"]) == 3 and "cycle" in exp["profil"], "l'export contient la phase, les programmes suivis et le cycle")
         ok(not errs, f"aucune erreur JavaScript (phases) {errs[:2]}"); ctx.close()
         ctx, pg, errs = page(J(92))
-        pg.click("button:has-text('J’ai une sauvegarde')"); time.sleep(.3); pg.fill("#bk", json.dumps(exp)); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(1500)
+        pg.click("button:has-text('J’ai une sauvegarde')"); time.sleep(.3); importer_texte(pg, json.dumps(exp), 1500)
         ok(pg.evaluate(PROFIL) == exp["profil"] and pg.evaluate("PROFIL.coach().phase") == 3, "import sur un autre appareil : profil, phase 3 et cycle restaurés")
         ok(not errs, f"aucune erreur JavaScript (import) {errs[:2]}"); ctx.close()
 
@@ -257,7 +259,7 @@ try:
         # profil importé sans questionnaire : ni phase ni placement, l'accueil garde « la séance qui suit la dernière faite »
         ctx, pg, errs = page(J(0)); exp0 = pg.evaluate("fetch('/api/export').then(r => r.json())"); exp0.pop("profil", None)
         w0 = exp0["workouts"]; exp0["sessions"] = [{"id": 1, "day": J(-2), "ts": 1, "workout_id": w0[0]["id"], "workout_name": w0[0]["name"], "notes": "", "entries": [{"exercise_id": w0[0]["items"][0], "sets": [[30, 10]]}]}]
-        pg.click("button:has-text('J’ai une sauvegarde')"); time.sleep(.3); pg.fill("#bk", json.dumps(exp0)); pg.click("button.go:has-text('Importer')"); pg.wait_for_timeout(1500)
+        pg.click("button:has-text('J’ai une sauvegarde')"); time.sleep(.3); importer_texte(pg, json.dumps(exp0), 1500)
         h = bouton_en_tete(pg, "profil importé sans questionnaire")
         ok(h["titre"] == w0[1]["name"] and pg.evaluate("PROFIL.schedule()") is None and pg.evaluate("PROFIL.coach().phase") is None and "phase" not in "".join(offres(pg)),
            f"profil importé : séance qui suit la dernière faite ({h['titre']}), ni placement ni phase")
@@ -331,10 +333,10 @@ try:
         ok(pg.evaluate("a => PROFIL._.plan(a, 2).prm.rdl.rest", prof(objectif="force", niveau="intermediaire", poids=92.5)) == 180, "IMC 32, force : soulevé de terre roumain 180 s (150 + 30 plafonné à 180)")
         pg.evaluate("a => localStorage.setItem('muscu-profil-brouillon', JSON.stringify({version: 1, answers: a, mode: 'resume', i: 16, redo: false}))", prof(poids=92.5))
         pg.reload(); pg.wait_for_selector("button:has-text('Générer mon programme')"); pg.evaluate(OUVRIR); t = pg.inner_text("#app")
-        ok("Repos allongés de 30 s" in t and "IMC" not in t and "kcal" not in t, "IMC caché : repos allongés annoncés sans leur raison")
-        pg.click("button:has-text('Afficher le détail santé')"); time.sleep(.2); pg.evaluate(OUVRIR)
-        ok("IMC de 30 ou plus\u00a0: repos allongés de 30 s" in pg.inner_text("#app"), "(témoin : détail affiché, la raison apparaît)")
-        pg.click("button:has-text('Masquer le détail santé')"); time.sleep(.2)
+        ok("Repos un peu plus longs et cardio plus doux, d’après ta taille et ton poids." in t and "IMC" not in t and "kcal" not in t, "IMC caché : repos allongés annoncés par une phrase neutre")
+        pg.click("#app [role=switch][aria-label='Détail santé']"); time.sleep(.2); pg.evaluate(OUVRIR); t = pg.inner_text("#app")
+        ok("kcal" in t and "IMC" not in t, "(témoin : détail affiché, les calories apparaissent ; l'IMC jamais, depuis la 0.7.3)")
+        pg.click("#app [role=switch][aria-label='Détail santé']"); time.sleep(.2)
         pg.click("button:has-text('Générer mon programme')"); time.sleep(.3); pg.click("button:has-text('Remplacer')"); pg.wait_for_selector("text=Ton programme est prêt")
         le(pg, J(28))
         vus = []
